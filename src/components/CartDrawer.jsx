@@ -48,6 +48,11 @@ const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem
     setIsPaying(true);
     
     try {
+      // Save cart snapshot to sessionStorage BEFORE redirecting to MP
+      // so the success page can display what was purchased
+      sessionStorage.setItem('mate_last_cart', JSON.stringify(cartItems));
+      sessionStorage.setItem('mate_last_total', total.toString());
+
       const response = await fetch('/api/create_preference', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

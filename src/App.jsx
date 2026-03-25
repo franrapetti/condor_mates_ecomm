@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import PublicCatalog from './pages/public/PublicCatalog';
 import ProductDetail from './pages/public/ProductDetail';
 import CheckoutSuccess from './pages/public/CheckoutSuccess';
+import NotFound from './pages/public/NotFound';
 import Login from './pages/admin/Login';
 import AdminLayout from './components/admin/AdminLayout';
 import ProductsList from './pages/admin/ProductsList';
@@ -48,6 +49,7 @@ function App() {
                 <Route path="products/new" element={<ProductForm />} />
                 <Route path="products/:id" element={<ProductForm />} />
               </Route>
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </Router>
         </CartProvider>
