@@ -6,6 +6,7 @@ import Login from './pages/admin/Login';
 import AdminLayout from './components/admin/AdminLayout';
 import ProductsList from './pages/admin/ProductsList';
 import ProductForm from './pages/admin/ProductForm';
+import OrdersList from './pages/admin/OrdersList';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { CartProvider } from './context/CartContext';
@@ -32,6 +33,7 @@ function App() {
                 </ProtectedRoute>
               }>
                 <Route index element={<ProductsList />} />
+                <Route path="orders" element={<OrdersList />} />
                 <Route path="products/new" element={<ProductForm />} />
                 <Route path="products/:id" element={<ProductForm />} />
               </Route>

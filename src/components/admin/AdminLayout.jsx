@@ -25,13 +25,10 @@ const AdminLayout = () => {
         </div>
         <nav className="admin-nav">
           <NavLink to="/admin" end className={({ isActive }) => isActive ? 'active' : ''}>
-            Products
+            📦 Catálogo
           </NavLink>
-          <NavLink to="/admin/categories" className={({ isActive }) => isActive ? 'active' : ''}>
-            Categories
-          </NavLink>
-          <NavLink to="/admin/settings" className={({ isActive }) => isActive ? 'active' : ''}>
-            Settings
+          <NavLink to="/admin/orders" className={({ isActive }) => isActive ? 'active' : ''}>
+            💰 Ventas
           </NavLink>
         </nav>
         <div className="admin-footer">
