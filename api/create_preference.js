@@ -21,9 +21,9 @@ export default async function handler(req, res) {
 
     // 1. Insertar orden preliminar en Supabase para obtener un UUID unívoco
     const { data: orderData, error: dbError } = await supabase.from('orders').insert([{
-      customer_name: customer.nombre,
-      customer_city: customer.ciudad,
-      customer_notes: customer.notas || '',
+      customer_name: customer.name,
+      customer_city: customer.city,
+      customer_notes: customer.notes || '',
       items: items,
       total_price: total,
       status: 'pending'
@@ -42,7 +42,7 @@ export default async function handler(req, res) {
         currency_id: 'ARS',
       })),
       payer: {
-        name: customer.nombre,
+        name: customer.name,
       },
       back_urls: {
         success: `${req.headers.origin}/success`,
