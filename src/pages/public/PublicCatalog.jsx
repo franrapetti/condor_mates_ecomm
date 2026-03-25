@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabaseClient';
 import Header from '../../components/Header';
 import ProductCard from '../../components/ProductCard';
 import { useCart } from '../../context/CartContext';
+import { Helmet } from 'react-helmet-async';
 
 function PublicCatalog() {
   const [products, setProducts] = useState([]);

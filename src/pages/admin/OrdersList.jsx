@@ -251,8 +251,10 @@ const OrdersList = () => {
               <div className="order-customer-info">
                 <h3>Datos del Cliente</h3>
                 <p><strong>Nombre:</strong> {selectedOrder.customer_name}</p>
+                <p><strong>Email:</strong> {selectedOrder.customer_email || 'No provisto'}</p>
                 <p><strong>Ciudad:</strong> {selectedOrder.customer_city}</p>
                 <p><strong>Notas:</strong> {selectedOrder.customer_notes || 'Ninguna'}</p>
+                <p><strong>Origen (Ads):</strong> <span style={{backgroundColor: '#e6fced', color: '#008a3d', padding: '2px 8px', borderRadius: '12px', fontSize: '0.85rem', fontWeight: 'bold', textTransform: 'uppercase'}}>{selectedOrder.source || 'Directo'}</span></p>
                 <p><strong>Mercado Pago ID:</strong> {selectedOrder.mp_payment_id || 'N/A'}</p>
                 <p style={{marginTop: '0.5rem'}}>Estado Actual: {getStatusBadge(selectedOrder.status)}</p>
               </div>

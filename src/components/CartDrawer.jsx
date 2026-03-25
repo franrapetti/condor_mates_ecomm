@@ -7,7 +7,7 @@ initMercadoPago(import.meta.env.VITE_MP_PUBLIC_KEY || 'TEST-PUBLIC-KEY', { local
 
 const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem }) => {
   const [isCheckout, setIsCheckout] = useState(false);
-  const [formData, setFormData] = useState({ name: '', city: '', notes: '' });
+  const [formData, setFormData] = useState({ name: '', email: '', city: '', notes: '' });
   const [preferenceId, setPreferenceId] = useState(null);
   const [isPaying, setIsPaying] = useState(false);
 
@@ -28,6 +28,7 @@ const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem
       let message = `*¡Hola! Quiero hacer un pedido por la web*\n\n`;
       message += `*Mis datos:*\n`;
       message += `- Nombre: ${formData.name}\n`;
+      message += `- Email: ${formData.email}\n`;
       message += `- Ciudad: ${formData.city}\n`;
       if(formData.notes) message += `- Notas: ${formData.notes}\n`;
       message += `\n*Mi pedido:*\n`;
@@ -52,7 +53,8 @@ const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem
         body: JSON.stringify({
           items: cartItems,
           customer: formData,
-          total: total
+          total: total,
+          source: sessionStorage.getItem('mate_utm_source') || 'direct'
         })
       });
       
@@ -91,6 +93,10 @@ const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem
               <div className="form-group">
                 <label>Nombre Completo</label>
                 <input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Ej: Juan Pérez" />
+              </div>
+              <div className="form-group">
+                <label>Email (para envío del recibo)</label>
+                <input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} placeholder="Ej: juan@email.com" />
               </div>
               <div className="form-group">
                 <label>Ciudad de Envío</label>

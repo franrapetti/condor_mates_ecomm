@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabaseClient';
 import { useCart } from '../../context/CartContext';
 import Header from '../../components/Header';
 import ProductCard from '../../components/ProductCard';
+import { Helmet } from 'react-helmet-async'; // Added Helmet import
 import './ProductDetail.css';
 
 function ProductDetail() {
@@ -88,6 +89,17 @@ function ProductDetail() {
 
   return (
     <>
+      {product && ( // Conditionally render Helmet when product data is available
+        <Helmet>
+          <title>{product.name} | Cóndor Mates</title>
+          <meta name="description" content={`Comprá ${product.name} al mejor precio. Envíos gratis a todo el país. Cóndor Mates 🦅`} />
+          <meta property="og:title" content={`${product.name} | Oferta Limitada`} />
+          <meta property="og:description" content={`Mira este ${product.name}. Stock disponible y envío rápido.`} />
+          <meta property="og:image" content={product.image_url} />
+          <meta property="og:url" content={window.location.href} />
+          <meta property="og:type" content="product" />
+        </Helmet>
+      )}
       <Header 
         cartCount={cartCount} 
         onCartClick={() => setIsCartOpen(true)} 

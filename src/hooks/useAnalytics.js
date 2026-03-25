@@ -23,6 +23,14 @@ export const useAnalytics = () => {
   useEffect(() => {
     if (!sessionRef.current) return;
     
+    // Parse UTM Source
+    const params = new URLSearchParams(location.search);
+    const sourceParam = params.get('ref') || params.get('utm_source');
+    if (sourceParam) {
+      sessionStorage.setItem('mate_utm_source', sourceParam);
+    }
+    const currentSource = sessionStorage.getItem('mate_utm_source') || 'direct';
+
     // When URL changes, reset the timer for the new page
     startTimerRef.current = Date.now();
     let isSubscribed = true;
@@ -32,7 +40,8 @@ export const useAnalytics = () => {
         const { data, error } = await supabase.from('page_views').insert([{
           session_id: sessionRef.current,
           path: location.pathname,
-          duration_seconds: 0
+          duration_seconds: 0,
+          source: currentSource
         }]).select('id').single();
         
         if (error) throw error;

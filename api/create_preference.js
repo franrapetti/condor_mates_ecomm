@@ -7,7 +7,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { items, customer, total } = req.body;
+    const { items, customer, total, source } = req.body;
 
     // Configurar Supabase Client
     // Usamos variables de entorno universales de Vercel
@@ -22,11 +22,13 @@ export default async function handler(req, res) {
     // 1. Insertar orden preliminar en Supabase para obtener un UUID unívoco
     const { data: orderData, error: dbError } = await supabase.from('orders').insert([{
       customer_name: customer.name,
+      customer_email: customer.email,
       customer_city: customer.city,
       customer_notes: customer.notes || '',
       items: items,
       total_price: total,
-      status: 'pending'
+      status: 'pending',
+      source: source || 'direct'
     }]).select().single();
 
     if (dbError) throw dbError;

@@ -13,6 +13,7 @@ import { CartProvider } from './context/CartContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import GlobalCart from './components/GlobalCart';
 import { useAnalytics } from './hooks/useAnalytics';
+import { HelmetProvider } from 'react-helmet-async';
 import './App.css';
 
 const AnalyticsWrapper = () => {
@@ -22,10 +23,11 @@ const AnalyticsWrapper = () => {
 
 function App() {
   return (
-    <AuthProvider>
-      <ToastProvider>
-        <CartProvider>
-          <Router>
+    <HelmetProvider>
+      <AuthProvider>
+        <ToastProvider>
+          <CartProvider>
+            <Router>
             <AnalyticsWrapper />
             <GlobalCart />
             <Routes>
@@ -49,6 +51,7 @@ function App() {
         </CartProvider>
       </ToastProvider>
     </AuthProvider>
+  </HelmetProvider>
   );
 }
 
