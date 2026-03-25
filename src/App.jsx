@@ -12,6 +12,7 @@ import { ToastProvider } from './context/ToastContext';
 import { CartProvider } from './context/CartContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import GlobalCart from './components/GlobalCart';
+import MetaPixel from './components/MetaPixel';
 import { useAnalytics } from './hooks/useAnalytics';
 import { HelmetProvider } from 'react-helmet-async';
 import './App.css';
@@ -28,9 +29,10 @@ function App() {
         <ToastProvider>
           <CartProvider>
             <Router>
-            <AnalyticsWrapper />
-            <GlobalCart />
-            <Routes>
+              <MetaPixel />
+              <AnalyticsWrapper />
+              <GlobalCart />
+              <Routes>
               <Route path="/" element={<PublicCatalog />} />
               <Route path="/producto/:id" element={<ProductDetail />} />
               <Route path="/success" element={<CheckoutSuccess />} />

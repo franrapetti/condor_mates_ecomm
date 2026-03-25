@@ -39,7 +39,8 @@ const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem
       
       message += `\n*Total estimado: $${total.toLocaleString()}*`;
       
-      const whatsappUrl = `https://wa.me/5491123456789?text=${encodeURIComponent(message)}`;
+      const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER || '543572595756';
+      const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
       window.open(whatsappUrl, '_blank');
       return;
     }

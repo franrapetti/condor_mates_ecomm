@@ -13,8 +13,11 @@ const CheckoutSuccess = () => {
     // Clear cart after successful payment
     if (status === 'approved') {
       clearCart();
+      if (window.fbq && paymentId) {
+        window.fbq('track', 'Purchase', { currency: 'ARS', transaction_id: paymentId });
+      }
     }
-  }, [status, clearCart]);
+  }, [status, paymentId, clearCart]);
 
   return (
     <div className="checkout-success-page fade-in">
