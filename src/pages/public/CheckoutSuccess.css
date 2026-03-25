@@ -1,0 +1,59 @@
+.checkout-success-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 80vh;
+  padding: 2rem;
+}
+
+.success-card {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 3rem;
+  text-align: center;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.05);
+}
+
+.success-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.success-card h1 {
+  color: var(--text-dark);
+  margin-bottom: 1rem;
+}
+
+.success-card p {
+  color: var(--text-light);
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+.order-details {
+  background-color: var(--bg);
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+  border: 1px dashed var(--border);
+}
+
+.order-number {
+  font-size: 1.1rem;
+  color: var(--text-dark) !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.order-instructions {
+  font-size: 0.9rem;
+  margin: 0 !important;
+}
+
+.success-btn {
+  display: inline-block;
+  text-decoration: none;
+  width: 100%;
+}

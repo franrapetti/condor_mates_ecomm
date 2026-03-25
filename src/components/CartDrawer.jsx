@@ -1,0 +1,166 @@
+import React, { useState } from 'react';
+import { initMercadoPago, Wallet } from '@mercadopago/sdk-react';
+import './CartDrawer.css';
+
+// Initialize MP with public key (fallback to TEST if not found)
+initMercadoPago(import.meta.env.VITE_MP_PUBLIC_KEY || 'TEST-PUBLIC-KEY', { locale: 'es-AR' });
+
+const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem }) => {
+  const [isCheckout, setIsCheckout] = useState(false);
+  const [formData, setFormData] = useState({ name: '', city: '', notes: '' });
+  const [preferenceId, setPreferenceId] = useState(null);
+  const [isPaying, setIsPaying] = useState(false);
+
+  const total = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+  
+  const handleClose = () => {
+    setIsCheckout(false);
+    setPreferenceId(null);
+    onClose();
+  };
+
+  const [submitAction, setSubmitAction] = useState('mp');
+
+  const handleCheckoutSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (submitAction === 'whatsapp') {
+      let message = `*¡Hola! Quiero hacer un pedido por la web*\n\n`;
+      message += `*Mis datos:*\n`;
+      message += `- Nombre: ${formData.name}\n`;
+      message += `- Ciudad: ${formData.city}\n`;
+      if(formData.notes) message += `- Notas: ${formData.notes}\n`;
+      message += `\n*Mi pedido:*\n`;
+      
+      cartItems.forEach(item => {
+        message += `- ${item.quantity}x ${item.name} ($${item.price.toLocaleString()})\n`;
+      });
+      
+      message += `\n*Total estimado: $${total.toLocaleString()}*`;
+      
+      const whatsappUrl = `https://wa.me/5491123456789?text=${encodeURIComponent(message)}`;
+      window.open(whatsappUrl, '_blank');
+      return;
+    }
+
+    setIsPaying(true);
+    
+    try {
+      const response = await fetch('/api/create_preference', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: cartItems,
+          customer: formData,
+          total: total
+        })
+      });
+      
+      const data = await response.json();
+      if (data.id) {
+        setPreferenceId(data.id);
+      } else {
+        alert('Hubo un error al generar el link de pago.');
+      }
+    } catch (error) {
+      console.error(error);
+      alert('Error de conexión.');
+    } finally {
+      setIsPaying(false);
+    }
+  };
+
+  return (
+    <>
+      <div className={`cart-overlay ${isOpen ? 'open' : ''}`} onClick={handleClose}></div>
+      <div className={`cart-drawer ${isOpen ? 'open' : ''}`}>
+        <div className="cart-header">
+          <h2>{isCheckout ? 'Tus Datos' : 'Tu Carrito'}</h2>
+          <button className="close-btn" onClick={handleClose}>×</button>
+        </div>
+
+        {cartItems.length === 0 ? (
+          <div className="cart-empty">
+            <span className="emoji-huge">🛒</span>
+            <p>Tu carrito está vacío.</p>
+            <button className="continue-shopping" onClick={handleClose}>Ver Mates</button>
+          </div>
+        ) : isCheckout ? (
+          <div className="checkout-form-container">
+            <form className="checkout-form" onSubmit={handleCheckoutSubmit}>
+              <div className="form-group">
+                <label>Nombre Completo</label>
+                <input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Ej: Juan Pérez" />
+              </div>
+              <div className="form-group">
+                <label>Ciudad de Envío</label>
+                <input required type="text" value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} placeholder="Ej: Córdoba Capital" />
+              </div>
+              <div className="form-group">
+                <label>Notas Adicionales (Opcional)</label>
+                <textarea rows="3" value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} placeholder="Instrucciones para la entrega, etc." />
+              </div>
+              
+              <div className="cart-total checkout-total">
+                <span>Total a pagar:</span>
+                <span className="total-price">${total.toLocaleString()}</span>
+              </div>
+              
+              <div className="checkout-actions">
+                <button type="button" className="btn-back" onClick={() => setIsCheckout(false)}>← Volver al carrito</button>
+                
+                {!preferenceId ? (
+                  <>
+                    <button type="submit" onClick={() => setSubmitAction('mp')} className="whatsapp-btn mp-btn" disabled={isPaying} style={{backgroundColor: '#009ee3'}}>
+                      {isPaying ? 'Conectando Seguro...' : '💳 Pagar con Mercado Pago'}
+                    </button>
+                    <button type="submit" onClick={() => setSubmitAction('whatsapp')} className="whatsapp-btn" disabled={isPaying} style={{marginTop: '-0.5rem'}}>
+                      💬 Acordar por WhatsApp
+                    </button>
+                  </>
+                ) : (
+                  <div className="mp-wallet-container">
+                    <Wallet initialization={{ preferenceId }} customization={{ texts: { valueProp: 'security_details' } }} />
+                  </div>
+                )}
+              </div>
+            </form>
+          </div>
+        ) : (
+          <>
+            <div className="cart-items">
+              {cartItems.map(item => (
+                <div key={item.id} className="cart-item fade-in">
+                  <img src={item.image_url} alt={item.name} className="cart-item-image" />
+                  <div className="cart-item-details">
+                    <h4>{item.name}</h4>
+                    <p className="cart-item-price">${item.price.toLocaleString()}</p>
+                    <div className="quantity-controls">
+                      <button onClick={() => onUpdateQuantity(item.id, item.quantity - 1)}>-</button>
+                      <span>{item.quantity}</span>
+                      <button onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}>+</button>
+                    </div>
+                  </div>
+                  <button className="remove-btn" onClick={() => onRemoveItem(item.id)}>🗑️</button>
+                </div>
+              ))}
+            </div>
+            
+            <div className="cart-footer">
+              <div className="cart-total">
+                <span>Total</span>
+                <span className="total-price">${total.toLocaleString()}</span>
+              </div>
+              <p className="shipping-notice">¡Envío con packaging de regalo incluido!</p>
+              <button className="whatsapp-btn" onClick={() => setIsCheckout(true)}>
+                Continuar Compra →
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </>
+  );
+};
+
+export default CartDrawer;

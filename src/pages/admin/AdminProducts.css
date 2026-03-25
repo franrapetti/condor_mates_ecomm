@@ -1,0 +1,146 @@
+.admin-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.admin-page-header h1 {
+  font-size: 1.5rem;
+  color: var(--text-dark);
+}
+
+.btn-primary {
+  background-color: var(--accent);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-weight: 500;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.btn-primary:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background-color: var(--surface);
+  color: var(--text-dark);
+  border: 1px solid var(--border);
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.table-container, .form-container {
+  background: var(--surface);
+  border-radius: 8px;
+  box-shadow: var(--shadow-sm);
+  overflow: auto;
+  padding: 1rem;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table th, .data-table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.data-table th {
+  font-weight: 500;
+  color: var(--text-light);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+}
+
+.table-thumbnail {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.badge {
+  background: var(--primary);
+  color: var(--text-dark);
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-right: 0.5rem;
+}
+
+.badge-outline {
+  border: 1px solid var(--border);
+  color: var(--text-light);
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-icon {
+  font-size: 0.85rem;
+  color: #3b82f6;
+  cursor: pointer;
+}
+
+.btn-icon.text-danger {
+  color: #ef4444;
+}
+
+/* Form Styles */
+.admin-form {
+  max-width: 600px;
+}
+
+.admin-form select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-family: inherit;
+  background: white;
+}
+
+.toggle-group label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.toggle-group input[type="checkbox"] {
+  width: auto;
+}
+
+.image-upload-area {
+  border: 2px dashed var(--border);
+  padding: 2rem;
+  text-align: center;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.form-thumbnail {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 4px;
+}

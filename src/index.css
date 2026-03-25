@@ -1,0 +1,68 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --primary: #234A2E;
+  --accent: #234A2E;
+  --accent-light: #4ae577;
+  --background: #F4F6F4;
+  --surface: #ffffff;
+  --text-dark: #1a1a1a;
+  --text-light: #666666;
+  --border: #e5e5e5;
+  --shadow-sm: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.dark-theme {
+  --primary: #4ae577;
+  --accent: #4ae577;
+  --accent-light: #234A2E;
+  --background: #121212;
+  --surface: #1e1e1e;
+  --text-dark: #f0f0f0;
+  --text-light: #a0a0a0;
+  --border: #333333;
+  --shadow-sm: 0 4px 12px rgba(0,0,0,0.5);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--background);
+  color: var(--text-dark);
+  line-height: 1.5;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  -webkit-font-smoothing: antialiased;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+ul {
+  list-style: none;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button {
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
