@@ -12,7 +12,13 @@ import { ToastProvider } from './context/ToastContext';
 import { CartProvider } from './context/CartContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import GlobalCart from './components/GlobalCart';
+import { useAnalytics } from './hooks/useAnalytics';
 import './App.css';
+
+const AnalyticsWrapper = () => {
+  useAnalytics();
+  return null;
+};
 
 function App() {
   return (
@@ -20,6 +26,7 @@ function App() {
       <ToastProvider>
         <CartProvider>
           <Router>
+            <AnalyticsWrapper />
             <GlobalCart />
             <Routes>
               <Route path="/" element={<PublicCatalog />} />

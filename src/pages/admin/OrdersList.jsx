@@ -1,45 +1,46 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../../lib/supabaseClient';
+import {
+  LineChart, Line, BarChart, Bar, AreaChart, Area,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
+} from 'recharts';
 import './OrdersList.css';
 
 const OrdersList = () => {
   const [orders, setOrders] = useState([]);
+  const [pageViews, setPageViews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [filter, setFilter] = useState('all');
 
   useEffect(() => {
-    fetchOrders();
+    fetchData();
   }, []);
 
-  const fetchOrders = async () => {
+  const fetchData = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      
+      const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
         .select('*')
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
-      setOrders(data || []);
+      if (ordersError) throw ordersError;
+      setOrders(ordersData || []);
+
+      const { data: viewsData } = await supabase
+        .from('page_views')
+        .select('*');
+      setPageViews(viewsData || []);
+
     } catch (error) {
-      console.error('Error fetching orders:', error);
-      alert('Error cargando órdenes');
+      console.error('Error fetching data:', error);
+      alert('Error cargando datos del dashboard');
     } finally {
       setLoading(false);
     }
   };
-
-  const calculateKPIs = () => {
-    const validOrders = orders.filter(o => o.status === 'paid' || o.status === 'shipped');
-    const totalRevenue = validOrders.reduce((acc, o) => acc + o.total_price, 0);
-    const totalSales = validOrders.length;
-    const avgTicket = totalSales > 0 ? totalRevenue / totalSales : 0;
-
-    return { totalRevenue, totalSales, avgTicket };
-  };
-
-  const kpis = calculateKPIs();
 
   const updateOrderStatus = async (id, newStatus) => {
     try {
@@ -74,27 +75,120 @@ const OrdersList = () => {
     return o.status === filter;
   });
 
+  // Calculate Basic KPIs
+  const validOrders = orders.filter(o => o.status === 'paid' || o.status === 'shipped');
+  const totalRevenue = validOrders.reduce((acc, o) => acc + o.total_price, 0);
+  const totalSales = validOrders.length;
+  const avgTicket = totalSales > 0 ? totalRevenue / totalSales : 0;
+
+  // Calculate Advanced KPIs
+  const uniqueSessions = new Set(pageViews.map(v => v.session_id)).size;
+  const conversionRate = uniqueSessions > 0 ? ((totalSales / uniqueSessions) * 100).toFixed(2) : 0;
+  
+  const totalDuration = pageViews.reduce((acc, v) => acc + (v.duration_seconds || 0), 0);
+  const avgDurationSeconds = uniqueSessions > 0 ? Math.floor(totalDuration / uniqueSessions) : 0;
+  const avgDurationFormatted = `${Math.floor(avgDurationSeconds / 60)}m ${avgDurationSeconds % 60}s`;
+
+  // Chart Data Preparation
+  const chartData = useMemo(() => {
+    const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    
+    const monthlyData = months.map(m => ({ name: m, ingresos: 0 }));
+    const dailyData = days.map(d => ({ name: d, ordenes: 0 }));
+    const hourlyData = Array.from({length: 24}, (_, i) => ({ name: `${i}:00`, volumen: 0 }));
+
+    validOrders.forEach(order => {
+      const date = new Date(order.created_at);
+      
+      monthlyData[date.getMonth()].ingresos += order.total_price;
+      dailyData[date.getDay()].ordenes += 1;
+      hourlyData[date.getHours()].volumen += 1;
+    });
+
+    return { monthlyData, dailyData, hourlyData };
+  }, [validOrders]);
+
   return (
     <div className="orders-dashboard">
       <div className="dashboard-header">
-        <h1>Dashboard de Ventas</h1>
-        <button className="btn-secondary" onClick={fetchOrders} style={{padding: '0.5rem 1rem'}}>
-          ↻ Refrescar
+        <h1>Centro de Comando Analítico 👁️‍🗨️</h1>
+        <button className="btn-secondary" onClick={fetchData} style={{padding: '0.5rem 1rem'}}>
+          ↻ Sincronizar Datos
         </button>
       </div>
 
       <div className="kpi-grid">
         <div className="kpi-card">
           <h3>Ingresos Brutos</h3>
-          <p className="kpi-value">${kpis.totalRevenue.toLocaleString()}</p>
+          <p className="kpi-value">${totalRevenue.toLocaleString()}</p>
         </div>
         <div className="kpi-card">
           <h3>Ventas Concretadas</h3>
-          <p className="kpi-value">{kpis.totalSales}</p>
+          <p className="kpi-value">{totalSales}</p>
         </div>
         <div className="kpi-card">
           <h3>Ticket Promedio</h3>
-          <p className="kpi-value">${Math.round(kpis.avgTicket).toLocaleString()}</p>
+          <p className="kpi-value">${Math.round(avgTicket).toLocaleString()}</p>
+        </div>
+        <div className="kpi-card analytics-kpi">
+          <h3>Visitas Únicas</h3>
+          <p className="kpi-value">{uniqueSessions}</p>
+        </div>
+        <div className="kpi-card analytics-kpi">
+          <h3>Tasa de Conversión</h3>
+          <p className="kpi-value">{conversionRate}%</p>
+        </div>
+        <div className="kpi-card analytics-kpi">
+          <h3>Tiempo Vista Promedio</h3>
+          <p className="kpi-value">{avgDurationFormatted}</p>
+        </div>
+      </div>
+
+      <div className="charts-grid">
+        <div className="chart-card chart-full-width">
+          <h3>📈 Crecimiento Mensual (Ingresos Brutos)</h3>
+          <div style={{ width: '100%', height: 300 }}>
+            <ResponsiveContainer>
+              <LineChart data={chartData.monthlyData}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
+                <XAxis dataKey="name" stroke="#6B7280" />
+                <YAxis stroke="#6B7280" tickFormatter={(v) => `$${v/1000}k`} />
+                <Tooltip formatter={(value) => [`$${value.toLocaleString()}`, 'Ingresos']} />
+                <Line type="monotone" dataKey="ingresos" stroke="#234a2e" strokeWidth={3} activeDot={{ r: 8 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="chart-card">
+          <h3>📊 Órdenes por Día (Semanal)</h3>
+          <div style={{ width: '100%', height: 250 }}>
+            <ResponsiveContainer>
+              <BarChart data={chartData.dailyData}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
+                <XAxis dataKey="name" stroke="#6B7280" />
+                <YAxis stroke="#6B7280" allowDecimals={false} />
+                <Tooltip formatter={(value) => [value, 'Órdenes']} cursor={{fill: 'transparent'}} />
+                <Bar dataKey="ordenes" fill="#0284c7" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="chart-card">
+          <h3>🔔 Mapa de Calor Horario (Volumen de Compras)</h3>
+          <div style={{ width: '100%', height: 250 }}>
+            <ResponsiveContainer>
+              <AreaChart data={chartData.hourlyData}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
+                <XAxis dataKey="name" stroke="#6B7280" interval={3} />
+                <YAxis stroke="#6B7280" allowDecimals={false} />
+                <Tooltip formatter={(value) => [value, 'Ventas a esta hora']} />
+                <Area type="monotone" dataKey="volumen" stroke="#e65100" fill="#ffb74d" strokeWidth={2} />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
         </div>
       </div>
 
@@ -107,7 +201,7 @@ const OrdersList = () => {
         </div>
 
         {loading ? (
-          <p>Cargando información...</p>
+          <p style={{padding: '2rem'}}>Cargando información logísitca...</p>
         ) : (
           <div className="table-responsive">
             <table className="orders-table">
@@ -123,7 +217,7 @@ const OrdersList = () => {
               </thead>
               <tbody>
                 {filteredOrders.length === 0 && (
-                  <tr><td colSpan="6" style={{textAlign: 'center', padding: '2rem'}}>No hay órdenes en este estado.</td></tr>
+                  <tr><td colSpan="6" style={{textAlign: 'center', padding: '2rem'}}>No hay órdenes registradas.</td></tr>
                 )}
                 {filteredOrders.map(order => (
                   <tr key={order.id}>
@@ -134,7 +228,7 @@ const OrdersList = () => {
                     <td style={{fontWeight: 600, color: 'var(--accent)'}}>${order.total_price?.toLocaleString()}</td>
                     <td>
                       <button className="btn-view" onClick={() => setSelectedOrder(order)}>
-                        Ver MÁS
+                        VER GUÍA
                       </button>
                     </td>
                   </tr>
@@ -164,7 +258,7 @@ const OrdersList = () => {
               </div>
 
               <div className="order-items-info">
-                <h3>Productos Comprados</h3>
+                <h3>Productos a Empacar</h3>
                 <ul className="order-items-list">
                   {selectedOrder.items && selectedOrder.items.map((item, idx) => (
                     <li key={idx}>
@@ -184,12 +278,14 @@ const OrdersList = () => {
               <div style={{display: 'flex', gap: '0.5rem', flexWrap: 'wrap'}}>
                 {selectedOrder.status === 'paid' && (
                   <button className="btn-primary" onClick={() => updateOrderStatus(selectedOrder.id, 'shipped')}>
-                    📦 Marcar como Enviado (Andreani)
+                    📦 Imprimir Etiqueta y Marcar Enviado
                   </button>
                 )}
-                <button className="btn-secondary" onClick={() => updateOrderStatus(selectedOrder.id, 'paid')}>
-                  Marcar Pagado Manualmente
-                </button>
+                {selectedOrder.status === 'pending' && (
+                  <button className="btn-secondary" onClick={() => updateOrderStatus(selectedOrder.id, 'paid')}>
+                    Marcar Pagado Manualmente (WhatsApp)
+                  </button>
+                )}
                 <button className="btn-danger" onClick={() => updateOrderStatus(selectedOrder.id, 'canceled')} style={{backgroundColor: '#e53935', color: 'white', border: 'none', borderRadius: '6px', padding: '0.75rem 1rem', cursor: 'pointer', fontWeight: 600}}>
                   Cancelar Orden (Reembolso)
                 </button>

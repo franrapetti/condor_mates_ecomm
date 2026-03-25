@@ -46,6 +46,43 @@
   color: var(--text-dark);
 }
 
+.analytics-kpi {
+  border-left-color: #0284c7;
+  background-color: #f8fafc;
+}
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+  .charts-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .chart-full-width {
+    grid-column: 1 / -1;
+  }
+}
+
+.chart-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+}
+
+.chart-card h3 {
+  font-size: 1.1rem;
+  color: var(--text-dark);
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid var(--accent);
+  display: inline-block;
+  padding-bottom: 0.2rem;
+}
+
 .orders-container {
   background-color: white;
   border-radius: 12px;
