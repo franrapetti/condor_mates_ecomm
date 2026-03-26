@@ -32,35 +32,35 @@ function App() {
         <ToastProvider>
           <CartProvider>
             <WishlistProvider>
-            <Router>
-              <MetaPixel />
-              <AnalyticsWrapper />
-              <GlobalCart />
-              <Routes>
-              <Route path="/" element={<PublicCatalog />} />
-              <Route path="/producto/:id" element={<ProductDetail />} />
-              <Route path="/success" element={<CheckoutSuccess />} />
-              <Route path="/favoritos" element={<Wishlist />} />
-              <Route path="/admin/login" element={<Login />} />
-              
-              <Route path="/admin" element={
-                <ProtectedRoute>
-                  <AdminLayout />
-                </ProtectedRoute>
-              }>
-                <Route index element={<ProductsList />} />
-                <Route path="orders" element={<OrdersList />} />
-                <Route path="products/new" element={<ProductForm />} />
-                <Route path="products/:id" element={<ProductForm />} />
-              </Route>
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Router>
+              <Router>
+                <MetaPixel />
+                <AnalyticsWrapper />
+                <GlobalCart />
+                <Routes>
+                  <Route path="/" element={<PublicCatalog />} />
+                  <Route path="/producto/:id" element={<ProductDetail />} />
+                  <Route path="/success" element={<CheckoutSuccess />} />
+                  <Route path="/favoritos" element={<Wishlist />} />
+                  <Route path="/admin/login" element={<Login />} />
+                  
+                  <Route path="/admin" element={
+                    <ProtectedRoute>
+                      <AdminLayout />
+                    </ProtectedRoute>
+                  }>
+                    <Route index element={<ProductsList />} />
+                    <Route path="orders" element={<OrdersList />} />
+                    <Route path="products/new" element={<ProductForm />} />
+                    <Route path="products/:id" element={<ProductForm />} />
+                  </Route>
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Router>
             </WishlistProvider>
           </CartProvider>
         </ToastProvider>
-    </AuthProvider>
-  </HelmetProvider>
+      </AuthProvider>
+    </HelmetProvider>
   );
 }
 

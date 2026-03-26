@@ -28,6 +28,7 @@ const ProductForm = () => {
   const [formData, setFormData] = useState({
     name: '',
     price: '',
+    stock: '',
     category_raw: CATEGORIES[0],
     quick_add_upsell: false,
     image_url: '',
@@ -60,6 +61,7 @@ const ProductForm = () => {
       setFormData({
         name: data.name,
         price: data.price,
+        stock: data.stock ?? '',
         category_raw: catRaw,
         quick_add_upsell: data.quick_add_upsell,
         image_url: data.image_url || '',
@@ -127,6 +129,7 @@ const ProductForm = () => {
       const payload = {
         name: formData.name,
         price: Number(formData.price),
+        stock: formData.stock !== '' ? Number(formData.stock) : null,
         category: category,
         sub_category: subCategory,
         quick_add_upsell: formData.quick_add_upsell,
@@ -152,14 +155,14 @@ const ProductForm = () => {
   return (
     <div className="admin-page">
       <div className="admin-page-header">
-        <h1>{isEditing ? 'Edit Product' : 'Add New Product'}</h1>
-        <Link to="/admin" className="btn-secondary">Cancel</Link>
+        <h1>{isEditing ? 'Editar Producto' : 'Nuevo Producto'}</h1>
+        <Link to="/admin" className="btn-secondary">Cancelar</Link>
       </div>
 
       <div className="form-container">
         <form onSubmit={handleSubmit} className="admin-form">
           <div className="form-group">
-            <label>Product Name</label>
+            <label>Nombre del Producto</label>
             <input 
               type="text" 
               required
@@ -169,17 +172,29 @@ const ProductForm = () => {
           </div>
 
           <div className="form-group">
-            <label>Price</label>
+            <label>Precio (ARS)</label>
             <input 
               type="number" 
               required
+              min="0"
               value={formData.price}
               onChange={e => setFormData({...formData, price: e.target.value})}
             />
           </div>
 
           <div className="form-group">
-            <label>Category</label>
+            <label>Stock Disponible</label>
+            <input 
+              type="number" 
+              min="0"
+              placeholder="Ej: 10"
+              value={formData.stock}
+              onChange={e => setFormData({...formData, stock: e.target.value})}
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Categoría</label>
             <select 
               value={formData.category_raw}
               onChange={e => setFormData({...formData, category_raw: e.target.value})}
@@ -198,13 +213,13 @@ const ProductForm = () => {
                   checked={formData.quick_add_upsell}
                   onChange={e => setFormData({...formData, quick_add_upsell: e.target.checked})}
                 />
-                Enable Quick Add Upsell (Trigger Cross-sell Modal)
+                Activar Cross-sell Modal al agregar al carrito
               </label>
             </div>
           )}
 
           <div className="form-group">
-            <label>Image</label>
+            <label>Imagen Principal</label>
             <div className="image-upload-area">
               {formData.image_url && !imageFile && (
                 <img src={formData.image_url} alt="Current" className="form-thumbnail" />
@@ -214,7 +229,7 @@ const ProductForm = () => {
                 accept="image/*"
                 onChange={e => setImageFile(e.target.files[0])}
               />
-              <small>Drag & Drop supported by browser standard file input</small>
+              <small>Arrastrá o seleccioná una imagen</small>
             </div>
           </div>
 

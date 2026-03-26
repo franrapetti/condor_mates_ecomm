@@ -13,13 +13,13 @@
 }
 
 .dark-theme {
-  --primary: #4ae577;
-  --accent: #4ae577;
-  --accent-light: #234A2E;
+  --primary: #34804a; /* A pleasant, readable green for dark backgrounds */
+  --accent: #2ea655; /* Vibrant but not blinding emerald green */
+  --accent-light: #4ae577;
   --background: #121212;
   --surface: #1e1e1e;
-  --text-dark: #f0f0f0;
-  --text-light: #a0a0a0;
+  --text-dark: #f3f4f6; /* Off-white for less eye strain */
+  --text-light: #9ca3af;
   --border: #333333;
   --shadow-sm: 0 4px 12px rgba(0,0,0,0.5);
 }

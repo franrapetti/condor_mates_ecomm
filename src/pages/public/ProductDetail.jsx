@@ -2,15 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { useCart } from '../../context/CartContext';
+import { useWishlist } from '../../context/WishlistContext';
 import Header from '../../components/Header';
 import ProductCard from '../../components/ProductCard';
-import { Helmet } from 'react-helmet-async'; // Added Helmet import
+import { Helmet } from 'react-helmet-async';
 import './ProductDetail.css';
 
 function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart, cartCount, setIsCartOpen } = useCart();
+  const { toggleWishlist, isWishlisted } = useWishlist();
   
   const [product, setProduct] = useState(null);
   const [related, setRelated] = useState([]);
@@ -176,10 +178,22 @@ function ProductDetail() {
               <span>🛡️ Compra Protegida</span>
             </div>
             
-            <p className="stock-indicator">🔥 Stock Disponible - Últimas unidades</p>
-            <button className="add-to-cart-large" onClick={() => addToCart(product)}>
-              Agregar al Carrito 🛒
-            </button>
+            <div className="detail-cta-row">
+              <button 
+                className="add-to-cart-large" 
+                onClick={() => addToCart(product)}
+                disabled={product.stock === 0}
+              >
+                {product.stock === 0 ? 'Sin Stock' : 'Agregar al Carrito 🛒'}
+              </button>
+              <button 
+                className={`detail-wishlist-btn ${isWishlisted(product.id) ? 'wishlisted' : ''}`}
+                onClick={() => toggleWishlist(product)}
+                title={isWishlisted(product.id) ? 'Quitar de favoritos' : 'Guardar en favoritos'}
+              >
+                {isWishlisted(product.id) ? '❤️' : '🤍'}
+              </button>
+            </div>
             <p className="secure-checkout-text">🔒 Pagos procesados encriptados via Mercado Pago</p>
 
             {/* Calculador Andreani */}

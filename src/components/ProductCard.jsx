@@ -31,8 +31,18 @@ const ProductCard = ({ product, onAddToCart }) => {
           <h3 className="product-title">{product.name}</h3>
         </Link>
         <p className="product-price">${product.price.toLocaleString()}</p>
-        <button className="add-to-cart-btn" onClick={() => onAddToCart(product)}>
-          Agregar al Carrito
+        {product.stock !== null && product.stock !== undefined && product.stock <= 3 && product.stock > 0 && (
+          <span className="low-stock-pill">⚡ Últimas {product.stock} unidades</span>
+        )}
+        {product.stock === 0 && (
+          <span className="no-stock-pill">😔 Sin stock</span>
+        )}
+        <button
+          className="add-to-cart-btn"
+          onClick={() => onAddToCart(product)}
+          disabled={product.stock === 0}
+        >
+          {product.stock === 0 ? 'Sin Stock' : 'Agregar al Carrito'}
         </button>
       </div>
     </div>

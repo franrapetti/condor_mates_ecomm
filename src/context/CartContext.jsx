@@ -82,9 +82,18 @@ export const CartProvider = ({ children }) => {
   };
 
   const quickAdd = (product) => {
+    const existing = cartItems.find(item => item.id === product.id);
+    const currentQty = existing ? existing.quantity : 0;
+    const maxStock = product.stock ?? 999;
+
+    if (currentQty + 1 > maxStock) {
+      addToast(`Solo quedan ${maxStock} unidad${maxStock !== 1 ? 'es' : ''} de "${product.name}".`, 'error');
+      return;
+    }
+
     setCartItems(prev => {
-      const existing = prev.find(item => item.id === product.id);
-      if (existing) {
+      const ex = prev.find(item => item.id === product.id);
+      if (ex) {
         return prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
       }
       return [...prev, { ...product, quantity: 1 }];

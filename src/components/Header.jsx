@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import './Header.css';
 
 const categoryTree = [
@@ -67,6 +68,9 @@ const Header = ({ cartCount, onCartClick, onNavClick, currentCategory, isDark, t
           <button className="theme-toggle" onClick={toggleTheme} title="Cambiar Tema">
             {isDark ? '☀️' : '🌙'}
           </button>
+          <Link to="/favoritos" className="wishlist-header-btn" title="Mis Favoritos">
+            ❤️
+          </Link>
           <button className="cart-btn" onClick={onCartClick}>
             <span>🛒</span>
             {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
