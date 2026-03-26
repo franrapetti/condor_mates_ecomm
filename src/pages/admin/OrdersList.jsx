@@ -12,6 +12,8 @@ const OrdersList = () => {
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [filter, setFilter] = useState('all');
+  const [alerts, setAlerts] = useState([]);
+  const [dismissedAlerts, setDismissedAlerts] = useState([]);
 
   useEffect(() => {
     fetchData();
@@ -40,6 +42,60 @@ const OrdersList = () => {
     } finally {
       setLoading(false);
     }
+
+    // --- Fetch Alerts ---
+    const newAlerts = [];
+
+    // Alert 1: Paid orders not shipped after 24h
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const { data: pendingShip } = await supabase
+      .from('orders')
+      .select('id, customer_name, created_at')
+      .eq('status', 'paid')
+      .lt('created_at', oneDayAgo);
+
+    if (pendingShip && pendingShip.length > 0) {
+      newAlerts.push({
+        id: 'unshipped',
+        type: 'warning',
+        icon: '📦',
+        message: `Tenés ${pendingShip.length} orden${pendingShip.length > 1 ? 'es' : ''} pagada${pendingShip.length > 1 ? 's' : ''} sin enviar hace más de 24 horas.`,
+        action: () => setFilter('paid')
+      });
+    }
+
+    // Alert 2: Products with low stock
+    const { data: lowStock } = await supabase
+      .from('products')
+      .select('id, name, stock')
+      .lte('stock', 3)
+      .gt('stock', 0);
+
+    if (lowStock && lowStock.length > 0) {
+      newAlerts.push({
+        id: 'lowstock',
+        type: 'caution',
+        icon: '⚠️',
+        message: `Stock bajo: ${lowStock.map(p => `${p.name} (${p.stock} ud.)`).join(', ')}.`
+      });
+    }
+
+    // Alert 3: Products completely out of stock
+    const { data: noStock } = await supabase
+      .from('products')
+      .select('id, name')
+      .eq('stock', 0);
+
+    if (noStock && noStock.length > 0) {
+      newAlerts.push({
+        id: 'nostock',
+        type: 'danger',
+        icon: '🚨',
+        message: `Sin stock: ${noStock.map(p => p.name).join(', ')}. Estos productos siguen visibles en la tienda.`
+      });
+    }
+
+    setAlerts(newAlerts);
   };
 
   const updateOrderStatus = async (id, newStatus) => {
@@ -117,6 +173,20 @@ const OrdersList = () => {
           ↻ Sincronizar Datos
         </button>
       </div>
+
+      {/* Proactive Alert Banners */}
+      {alerts.filter(a => !dismissedAlerts.includes(a.id)).map(alert => (
+        <div key={alert.id} className={`admin-alert admin-alert--${alert.type}`}>
+          <span className="admin-alert-icon">{alert.icon}</span>
+          <p className="admin-alert-msg">{alert.message}</p>
+          <div className="admin-alert-actions">
+            {alert.action && (
+              <button className="admin-alert-act-btn" onClick={alert.action}>Ver órdenes</button>
+            )}
+            <button className="admin-alert-dismiss" onClick={() => setDismissedAlerts(prev => [...prev, alert.id])}>×</button>
+          </div>
+        </div>
+      ))}
 
       <div className="kpi-grid">
         <div className="kpi-card">
