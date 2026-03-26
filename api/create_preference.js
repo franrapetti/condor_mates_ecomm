@@ -33,6 +33,26 @@ export default async function handler(req, res) {
 
     if (dbError) throw dbError;
 
+    // 1.5 Validate stock for all items before charging (prevents overselling)
+    const productIds = items.map(i => i.id);
+    const { data: dbProducts } = await supabase
+      .from('products')
+      .select('id, name, stock')
+      .in('id', productIds);
+    
+    if (dbProducts) {
+      for (const item of items) {
+        const dbProduct = dbProducts.find(p => p.id === item.id);
+        if (dbProduct && dbProduct.stock !== null && item.quantity > dbProduct.stock) {
+          // Cancel the pending order we just created
+          await supabase.from('orders').delete().eq('id', orderData.id);
+          return res.status(400).json({ 
+            error: `Stock insuficiente para "${dbProduct.name}". Solo quedan ${dbProduct.stock} unidades disponibles.` 
+          });
+        }
+      }
+    }
+
     // 2. Crear Preferencia en Mercado Pago
     const preference = new Preference(client);
     const body = {

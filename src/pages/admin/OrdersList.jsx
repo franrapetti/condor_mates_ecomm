@@ -14,6 +14,7 @@ const OrdersList = () => {
   const [filter, setFilter] = useState('all');
   const [alerts, setAlerts] = useState([]);
   const [dismissedAlerts, setDismissedAlerts] = useState([]);
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     fetchData();
@@ -127,8 +128,13 @@ const OrdersList = () => {
   };
 
   const filteredOrders = orders.filter(o => {
-    if (filter === 'all') return true;
-    return o.status === filter;
+    const matchesFilter = filter === 'all' || o.status === filter;
+    const searchLower = search.toLowerCase();
+    const matchesSearch = !search || 
+      o.customer_name?.toLowerCase().includes(searchLower) ||
+      o.customer_city?.toLowerCase().includes(searchLower) ||
+      o.customer_email?.toLowerCase().includes(searchLower);
+    return matchesFilter && matchesSearch;
   });
 
   // Calculate Basic KPIs
@@ -268,6 +274,13 @@ const OrdersList = () => {
           <button className={filter === 'paid' ? 'active' : ''} onClick={() => setFilter('paid')}>Solo Pagadas</button>
           <button className={filter === 'pending' ? 'active' : ''} onClick={() => setFilter('pending')}>Pendientes</button>
           <button className={filter === 'shipped' ? 'active' : ''} onClick={() => setFilter('shipped')}>Enviadas</button>
+          <input
+            type="search"
+            placeholder="🔍 Buscar por nombre, ciudad o email..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="orders-search-input"
+          />
         </div>
 
         {loading ? (

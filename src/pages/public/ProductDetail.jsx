@@ -16,6 +16,7 @@ function ProductDetail() {
   const [related, setRelated] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeImage, setActiveImage] = useState('');
+  const [soldCount, setSoldCount] = useState(0);
   
   // Accordions and Shipping
   const [activeAccordion, setActiveAccordion] = useState('desc');
@@ -53,6 +54,24 @@ function ProductDetail() {
           .neq('id', data.id)
           .limit(4);
         setRelated((relatedData || []).filter(p => p.id !== data.id).slice(0, 3));
+        
+        // Fetch sold count for social proof
+        const { data: orderData } = await supabase
+          .from('orders')
+          .select('items')
+          .in('status', ['paid', 'shipped']);
+        
+        if (orderData) {
+          let count = 0;
+          orderData.forEach(order => {
+            if (order.items) {
+              order.items.forEach(item => {
+                if (item.id === data.id) count += item.quantity;
+              });
+            }
+          });
+          setSoldCount(count);
+        }
         
         // Reset state on navigation
         setShippingResult(null);
@@ -136,6 +155,19 @@ function ProductDetail() {
             {product.category === 'Mates' && <span className="category-badge">{product.sub_category}</span>}
             <h1 className="product-title-large">{product.name}</h1>
             <p className="product-price-large">${product.price.toLocaleString()}</p>
+            
+            {/* Social Proof */}
+            <div className="product-social-proof">
+              {soldCount > 0 && (
+                <span className="sold-count-badge">🔥 {soldCount} persona{soldCount > 1 ? 's' : ''} ya lo compr{soldCount > 1 ? 'aron' : 'ó'}</span>
+              )}
+              {product.stock !== null && product.stock <= 5 && product.stock > 0 && (
+                <span className="low-stock-badge">⚡ ¡Solo quedan {product.stock}!</span>
+              )}
+              {product.stock === 0 && (
+                <span className="no-stock-badge">😔 Sin stock por el momento</span>
+              )}
+            </div>
             
             {/* Trust Badges Minimal */}
             <div className="trust-badges">

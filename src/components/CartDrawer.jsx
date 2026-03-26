@@ -68,7 +68,8 @@ const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem
       if (data.id) {
         setPreferenceId(data.id);
       } else {
-        alert('Hubo un error al generar el link de pago.');
+        // Show the specific error (e.g. out of stock message from the API)
+        alert(data.error || 'Hubo un error al generar el link de pago.');
       }
     } catch (error) {
       console.error(error);
