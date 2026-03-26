@@ -3,6 +3,7 @@ import PublicCatalog from './pages/public/PublicCatalog';
 import ProductDetail from './pages/public/ProductDetail';
 import CheckoutSuccess from './pages/public/CheckoutSuccess';
 import NotFound from './pages/public/NotFound';
+import Wishlist from './pages/public/Wishlist';
 import Login from './pages/admin/Login';
 import AdminLayout from './components/admin/AdminLayout';
 import ProductsList from './pages/admin/ProductsList';
@@ -14,6 +15,7 @@ import { CartProvider } from './context/CartContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import GlobalCart from './components/GlobalCart';
 import MetaPixel from './components/MetaPixel';
+import { WishlistProvider } from './context/WishlistContext';
 import { useAnalytics } from './hooks/useAnalytics';
 import { HelmetProvider } from 'react-helmet-async';
 import './App.css';
@@ -29,6 +31,7 @@ function App() {
       <AuthProvider>
         <ToastProvider>
           <CartProvider>
+            <WishlistProvider>
             <Router>
               <MetaPixel />
               <AnalyticsWrapper />
@@ -37,6 +40,7 @@ function App() {
               <Route path="/" element={<PublicCatalog />} />
               <Route path="/producto/:id" element={<ProductDetail />} />
               <Route path="/success" element={<CheckoutSuccess />} />
+              <Route path="/favoritos" element={<Wishlist />} />
               <Route path="/admin/login" element={<Login />} />
               
               <Route path="/admin" element={
@@ -52,8 +56,9 @@ function App() {
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Router>
-        </CartProvider>
-      </ToastProvider>
+            </WishlistProvider>
+          </CartProvider>
+        </ToastProvider>
     </AuthProvider>
   </HelmetProvider>
   );

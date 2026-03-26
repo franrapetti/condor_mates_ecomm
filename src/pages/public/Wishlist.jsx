@@ -1,0 +1,68 @@
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
+import Header from '../../components/Header';
+import { useWishlist } from '../../context/WishlistContext';
+import { useCart } from '../../context/CartContext';
+import './Wishlist.css';
+
+const Wishlist = () => {
+  const { wishlist, toggleWishlist } = useWishlist();
+  const { addToCart, cartCount, setIsCartOpen } = useCart();
+
+  return (
+    <div className="public-wrapper">
+      <Helmet>
+        <title>Mis Favoritos | Cóndor Mates</title>
+      </Helmet>
+      <Header cartCount={cartCount} onCartClick={() => setIsCartOpen(true)} />
+
+      <main className="wishlist-container">
+        <div className="wishlist-header">
+          <h1>❤️ Mis Favoritos</h1>
+          <p>{wishlist.length > 0
+            ? `Tenés ${wishlist.length} producto${wishlist.length > 1 ? 's' : ''} guardado${wishlist.length > 1 ? 's' : ''}.`
+            : 'Todavía no guardaste ningún producto.'
+          }</p>
+        </div>
+
+        {wishlist.length === 0 ? (
+          <div className="wishlist-empty">
+            <span className="wishlist-empty-icon">🤍</span>
+            <p>Tocá el corazoncito en cualquier producto del catálogo para guardarlo acá.</p>
+            <Link to="/" className="btn-primary">Ver Catálogo</Link>
+          </div>
+        ) : (
+          <div className="wishlist-grid">
+            {wishlist.map(product => (
+              <div key={product.id} className="wishlist-card">
+                <button
+                  className="wishlist-remove-btn"
+                  onClick={() => toggleWishlist(product)}
+                  title="Quitar de favoritos"
+                >❤️</button>
+                <Link to={`/producto/${product.id}`}>
+                  <img src={product.image_url} alt={product.name} className="wishlist-card-img" />
+                </Link>
+                <div className="wishlist-card-info">
+                  <Link to={`/producto/${product.id}`} className="wishlist-card-name">
+                    {product.name}
+                  </Link>
+                  <p className="wishlist-card-price">${product.price.toLocaleString()}</p>
+                  <button
+                    className="wishlist-add-btn"
+                    onClick={() => addToCart(product)}
+                  >
+                    🛒 Agregar al Carrito
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </main>
+    </div>
+  );
+};
+
+export default Wishlist;
