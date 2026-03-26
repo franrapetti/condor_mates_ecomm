@@ -30,7 +30,15 @@ const ProductCard = ({ product, onAddToCart }) => {
         <Link to={`/producto/${product.id}`} style={{textDecoration: 'none', color: 'inherit'}}>
           <h3 className="product-title">{product.name}</h3>
         </Link>
-        <p className="product-price">${product.price.toLocaleString()}</p>
+        {product.promo_price ? (
+          <div className="product-price-block">
+            <span className="product-price-promo">${product.promo_price.toLocaleString()}</span>
+            <span className="product-price-original">${product.price.toLocaleString()}</span>
+            <span className="discount-badge">{Math.round((1 - product.promo_price / product.price) * 100)}% OFF</span>
+          </div>
+        ) : (
+          <p className="product-price">${product.price.toLocaleString()}</p>
+        )}
         {product.stock !== null && product.stock !== undefined && product.stock <= 3 && product.stock > 0 && (
           <span className="low-stock-pill">⚡ Últimas {product.stock} unidades</span>
         )}

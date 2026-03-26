@@ -156,7 +156,15 @@ function ProductDetail() {
           <div className="product-info">
             {product.category === 'Mates' && <span className="category-badge">{product.sub_category}</span>}
             <h1 className="product-title-large">{product.name}</h1>
-            <p className="product-price-large">${product.price.toLocaleString()}</p>
+            {product.promo_price ? (
+              <div className="product-price-block detail-price-block">
+                <span className="product-price-promo detail-price-promo">${product.promo_price.toLocaleString()}</span>
+                <span className="product-price-original">${product.price.toLocaleString()}</span>
+                <span className="discount-badge">{Math.round((1 - product.promo_price / product.price) * 100)}% OFF</span>
+              </div>
+            ) : (
+              <p className="product-price-large">${product.price.toLocaleString()}</p>
+            )}
             
             {/* Social Proof */}
             <div className="product-social-proof">

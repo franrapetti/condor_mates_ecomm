@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useDropzone } from 'react-dropzone';
 import { supabase } from '../../lib/supabaseClient';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import './AdminProducts.css';
@@ -20,6 +21,69 @@ const CATEGORIES = [
   "Termos - Houdson"
 ];
 
+/* ────────────────────────────────────────────────────────────
+   Beautiful Dropzone Component
+──────────────────────────────────────────────────────────── */
+const ImageDropzone = ({ images, onAdd, onRemove, onSetPrimary }) => {
+  const onDrop = useCallback((acceptedFiles) => {
+    const withPreviews = acceptedFiles.map(file =>
+      Object.assign(file, { preview: URL.createObjectURL(file) })
+    );
+    onAdd(withPreviews);
+  }, [onAdd]);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: { 'image/*': [] },
+    multiple: true,
+  });
+
+  return (
+    <div className="dropzone-wrapper">
+      {/* Drop area */}
+      <div
+        {...getRootProps()}
+        className={`dropzone-area ${isDragActive ? 'drag-over' : ''}`}
+      >
+        <input {...getInputProps()} />
+        <div className="dropzone-inner">
+          <div className="dropzone-icon">🖼️</div>
+          {isDragActive
+            ? <p className="dropzone-hint active">Soltá las imágenes aquí...</p>
+            : (
+              <>
+                <p className="dropzone-hint">Arrastrá imágenes o <span className="dropzone-link">elegí archivos</span></p>
+                <p className="dropzone-sub">PNG, JPG, WEBP · Podés subir varias a la vez</p>
+              </>
+            )
+          }
+        </div>
+      </div>
+
+      {/* Preview grid */}
+      {images.length > 0 && (
+        <div className="dropzone-preview-grid">
+          {images.map((img, idx) => (
+            <div key={idx} className={`dropzone-preview-item ${idx === 0 ? 'primary' : ''}`}>
+              <img src={img.preview || img.url} alt={`img-${idx}`} />
+              <div className="dropzone-preview-actions">
+                {idx !== 0 && (
+                  <button type="button" title="Establecer como principal" onClick={() => onSetPrimary(idx)}>⭐</button>
+                )}
+                <button type="button" title="Eliminar" onClick={() => onRemove(idx)}>✕</button>
+              </div>
+              {idx === 0 && <span className="dropzone-primary-badge">Principal</span>}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ────────────────────────────────────────────────────────────
+   Main Form
+──────────────────────────────────────────────────────────── */
 const ProductForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -28,95 +92,104 @@ const ProductForm = () => {
   const [formData, setFormData] = useState({
     name: '',
     price: '',
+    promo_price: '',
     stock: '',
     category_raw: CATEGORIES[0],
     quick_add_upsell: false,
-    image_url: '',
-    gallery_images: []
   });
-  
-  const [imageFile, setImageFile] = useState(null);
-  const [galleryFiles, setGalleryFiles] = useState([]);
+
+  // images: array of { preview, file } for new files OR { url } for existing URLs
+  const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState('');
 
   useEffect(() => {
-    if (isEditing) {
-      fetchProduct();
-    }
+    if (isEditing) fetchProduct();
   }, [id]);
+
+  // Clean up object URLs on unmount
+  useEffect(() => {
+    return () => images.forEach(img => img.preview && URL.revokeObjectURL(img.preview));
+  }, [images]);
 
   const fetchProduct = async () => {
     try {
       const { data, error } = await supabase.from('products').select('*').eq('id', id).single();
       if (error) throw error;
-      
+
       let catRaw = data.category;
       if (data.sub_category) {
         const expectedRaw = `${data.category} - ${data.sub_category}`;
-        if (CATEGORIES.includes(expectedRaw)) {
-          catRaw = expectedRaw;
-        }
+        if (CATEGORIES.includes(expectedRaw)) catRaw = expectedRaw;
       }
-      
+
       setFormData({
         name: data.name,
         price: data.price,
+        promo_price: data.promo_price ?? '',
         stock: data.stock ?? '',
         category_raw: catRaw,
         quick_add_upsell: data.quick_add_upsell,
-        image_url: data.image_url || '',
-        gallery_images: data.gallery_images || []
       });
+
+      // Reconstruct images array from existing URLs
+      const existing = [];
+      if (data.image_url) existing.push({ url: data.image_url });
+      (data.gallery_images || []).forEach(url => existing.push({ url }));
+      setImages(existing);
     } catch (error) {
       console.error(error);
     }
   };
 
-  const handleImageUpload = async () => {
-    if (!imageFile) return formData.image_url;
-    
-    const fileExt = imageFile.name.split('.').pop();
-    const fileName = `${Math.random()}.${fileExt}`;
-    const filePath = `products/${fileName}`;
+  /* ── Image helpers ── */
+  const handleAddImages = (newFiles) => {
+    setImages(prev => [...prev, ...newFiles.map(f => ({ preview: f.preview, file: f }))]);
+  };
 
-    const { error: uploadError } = await supabase.storage
-      .from('product-images')
-      .upload(filePath, imageFile);
+  const handleRemoveImage = (idx) => {
+    setImages(prev => {
+      const next = [...prev];
+      if (next[idx].preview) URL.revokeObjectURL(next[idx].preview);
+      next.splice(idx, 1);
+      return next;
+    });
+  };
 
-    if (uploadError) throw uploadError;
+  const handleSetPrimary = (idx) => {
+    setImages(prev => {
+      const next = [...prev];
+      const [item] = next.splice(idx, 1);
+      return [item, ...next];
+    });
+  };
 
+  const uploadImage = async (img, index) => {
+    if (!img.file) return img.url; // already uploaded, return URL
+    setUploadProgress(`Subiendo imagen ${index + 1}...`);
+    const fileExt = img.file.name.split('.').pop();
+    const filePath = `products/${Math.random().toString(36).substr(2)}.${fileExt}`;
+    const { error } = await supabase.storage.from('product-images').upload(filePath, img.file);
+    if (error) throw error;
     const { data } = supabase.storage.from('product-images').getPublicUrl(filePath);
     return data.publicUrl;
   };
 
+  /* ── Submit ── */
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (images.length === 0) return alert('Por favor agregá al menos una imagen.');
     setLoading(true);
-    
+
     try {
-      let finalImageUrl = formData.image_url;
-      if (imageFile) {
-        finalImageUrl = await handleImageUpload();
+      // Upload all images (skip already-uploaded ones)
+      const uploadedUrls = [];
+      for (let i = 0; i < images.length; i++) {
+        const url = await uploadImage(images[i], i);
+        uploadedUrls.push(url);
       }
 
-      let finalGalleryUrls = [...(formData.gallery_images || [])];
-      
-      if (galleryFiles.length > 0) {
-        for (const file of galleryFiles) {
-          const fileExt = file.name.split('.').pop();
-          const fileName = `${Math.random()}.${fileExt}`;
-          const filePath = `products/${fileName}`;
-          
-          const { error: uploadError } = await supabase.storage
-            .from('product-images')
-            .upload(filePath, file);
-            
-          if (uploadError) throw uploadError;
-          
-          const { data } = supabase.storage.from('product-images').getPublicUrl(filePath);
-          finalGalleryUrls.push(data.publicUrl);
-        }
-      }
+      const [primaryUrl, ...galleryUrls] = uploadedUrls;
 
       let category = formData.category_raw;
       let subCategory = null;
@@ -129,15 +202,17 @@ const ProductForm = () => {
       const payload = {
         name: formData.name,
         price: Number(formData.price),
+        promo_price: formData.promo_price !== '' ? Number(formData.promo_price) : null,
         stock: formData.stock !== '' ? Number(formData.stock) : null,
-        category: category,
+        category,
         sub_category: subCategory,
         quick_add_upsell: formData.quick_add_upsell,
-        image_url: finalImageUrl,
-        gallery_images: finalGalleryUrls,
-        has_free_packaging: category === 'Mates' || category === 'Materas y Yerberas' || category === 'Bombillas'
+        image_url: primaryUrl,
+        gallery_images: galleryUrls,
+        has_free_packaging: ['Mates', 'Materas y Yerberas', 'Bombillas'].includes(category),
       };
 
+      setUploadProgress('Guardando en base de datos...');
       if (isEditing) {
         await supabase.from('products').update(payload).eq('id', id);
       } else {
@@ -146,11 +221,14 @@ const ProductForm = () => {
 
       navigate('/admin');
     } catch (error) {
-      alert('Error saving product: ' + error.message);
+      alert('Error al guardar: ' + error.message);
     } finally {
       setLoading(false);
+      setUploadProgress('');
     }
   };
+
+  const set = (key, val) => setFormData(prev => ({ ...prev, [key]: val }));
 
   return (
     <div className="admin-page">
@@ -161,43 +239,69 @@ const ProductForm = () => {
 
       <div className="form-container">
         <form onSubmit={handleSubmit} className="admin-form">
+
+          {/* ── Nombre ── */}
           <div className="form-group">
             <label>Nombre del Producto</label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               required
               value={formData.name}
-              onChange={e => setFormData({...formData, name: e.target.value})}
+              onChange={e => set('name', e.target.value)}
+              placeholder="Ej: Mate Torpedo Premium"
             />
           </div>
 
-          <div className="form-group">
-            <label>Precio (ARS)</label>
-            <input 
-              type="number" 
-              required
-              min="0"
-              value={formData.price}
-              onChange={e => setFormData({...formData, price: e.target.value})}
-            />
+          {/* ── Precios ── */}
+          <div className="form-row">
+            <div className="form-group">
+              <label>Precio Regular (ARS)</label>
+              <input
+                type="number"
+                required
+                min="0"
+                value={formData.price}
+                onChange={e => set('price', e.target.value)}
+                placeholder="Ej: 12000"
+              />
+            </div>
+            <div className="form-group">
+              <label>
+                Precio Promocional <span className="form-label-hint">(Opcional)</span>
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={formData.promo_price}
+                onChange={e => set('promo_price', e.target.value)}
+                placeholder="Ej: 9500"
+              />
+              {formData.promo_price && formData.price && Number(formData.promo_price) < Number(formData.price) && (
+                <small className="form-hint-success">
+                  {Math.round((1 - formData.promo_price / formData.price) * 100)}% de descuento ✓
+                </small>
+              )}
+            </div>
           </div>
 
+          {/* ── Stock ── */}
           <div className="form-group">
             <label>Stock Disponible</label>
-            <input 
-              type="number" 
+            <input
+              type="number"
               min="0"
-              placeholder="Ej: 10"
               value={formData.stock}
-              onChange={e => setFormData({...formData, stock: e.target.value})}
+              onChange={e => set('stock', e.target.value)}
+              placeholder="Ej: 10"
             />
           </div>
 
+          {/* ── Categoría ── */}
           <div className="form-group">
             <label>Categoría</label>
-            <select 
+            <select
               value={formData.category_raw}
-              onChange={e => setFormData({...formData, category_raw: e.target.value})}
+              onChange={e => set('category_raw', e.target.value)}
             >
               {CATEGORIES.map(cat => (
                 <option key={cat} value={cat}>{cat}</option>
@@ -205,58 +309,43 @@ const ProductForm = () => {
             </select>
           </div>
 
+          {/* ── Cross-sell toggle ── */}
           {formData.category_raw.startsWith('Mates') && (
             <div className="form-group toggle-group">
-              <label>
-                <input 
-                  type="checkbox" 
+              <label className="toggle-label">
+                <input
+                  type="checkbox"
                   checked={formData.quick_add_upsell}
-                  onChange={e => setFormData({...formData, quick_add_upsell: e.target.checked})}
+                  onChange={e => set('quick_add_upsell', e.target.checked)}
                 />
-                Activar Cross-sell Modal al agregar al carrito
+                <span>Activar Cross-sell Modal al agregar al carrito</span>
               </label>
             </div>
           )}
 
+          {/* ── Images ── */}
           <div className="form-group">
-            <label>Imagen Principal</label>
-            <div className="image-upload-area">
-              {formData.image_url && !imageFile && (
-                <img src={formData.image_url} alt="Current" className="form-thumbnail" />
-              )}
-              <input 
-                type="file" 
-                accept="image/*"
-                onChange={e => setImageFile(e.target.files[0])}
-              />
-              <small>Arrastrá o seleccioná una imagen</small>
-            </div>
+            <label>
+              Imágenes del Producto
+              <span className="form-label-hint"> · La primera es la imagen principal</span>
+            </label>
+            <ImageDropzone
+              images={images}
+              onAdd={handleAddImages}
+              onRemove={handleRemoveImage}
+              onSetPrimary={handleSetPrimary}
+            />
           </div>
 
-          <div className="form-group">
-            <label>Galería Múltiple (Opcional)</label>
-            <div className="image-upload-area">
-              {formData.gallery_images && formData.gallery_images.length > 0 && (
-                <div style={{display:'flex', gap:'10px', marginBottom:'10px'}}>
-                  {formData.gallery_images.map((img, i) => (
-                    <img key={i} src={img} alt="Gallery" className="form-thumbnail" style={{width:'40px', height:'40px', borderRadius:'4px'}} />
-                  ))}
-                  <button type="button" onClick={() => setFormData({...formData, gallery_images: []})} style={{fontSize:'0.8rem', padding:'0 5px'}}>Eliminar Antiguas</button>
-                </div>
-              )}
-              <input 
-                type="file" 
-                accept="image/*"
-                multiple
-                onChange={e => setGalleryFiles(Array.from(e.target.files))}
-              />
-              <small>Sube 1 o más imágenes extra para la tarjeta del producto</small>
-            </div>
-          </div>
-
-          <button type="submit" className="btn-primary" disabled={loading}>
-            {loading ? 'Guardando...' : 'Guardar Producto'}
+          {/* ── Submit ── */}
+          <button type="submit" className="btn-primary btn-submit" disabled={loading}>
+            {loading ? (
+              <span>{uploadProgress || 'Guardando...'}</span>
+            ) : (
+              <span>{isEditing ? '✓ Guardar Cambios' : '+ Crear Producto'}</span>
+            )}
           </button>
+
         </form>
       </div>
     </div>

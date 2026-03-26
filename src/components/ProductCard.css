@@ -60,7 +60,38 @@
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--accent);
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.product-price-block {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+.product-price-promo {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #e53935;
+}
+
+.product-price-original {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-light);
+  text-decoration: line-through;
+}
+
+.discount-badge {
+  background: #e53935;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 10px;
+  letter-spacing: 0.03em;
 }
 
 .add-to-cart-btn {
