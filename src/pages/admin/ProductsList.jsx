@@ -22,14 +22,14 @@ const ProductsList = () => {
       if (error) throw error;
       setProducts(data || []);
     } catch (error) {
-      console.error('Error fetching products:', error.message);
+      console.error('Error al obtener productos:', error.message);
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('¿Seguro que deseas eliminar este producto?')) return;
+    if (!window.confirm('¿Estás seguro que querés eliminar este producto?')) return;
     
     try {
       const { error } = await supabase.from('products').delete().eq('id', id);
@@ -40,28 +40,35 @@ const ProductsList = () => {
     }
   };
 
+  const getStockBadge = (stock) => {
+    if (stock === 0) return <span style={{background:'#fee2e2',color:'#dc2626',padding:'2px 8px',borderRadius:'10px',fontSize:'0.78rem',fontWeight:700}}>Sin stock</span>;
+    if (stock <= 3) return <span style={{background:'#fff7ed',color:'#c2410c',padding:'2px 8px',borderRadius:'10px',fontSize:'0.78rem',fontWeight:700}}>{stock} ud. ⚠️</span>;
+    return <span style={{background:'#e6fced',color:'#008a3d',padding:'2px 8px',borderRadius:'10px',fontSize:'0.78rem',fontWeight:700}}>{stock} ud.</span>;
+  };
+
   return (
     <div className="admin-page">
       <div className="admin-page-header">
-        <h1>Products</h1>
-        <Link to="/admin/products/new" className="btn-primary">Add New Product</Link>
+        <h1>Catálogo de Productos</h1>
+        <Link to="/admin/products/new" className="btn-primary">+ Nuevo Producto</Link>
       </div>
 
       <div className="table-container">
         {loading ? (
-          <p>Loading products...</p>
+          <p>Cargando productos...</p>
         ) : products.length === 0 ? (
-          <p>No products found. Start by adding one!</p>
+          <p>No hay productos. ¡Empezá agregando uno!</p>
         ) : (
           <table className="data-table">
             <thead>
               <tr>
-                <th>Image</th>
-                <th>Title</th>
-                <th>Category</th>
-                <th>Price</th>
+                <th>Imagen</th>
+                <th>Nombre</th>
+                <th>Categoría</th>
+                <th>Precio</th>
+                <th>Stock</th>
                 <th>Upsell</th>
-                <th>Actions</th>
+                <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -70,17 +77,18 @@ const ProductsList = () => {
                   <td>
                     <img src={product.image_url} alt={product.name} className="table-thumbnail" />
                   </td>
-                  <td>{product.name}</td>
+                  <td style={{fontWeight: 600}}>{product.name}</td>
                   <td>
                     <span className="badge">{product.category}</span>
                     {product.sub_category && <span className="badge-outline">{product.sub_category}</span>}
                   </td>
-                  <td>${product.price?.toLocaleString()}</td>
-                  <td>{product.quick_add_upsell ? '✅' : '-'}</td>
+                  <td style={{fontWeight: 700}}>${product.price?.toLocaleString()}</td>
+                  <td>{getStockBadge(product.stock ?? 0)}</td>
+                  <td>{product.quick_add_upsell ? '✅' : '—'}</td>
                   <td>
                     <div className="action-buttons">
-                      <Link to={`/admin/products/${product.id}`} className="btn-icon">Edit</Link>
-                      <button onClick={() => handleDelete(product.id)} className="btn-icon text-danger">Delete</button>
+                      <Link to={`/admin/products/${product.id}`} className="btn-icon">Editar</Link>
+                      <button onClick={() => handleDelete(product.id)} className="btn-icon text-danger">Eliminar</button>
                     </div>
                   </td>
                 </tr>

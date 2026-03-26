@@ -33,18 +33,30 @@ export const CartProvider = ({ children }) => {
   const addToCart = (product, quantity = 1) => {
     setCartItems(prev => {
       const existing = prev.find(item => item.id === product.id);
+      const currentQty = existing ? existing.quantity : 0;
+      const maxStock = product.stock ?? 999; // fallback if no stock field
+      
+      if (currentQty + quantity > maxStock) {
+        addToast(`Solo quedan ${maxStock} unidad${maxStock !== 1 ? 'es' : ''} de "${product.name}".`, 'error');
+        return prev; // don't change the cart
+      }
+      
       if (existing) {
         return prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + quantity } : item);
       }
       return [...prev, { ...product, quantity }];
     });
     
-    addToast(`¡${product.name} agregado al carrito!`, 'success');
-
-    if (product.category === 'Mates' && product.quick_add_upsell && crossSells.length > 0) {
-      setIsCrossSellOpen(true);
-    } else {
-      setIsCartOpen(true);
+    const maxStock = product.stock ?? 999;
+    const existing = cartItems.find(item => item.id === product.id);
+    const currentQty = existing ? existing.quantity : 0;
+    if (currentQty + quantity <= maxStock) {
+      addToast(`¡${product.name} agregado al carrito!`, 'success');
+      if (product.category === 'Mates' && product.quick_add_upsell && crossSells.length > 0) {
+        setIsCrossSellOpen(true);
+      } else {
+        setIsCartOpen(true);
+      }
     }
   };
 
@@ -53,7 +65,15 @@ export const CartProvider = ({ children }) => {
       removeItem(id);
       return;
     }
-    setCartItems(prev => prev.map(item => item.id === id ? { ...item, quantity } : item));
+    setCartItems(prev => prev.map(item => {
+      if (item.id !== id) return item;
+      const maxStock = item.stock ?? 999;
+      if (quantity > maxStock) {
+        addToast(`Stock máximo alcanzado: ${maxStock} unidades.`, 'error');
+        return item; // don't update
+      }
+      return { ...item, quantity };
+    }));
   };
 
   const removeItem = (id) => {
