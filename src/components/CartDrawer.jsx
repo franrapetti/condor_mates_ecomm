@@ -16,8 +16,8 @@ const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem
     return acc + (itemPrice * item.quantity);
   }, 0);
 
-  // Free shipping threshold
-  const FREE_SHIPPING_THRESHOLD = 60000;
+  // Free shipping threshold (Protective margin threshold)
+  const FREE_SHIPPING_THRESHOLD = 120000;
   const progressPercent = Math.min((total / FREE_SHIPPING_THRESHOLD) * 100, 100);
   const remainingForFreeShipping = FREE_SHIPPING_THRESHOLD - total;
   

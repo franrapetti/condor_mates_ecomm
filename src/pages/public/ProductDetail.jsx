@@ -20,6 +20,14 @@ function ProductDetail() {
   const [activeImage, setActiveImage] = useState('');
   const [soldCount, setSoldCount] = useState(0);
   
+  // Reviews state
+  const [reviews, setReviews] = useState([]);
+  const [newReview, setNewReview] = useState({ user_name: '', rating: 5, comment: '' });
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  
+  // Bundling state
+  const [bundleAddon, setBundleAddon] = useState(null);
+
   // Accordions and Shipping
   const [activeAccordion, setActiveAccordion] = useState('desc');
   const [postalCode, setPostalCode] = useState('');
@@ -49,7 +57,31 @@ function ProductDetail() {
         setProduct(data);
         setActiveImage(data.image_url);
 
-        // Fetch related products
+        // ── Fetch Reviews ──
+        // Fail gracefully if table doesn't exist yet
+        try {
+          const { data: revs } = await supabase.from('reviews').select('*').eq('product_id', id).order('created_at', { ascending: false });
+          if (revs) setReviews(revs);
+        } catch (e) {
+          console.warn('Reviews table might not be set up yet.');
+        }
+
+        // ── Fetch Related / Bundle ──
+        // For bundling: if it's a Mate, try suggesting a Termo or Bombilla
+        let addonCat = data.category;
+        if (data.category === 'Mates') addonCat = 'Termos - Termolar'; // Ex: suggest a Termo
+        
+        const { data: addonData, error: addonErr } = await supabase.from('products')
+          .select('*')
+          .ilike('category', addonCat === 'Mates' ? '%Termos%' : '%Mates%')
+          .limit(1);
+
+        if (addonData && addonData.length > 0 && data.category === 'Mates') {
+          setBundleAddon(addonData[0]);
+        } else {
+          setBundleAddon(null);
+        }
+
         const { data: relatedData } = await supabase.from('products')
           .select('*')
           .eq('category', data.category)
@@ -103,10 +135,42 @@ function ProductDetail() {
     }, 600);
   };
 
+  const handleSubmitReview = async (e) => {
+    e.preventDefault();
+    if (!newReview.user_name || !newReview.rating) return;
+    setIsSubmittingReview(true);
+    try {
+      const { data, error } = await supabase.from('reviews').insert([{
+        product_id: product.id,
+        user_name: newReview.user_name,
+        rating: newReview.rating,
+        comment: newReview.comment
+      }]).select();
+      
+      if (error) throw error;
+      setReviews(prev => [data[0], ...prev]);
+      setNewReview({ user_name: '', rating: 5, comment: '' });
+      alert('¡Gracias por tu reseña!');
+    } catch (err) {
+      alert('Ocurrió un error al enviar la reseña. Verificá que la tabla SQL esté creada.');
+    } finally {
+      setIsSubmittingReview(false);
+    }
+  };
+
+  const handleBundleAdd = () => {
+    addToCart(product);
+    if (bundleAddon) addToCart(bundleAddon);
+    setIsCartOpen(true);
+  };
+
   if (loading) return <div className="container main-content"><p>Cargando producto...</p></div>;
   if (!product) return null;
 
   const gallery = [product.image_url, ...(product.gallery_images || [])].filter(Boolean);
+  
+  const reviewCount = reviews.length;
+  const ratingAvg = reviewCount > 0 ? (reviews.reduce((a, b) => a + b.rating, 0) / reviewCount).toFixed(1) : 0;
 
   return (
     <>
@@ -156,6 +220,15 @@ function ProductDetail() {
           <div className="product-info">
             {product.category === 'Mates' && <span className="category-badge">{product.sub_category}</span>}
             <h1 className="product-title-large">{product.name}</h1>
+            
+            {/* Reviews Summary */}
+            {reviewCount > 0 && (
+              <div className="product-rating-summary" onClick={() => document.getElementById('reviews-section').scrollIntoView({behavior: 'smooth'})} style={{cursor: 'pointer'}}>
+                <span className="stars">{'★'.repeat(Math.round(ratingAvg))}{'☆'.repeat(5 - Math.round(ratingAvg))}</span>
+                <span className="rating-text">{ratingAvg} ({reviewCount} reseñas)</span>
+              </div>
+            )}
+            
             {product.promo_price ? (
               <div className="product-price-block detail-price-block">
                 <span className="product-price-promo detail-price-promo">${product.promo_price.toLocaleString()}</span>
@@ -167,7 +240,7 @@ function ProductDetail() {
             )}
 
             <p className="installments-text" style={{marginTop: '-0.5rem', marginBottom: '1.5rem', fontSize: '0.95rem', color: 'var(--text-dark)'}}>
-              💳 3 cuotas sin interés de <strong>${Math.round((product.promo_price || product.price) / 3).toLocaleString()}</strong>
+              💸 <strong>10% de descuento</strong> abonando por Transferencia o Depósito
             </p>
             
             {/* Social Proof */}
@@ -274,7 +347,93 @@ function ProductDetail() {
                 </div>
               )}
             </div>
+
+            {/* Armá tu Kit Section (Upselling) */}
+            {bundleAddon && (
+              <div className="bundle-section fade-in">
+                <h3>🛍️ Armá tu Kit Perfecto</h3>
+                <p className="bundle-desc">Agregá ambos productos y completá tu experiencia matera original.</p>
+                <div className="bundle-items">
+                  <div className="bundle-item main">
+                    <img src={product.image_url} alt="Mate" />
+                  </div>
+                  <span className="bundle-plus">+</span>
+                  <div className="bundle-item addon">
+                    <img src={bundleAddon.image_url} alt="Accesorio" />
+                    <div className="bundle-addon-info">
+                      <strong>{bundleAddon.name}</strong>
+                      <span>${(bundleAddon.promo_price || bundleAddon.price).toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+                <button className="add-bundle-btn" onClick={handleBundleAdd}>
+                  Sumar Combo al Carrito 🚀
+                </button>
+              </div>
+            )}
             
+          </div>
+        </div>
+
+        {/* Reviews Section */}
+        <div id="reviews-section" className="reviews-wrapper fade-in">
+          <div className="reviews-header">
+            <h2>Reseñas de Clientes</h2>
+            <div className="reviews-rating-big">
+              {reviewCount > 0 ? (
+                <>
+                  <span className="big-score">{ratingAvg}</span>
+                  <div className="big-stars">
+                    {'★'.repeat(Math.round(ratingAvg))}{'☆'.repeat(5 - Math.round(ratingAvg))}
+                    <span>basado en {reviewCount} opiniones</span>
+                  </div>
+                </>
+              ) : (
+                <p>Se el primero en dejar una reseña sobre este producto.</p>
+              )}
+            </div>
+          </div>
+
+          <div className="reviews-content">
+            <div className="reviews-form-container">
+              <h3>Dejar una Reseña</h3>
+              <form onSubmit={handleSubmitReview} className="review-form">
+                <div className="form-group">
+                  <label>Tu Nombre</label>
+                  <input type="text" required value={newReview.user_name} onChange={e => setNewReview({...newReview, user_name: e.target.value})} placeholder="Ej: Lucas M." />
+                </div>
+                <div className="form-group">
+                  <label>Calificación (1 a 5)</label>
+                  <select value={newReview.rating} onChange={e => setNewReview({...newReview, rating: Number(e.target.value)})}>
+                    <option value={5}>⭐⭐⭐⭐⭐ (Excelente)</option>
+                    <option value={4}>⭐⭐⭐⭐ (Muy Bueno)</option>
+                    <option value={3}>⭐⭐⭐ (Bueno)</option>
+                    <option value={2}>⭐⭐ (Regular)</option>
+                    <option value={1}>⭐ (Malo)</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Comentario (Opcional)</label>
+                  <textarea rows="3" value={newReview.comment} onChange={e => setNewReview({...newReview, comment: e.target.value})} placeholder="Contanos qué te pareció el producto..." />
+                </div>
+                <button type="submit" disabled={isSubmittingReview}>
+                  {isSubmittingReview ? 'Enviando...' : 'Publicar Reseña'}
+                </button>
+              </form>
+            </div>
+
+            <div className="reviews-list">
+              {reviews.map(rev => (
+                <div key={rev.id} className="review-card">
+                  <div className="review-card-header">
+                    <strong>{rev.user_name}</strong>
+                    <span className="stars">{'★'.repeat(rev.rating)}{'☆'.repeat(5 - rev.rating)}</span>
+                  </div>
+                  <span className="review-date">{new Date(rev.created_at).toLocaleDateString()}</span>
+                  {rev.comment && <p className="review-comment">{rev.comment}</p>}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
