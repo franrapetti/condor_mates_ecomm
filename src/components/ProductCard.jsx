@@ -39,6 +39,10 @@ const ProductCard = ({ product, onAddToCart }) => {
         ) : (
           <p className="product-price">${product.price.toLocaleString()}</p>
         )}
+        
+        <p className="installments-card-text" style={{fontSize: '0.8rem', color: 'var(--text-dark)', marginTop: '-0.25rem', marginBottom: '0.75rem'}}>
+          💳 3 cuotas s/i de <strong>${Math.round((product.promo_price || product.price) / 3).toLocaleString()}</strong>
+        </p>
         {product.stock !== null && product.stock !== undefined && product.stock <= 3 && product.stock > 0 && (
           <span className="low-stock-pill">⚡ Últimas {product.stock} unidades</span>
         )}

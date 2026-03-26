@@ -165,6 +165,10 @@ function ProductDetail() {
             ) : (
               <p className="product-price-large">${product.price.toLocaleString()}</p>
             )}
+
+            <p className="installments-text" style={{marginTop: '-0.5rem', marginBottom: '1.5rem', fontSize: '0.95rem', color: 'var(--text-dark)'}}>
+              💳 3 cuotas sin interés de <strong>${Math.round((product.promo_price || product.price) / 3).toLocaleString()}</strong>
+            </p>
             
             {/* Social Proof */}
             <div className="product-social-proof">

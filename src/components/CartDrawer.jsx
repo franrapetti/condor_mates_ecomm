@@ -11,7 +11,15 @@ const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem
   const [preferenceId, setPreferenceId] = useState(null);
   const [isPaying, setIsPaying] = useState(false);
 
-  const total = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+  const total = cartItems.reduce((acc, item) => {
+    const itemPrice = item.promo_price || item.price;
+    return acc + (itemPrice * item.quantity);
+  }, 0);
+
+  // Free shipping threshold
+  const FREE_SHIPPING_THRESHOLD = 60000;
+  const progressPercent = Math.min((total / FREE_SHIPPING_THRESHOLD) * 100, 100);
+  const remainingForFreeShipping = FREE_SHIPPING_THRESHOLD - total;
   
   const handleClose = () => {
     setIsCheckout(false);
@@ -88,6 +96,27 @@ const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem
           <button className="close-btn" onClick={handleClose}>×</button>
         </div>
 
+        {/* Free Shipping Progress Bar */}
+        {cartItems.length > 0 && !isCheckout && (
+          <div className="shipping-progress-container">
+            {remainingForFreeShipping > 0 ? (
+              <p className="shipping-progress-text">
+                Agregá <strong>${remainingForFreeShipping.toLocaleString()}</strong> más para <strong>Envío Gratis</strong> 📦
+              </p>
+            ) : (
+              <p className="shipping-progress-text success">
+                ¡Tenés <strong>Envío Gratis</strong> a todo el país! 🎉
+              </p>
+            )}
+            <div className="shipping-progress-bar">
+              <div 
+                className={`shipping-progress-fill ${progressPercent === 100 ? 'success' : ''}`} 
+                style={{ width: `${progressPercent}%` }}
+              ></div>
+            </div>
+          </div>
+        )}
+
         {cartItems.length === 0 ? (
           <div className="cart-empty">
             <span className="emoji-huge">🛒</span>
@@ -125,11 +154,20 @@ const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem
                 {!preferenceId ? (
                   <>
                     <button type="submit" onClick={() => setSubmitAction('mp')} className="whatsapp-btn mp-btn" disabled={isPaying} style={{backgroundColor: '#009ee3'}}>
-                      {isPaying ? 'Conectando Seguro...' : '💳 Pagar con Mercado Pago'}
+                      {isPaying ? 'Conectando Seguro...' : '💳 Pagar Seguro con Mercado Pago'}
                     </button>
-                    <button type="submit" onClick={() => setSubmitAction('whatsapp')} className="whatsapp-btn" disabled={isPaying} style={{marginTop: '-0.5rem'}}>
-                      💬 Acordar por WhatsApp
+                    <button type="submit" onClick={() => setSubmitAction('whatsapp')} className="whatsapp-btn " disabled={isPaying} style={{marginTop: '-0.5rem', backgroundColor: '#25D366', color: 'white', border: 'none'}}>
+                      💬 Acordar con Vendedor
                     </button>
+                    
+                    <div className="trust-badges-container">
+                      <div className="trust-logos">
+                        <img src="https://logospng.org/download/mercado-pago/logo-mercado-pago-icono-256.png" alt="Mercado Pago" title="MercadoPago" />
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/4/41/Visa_Logo.png" alt="Visa" title="Visa" />
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/b/b7/MasterCard_Logo.svg" alt="Mastercard" title="Mastercard" />
+                      </div>
+                      <p className="trust-text">🔒 PAGO 100% SEGURO Y CIFRADO</p>
+                    </div>
                   </>
                 ) : (
                   <div className="mp-wallet-container">
@@ -147,7 +185,7 @@ const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem
                   <img src={item.image_url} alt={item.name} className="cart-item-image" />
                   <div className="cart-item-details">
                     <h4>{item.name}</h4>
-                    <p className="cart-item-price">${item.price.toLocaleString()}</p>
+                    <p className="cart-item-price">${(item.promo_price || item.price).toLocaleString()}</p>
                     <div className="quantity-controls">
                       <button onClick={() => onUpdateQuantity(item.id, item.quantity - 1)}>-</button>
                       <span>{item.quantity}</span>

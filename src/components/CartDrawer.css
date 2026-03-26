@@ -3,7 +3,7 @@
   top: 0;
   left: 0;
   width: 100vw;
-  height: 100vh;
+  height: 100dvh;
   background-color: rgba(0, 0, 0, 0.5);
   opacity: 0;
   visibility: hidden;
@@ -22,7 +22,7 @@
   right: -400px;
   width: 100%;
   max-width: 400px;
-  height: 100vh;
+  height: 100dvh;
   background-color: var(--surface);
   box-shadow: var(--shadow-lg);
   display: flex;
@@ -145,6 +145,7 @@
 
 .cart-footer {
   padding: 1.5rem;
+  padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 20px));
   border-top: 1px solid var(--border);
   background-color: #fafafa;
 }
@@ -178,6 +179,7 @@
 /* Checkout Form Styles */
 .checkout-form-container {
   padding: 1.5rem;
+  padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 20px));
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -235,3 +237,70 @@
   padding-top: 1rem;
   border-top: 2px dashed var(--border);
 }
+
+/* Shipping Progress Bar */
+.shipping-progress-container {
+  padding: 1rem 1.5rem;
+  background-color: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.shipping-progress-text {
+  font-size: 0.85rem;
+  color: var(--text-dark);
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.shipping-progress-text.success {
+  color: #16a34a;
+}
+
+.shipping-progress-bar {
+  height: 6px;
+  background-color: var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.shipping-progress-fill {
+  height: 100%;
+  background-color: var(--accent);
+  transition: width 0.3s ease;
+}
+
+.shipping-progress-fill.success {
+  background-color: #16a34a;
+}
+
+/* Trust Badges */
+.trust-badges-container {
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.trust-logos {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.trust-logos img {
+  height: 20px;
+  opacity: 0.7;
+  filter: grayscale(100%);
+  transition: all 0.2s;
+}
+
+.trust-logos img:hover {
+  opacity: 1;
+  filter: grayscale(0%);
+}
+
+.trust-text {
+  font-size: 0.7rem;
+  color: var(--text-light);
+  font-weight: 700;
+}
+
