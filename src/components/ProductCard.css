@@ -173,3 +173,43 @@
   opacity: 0.7;
 }
 
+@media (max-width: 768px) {
+  .product-info {
+    padding: 0.75rem;
+  }
+  .product-title {
+    font-size: 0.85rem;
+    line-height: 1.2;
+    margin-bottom: 0.35rem;
+  }
+  .product-price {
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+  }
+  .product-price-promo {
+    font-size: 1rem;
+  }
+  .product-price-original {
+    font-size: 0.8rem;
+  }
+  .discount-badge {
+    font-size: 0.65rem;
+    padding: 1px 5px;
+  }
+  .add-to-cart-btn {
+    padding: 0.5rem;
+    font-size: 0.8rem;
+  }
+  .packaging-badge {
+    font-size: 0.6rem;
+    padding: 2px 6px;
+  }
+  .wishlist-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 0.9rem;
+    top: 6px;
+    left: 6px;
+  }
+}
+
