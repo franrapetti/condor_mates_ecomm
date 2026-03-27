@@ -14,6 +14,7 @@ import { ToastProvider } from './context/ToastContext';
 import { CartProvider } from './context/CartContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import GlobalCart from './components/GlobalCart';
+import ExitIntentPopup from './components/ExitIntentPopup';
 import MetaPixel from './components/MetaPixel';
 import { WishlistProvider } from './context/WishlistContext';
 import { useAnalytics } from './hooks/useAnalytics';
@@ -36,6 +37,7 @@ function App() {
                 <MetaPixel />
                 <AnalyticsWrapper />
                 <GlobalCart />
+                <ExitIntentPopup />
                 <Routes>
                   <Route path="/" element={<PublicCatalog />} />
                   <Route path="/producto/:id" element={<ProductDetail />} />
