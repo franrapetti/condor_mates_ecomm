@@ -3,7 +3,7 @@
 -- 1. Crear la tabla de reviews
 CREATE TABLE IF NOT EXISTS public.reviews (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    product_id UUID REFERENCES public.products(id) ON DELETE CASCADE,
+    product_id BIGINT REFERENCES public.products(id) ON DELETE CASCADE,
     user_name TEXT NOT NULL,
     rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
     comment TEXT,
