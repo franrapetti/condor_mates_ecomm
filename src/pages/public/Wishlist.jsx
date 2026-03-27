@@ -4,6 +4,7 @@ import { Helmet } from 'react-helmet-async';
 import Header from '../../components/Header';
 import { useWishlist } from '../../context/WishlistContext';
 import { useCart } from '../../context/CartContext';
+import { Heart, Trash2 } from 'lucide-react';
 import './Wishlist.css';
 
 const Wishlist = () => {
@@ -27,8 +28,8 @@ const Wishlist = () => {
         </div>
 
         {wishlist.length === 0 ? (
-          <div className="wishlist-empty">
-            <span className="wishlist-empty-icon">🤍</span>
+          <div className="empty-wishlist">
+            <Heart size={64} color="var(--border)" strokeWidth={1} style={{marginBottom: '1rem'}} />
             <p>Tocá el corazoncito en cualquier producto del catálogo para guardarlo acá.</p>
             <Link to="/" className="btn-primary">Ver Catálogo</Link>
           </div>
@@ -36,11 +37,13 @@ const Wishlist = () => {
           <div className="wishlist-grid">
             {wishlist.map(product => (
               <div key={product.id} className="wishlist-card">
-                <button
-                  className="wishlist-remove-btn"
-                  onClick={() => toggleWishlist(product)}
-                  title="Quitar de favoritos"
-                >❤️</button>
+                  <button
+                    className="remove-wishlist-btn"
+                    onClick={() => toggleWishlist(product)}
+                    title="Quitar de favoritos"
+                  >
+                    <Trash2 size={20} />
+                  </button>
                 <Link to={`/producto/${product.id}`}>
                   <img src={product.image_url} alt={product.name} className="wishlist-card-img" />
                 </Link>

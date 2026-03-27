@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useWishlist } from '../context/WishlistContext';
+import { Heart } from 'lucide-react';
 import './ProductCard.css';
 
 const ProductCard = ({ product, onAddToCart }) => {
@@ -22,8 +23,9 @@ const ProductCard = ({ product, onAddToCart }) => {
           }}
           title={wishlisted ? 'Quitar de favoritos' : 'Guardar en favoritos'}
           aria-label="Toggle favorito"
+          style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}
         >
-          {wishlisted ? '❤️' : '🤍'}
+          {wishlisted ? <Heart size={18} fill="currentColor" strokeWidth={1.5} /> : <Heart size={18} strokeWidth={1.5} />}
         </button>
       </div>
       <div className="product-info">

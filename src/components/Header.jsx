@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { Moon, Sun, Heart, ShoppingBag } from 'lucide-react';
 import './Header.css';
 
 const categoryTree = [
@@ -65,14 +66,14 @@ const Header = ({ cartCount, onCartClick, onNavClick, currentCategory, isDark, t
           </ul>
         </nav>
         <div className="header-actions">
-          <button className="theme-toggle" onClick={toggleTheme} title="Cambiar Tema">
-            {isDark ? '☀️' : '🌙'}
+          <button className="theme-toggle" onClick={toggleTheme} title="Cambiar Tema" style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+            {isDark ? <Sun size={20} strokeWidth={1.5} /> : <Moon size={20} strokeWidth={1.5} />}
           </button>
-          <Link to="/favoritos" className="wishlist-header-btn" title="Mis Favoritos">
-            ❤️
+          <Link to="/favoritos" className="wishlist-header-btn" title="Mis Favoritos" style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+            <Heart size={20} strokeWidth={1.5} />
           </Link>
-          <button className="cart-btn" onClick={onCartClick}>
-            <span>🛒</span>
+          <button className="cart-btn" onClick={onCartClick} style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+            <ShoppingBag size={20} strokeWidth={1.5} />
             {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
           </button>
         </div>

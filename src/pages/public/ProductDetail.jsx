@@ -6,6 +6,7 @@ import { useWishlist } from '../../context/WishlistContext';
 import Header from '../../components/Header';
 import ProductCard from '../../components/ProductCard';
 import { Helmet } from 'react-helmet-async';
+import { Heart, ShoppingBag } from 'lucide-react';
 import './ProductDetail.css';
 
 function ProductDetail() {
@@ -275,8 +276,10 @@ function ProductDetail() {
                 className={`detail-wishlist-btn ${isWishlisted(product.id) ? 'wishlisted' : ''}`}
                 onClick={() => toggleWishlist(product)}
                 title={isWishlisted(product.id) ? 'Quitar de favoritos' : 'Guardar en favoritos'}
+                style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'}}
               >
-                {isWishlisted(product.id) ? '❤️' : '🤍'}
+                <Heart size={20} fill={isWishlisted(product.id) ? "currentColor" : "none"} strokeWidth={1.5} /> 
+                {isWishlisted(product.id) ? 'Quitar de Favoritos' : 'Guardar en Favoritos'}
               </button>
             </div>
             <p className="secure-checkout-text">🔒 Pagos procesados encriptados via Mercado Pago</p>
@@ -351,7 +354,9 @@ function ProductDetail() {
             {/* Armá tu Kit Section (Upselling) */}
             {bundleAddon && (
               <div className="bundle-section fade-in">
-                <h3>🛍️ Armá tu Kit Perfecto</h3>
+                <h3 style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                  <ShoppingBag size={22} strokeWidth={1.5} /> Armá tu Kit Perfecto
+                </h3>
                 <p className="bundle-desc">Agregá ambos productos y completá tu experiencia matera original.</p>
                 <div className="bundle-items">
                   <div className="bundle-item main">
@@ -366,8 +371,8 @@ function ProductDetail() {
                     </div>
                   </div>
                 </div>
-                <button className="add-bundle-btn" onClick={handleBundleAdd}>
-                  Sumar Combo al Carrito 🚀
+                <button className="add-bundle-btn" onClick={handleBundleAdd} style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'}}>
+                  Sumar Combo al Carrito <ShoppingBag size={18} strokeWidth={2} />
                 </button>
               </div>
             )}

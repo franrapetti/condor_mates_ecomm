@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { initMercadoPago, Wallet } from '@mercadopago/sdk-react';
+import { X, Trash2, ShoppingBag, ShieldCheck } from 'lucide-react';
 import './CartDrawer.css';
 
 // Initialize MP with public key (fallback to TEST if not found)
@@ -93,7 +94,7 @@ const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem
       <div className={`cart-drawer ${isOpen ? 'open' : ''}`}>
         <div className="cart-header">
           <h2>{isCheckout ? 'Tus Datos' : 'Tu Carrito'}</h2>
-          <button className="close-btn" onClick={handleClose}>×</button>
+          <button className="close-btn" onClick={handleClose} style={{display: 'flex', alignItems: 'center'}}><X size={24} strokeWidth={1.5} /></button>
         </div>
 
         {/* Free Shipping Progress Bar */}
@@ -118,10 +119,10 @@ const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem
         )}
 
         {cartItems.length === 0 ? (
-          <div className="cart-empty">
-            <span className="emoji-huge">🛒</span>
+          <div className="cart-empty" style={{textAlign: 'center', marginTop: '3rem'}}>
+            <ShoppingBag size={48} strokeWidth={1} style={{marginBottom: '1rem', color: 'var(--text-light)'}} />
             <p>Tu carrito está vacío.</p>
-            <button className="continue-shopping" onClick={handleClose}>Ver Mates</button>
+            <button className="continue-shopping mt-4" onClick={handleClose} style={{padding: '0.75rem 1.5rem', background: 'var(--text-dark)', color: 'var(--surface)', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer'}}>Ver Catálogo</button>
           </div>
         ) : isCheckout ? (
           <div className="checkout-form-container">
@@ -162,11 +163,13 @@ const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem
                     
                     <div className="trust-badges-container">
                       <div className="trust-logos">
-                        <img src="https://logospng.org/download/mercado-pago/logo-mercado-pago-icono-256.png" alt="Mercado Pago" title="MercadoPago" />
+                        <img src="https://http2.mlstatic.com/frontend-assets/ml-web-navigation/ui-navigation/5.19.1/mercadolibre/logo__small@2x.png" alt="Mercado Pago" title="MercadoPago" />
                         <img src="https://upload.wikimedia.org/wikipedia/commons/4/41/Visa_Logo.png" alt="Visa" title="Visa" />
                         <img src="https://upload.wikimedia.org/wikipedia/commons/b/b7/MasterCard_Logo.svg" alt="Mastercard" title="Mastercard" />
                       </div>
-                      <p className="trust-text">🔒 PAGO 100% SEGURO Y CIFRADO</p>
+                      <p className="trust-text" style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px'}}>
+                        <ShieldCheck size={14} /> PAGO 100% SEGURO Y CIFRADO
+                      </p>
                     </div>
                   </>
                 ) : (
@@ -192,7 +195,7 @@ const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem
                       <button onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}>+</button>
                     </div>
                   </div>
-                  <button className="remove-btn" onClick={() => onRemoveItem(item.id)}>🗑️</button>
+                  <button className="remove-btn" onClick={() => onRemoveItem(item.id)} style={{display: 'flex', alignItems: 'center'}}><Trash2 size={18} strokeWidth={1.5} /></button>
                 </div>
               ))}
             </div>
