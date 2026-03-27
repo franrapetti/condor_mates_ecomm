@@ -4,6 +4,7 @@ import Header from '../../components/Header';
 import ProductCard from '../../components/ProductCard';
 import { useCart } from '../../context/CartContext';
 import { Helmet } from 'react-helmet-async';
+import { useLocation } from 'react-router-dom';
 
 function PublicCatalog() {
   const [products, setProducts] = useState([]);
@@ -11,8 +12,10 @@ function PublicCatalog() {
 
   const { cartCount, setIsCartOpen, addToCart } = useCart();
   
-  const [currentCategory, setCurrentCategory] = useState('All');
-  const [mateSubCategory, setMateSubCategory] = useState('All');
+  const location = useLocation();
+  
+  const [currentCategory, setCurrentCategory] = useState(location.state?.category || 'All');
+  const [mateSubCategory, setMateSubCategory] = useState(location.state?.subCategory || 'All');
   
   // Search & Filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -32,6 +35,15 @@ function PublicCatalog() {
       localStorage.setItem('mate_theme', 'light');
     }
   }, [isDark]);
+
+  useEffect(() => {
+    if (location.state?.category) {
+      setCurrentCategory(location.state.category);
+    }
+    if (location.state?.subCategory) {
+      setMateSubCategory(location.state.subCategory);
+    }
+  }, [location.state]);
 
   useEffect(() => {
     fetchPublicProducts();

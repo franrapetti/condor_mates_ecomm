@@ -1,5 +1,5 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import Header from '../../components/Header';
 import { useWishlist } from '../../context/WishlistContext';
@@ -10,13 +10,42 @@ import './Wishlist.css';
 const Wishlist = () => {
   const { wishlist, toggleWishlist } = useWishlist();
   const { addToCart, cartCount, setIsCartOpen } = useCart();
+  const navigate = useNavigate();
+
+  // Theme Management
+  const [isDark, setIsDark] = useState(() => {
+    return localStorage.getItem('mate_theme') === 'dark';
+  });
+
+  useEffect(() => {
+    if (isDark) {
+      document.body.classList.add('dark-theme');
+      localStorage.setItem('mate_theme', 'dark');
+    } else {
+      document.body.classList.remove('dark-theme');
+      localStorage.setItem('mate_theme', 'light');
+    }
+  }, [isDark]);
+
+  const toggleTheme = () => setIsDark(!isDark);
+
+  const handleNavClick = (cat, subCat = 'All') => {
+    navigate('/', { state: { category: cat, subCategory: subCat } });
+  };
 
   return (
     <div className="public-wrapper">
       <Helmet>
         <title>Mis Favoritos | Cóndor Mates</title>
       </Helmet>
-      <Header cartCount={cartCount} onCartClick={() => setIsCartOpen(true)} />
+      <Header 
+        cartCount={cartCount} 
+        onCartClick={() => setIsCartOpen(true)} 
+        onNavClick={handleNavClick}
+        currentCategory="Favoritos"
+        isDark={isDark}
+        toggleTheme={toggleTheme}
+      />
 
       <main className="wishlist-container">
         <div className="wishlist-header">

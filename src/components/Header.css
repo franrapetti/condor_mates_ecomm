@@ -166,6 +166,7 @@ body.dark-theme .logo-img {
   padding: 0.25rem;
   border-radius: 50%;
   transition: background-color 0.2s;
+  color: var(--text-dark);
 }
 
 .theme-toggle:hover {
