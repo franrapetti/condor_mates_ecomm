@@ -193,8 +193,8 @@
 }
 
 .capsule.border-style {
-  background-color: white;
-  border: 2px solid #e5e7eb;
+  background-color: var(--surface);
+  border: 2px solid var(--border);
 }
 
 .huge-text {
