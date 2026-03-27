@@ -26,12 +26,7 @@
   transition: all 0.3s ease;
 }
 
-body.dark-theme .logo-img {
-  /* Al sacarle el fondo blanco a tu logo (hacerlo PNG transparente), 
-     este filtro hará que el águila y las letras negras se vuelvan blancas automáticamente 
-     para contrastar perfecto con el fondo oscuro. */
-  filter: brightness(0) invert(1);
-}
+
 
 .logo {
   font-size: 1.5rem;

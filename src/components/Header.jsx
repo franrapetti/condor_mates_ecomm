@@ -20,7 +20,7 @@ const Header = ({ cartCount, onCartClick, onNavClick, currentCategory, isDark, t
     <header className="header sticky">
       <div className="container header-content">
         <div className="header-logo" onClick={() => onNavClick('All')}>
-          <img src="/logo.png" alt="Cóndor Mates" className="logo-img" />
+          <img src={isDark ? "/logo-noche.png" : "/logo.png"} alt="Cóndor Mates" className="logo-img" />
         </div>
 
         <nav className="desktop-nav">
