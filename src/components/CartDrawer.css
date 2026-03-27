@@ -147,7 +147,7 @@
   padding: 1.5rem;
   padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 20px));
   border-top: 1px solid var(--border);
-  background-color: #fafafa;
+  background-color: var(--background);
 }
 
 .cart-total {
