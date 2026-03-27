@@ -214,14 +214,17 @@ const ProductForm = () => {
 
       setUploadProgress('Guardando en base de datos...');
       if (isEditing) {
-        await supabase.from('products').update(payload).eq('id', id);
+        const { error } = await supabase.from('products').update(payload).eq('id', id);
+        if (error) throw error;
       } else {
-        await supabase.from('products').insert([payload]);
+        const { error } = await supabase.from('products').insert([payload]);
+        if (error) throw error;
       }
 
       navigate('/admin');
     } catch (error) {
-      alert('Error al guardar: ' + error.message);
+      console.error(error);
+      alert('Error al guardar el producto:\n\n' + (error.message || error.details || JSON.stringify(error)));
     } finally {
       setLoading(false);
       setUploadProgress('');
