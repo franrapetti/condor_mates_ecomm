@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Moon, Sun, Heart, ShoppingBag } from 'lucide-react';
+import { Moon, Sun, Heart, ShoppingBag, Menu, X } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import './Header.css';
 
@@ -16,7 +16,13 @@ const categoryTree = [
 
 const Header = ({ cartCount, onCartClick, onNavClick, currentCategory }) => {
   const { isDark, toggleTheme } = useTheme();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const isProductActive = ['All', 'Mates', 'Yerbas', 'Bombillas', 'Materas y Yerberas', 'Accesorios', 'Termos'].includes(currentCategory);
+
+  const handleNavClick = (cat, subCat) => {
+    onNavClick(cat, subCat);
+    setIsMenuOpen(false);
+  };
 
   return (
     <header className="header sticky">
@@ -25,12 +31,12 @@ const Header = ({ cartCount, onCartClick, onNavClick, currentCategory }) => {
           <img src={isDark ? "/logo-noche.png" : "/logo.png"} alt="Cóndor Mates" className="logo-img" />
         </div>
 
-        <nav className="desktop-nav">
+        <nav className={`desktop-nav ${isMenuOpen ? 'mobile-open' : ''}`}>
           <ul className="nav-links">
             <li className="dropdown-parent">
               <button 
                 className={isProductActive ? 'active' : ''} 
-                onClick={() => onNavClick('All', 'All')}
+                onClick={() => handleNavClick('All', 'All')}
               >
                 Productos ▾
               </button>
@@ -38,7 +44,7 @@ const Header = ({ cartCount, onCartClick, onNavClick, currentCategory }) => {
                 {categoryTree.map(cat => (
                   <div key={cat.value} className="dropdown-group">
                     <button 
-                      onClick={() => onNavClick(cat.value, 'All')} 
+                      onClick={() => handleNavClick(cat.value, 'All')} 
                       className="dropdown-main-btn"
                     >
                       {cat.name}
@@ -50,7 +56,7 @@ const Header = ({ cartCount, onCartClick, onNavClick, currentCategory }) => {
                              key={sub} 
                              onClick={(e) => {
                                e.stopPropagation();
-                               onNavClick(cat.value, sub);
+                               handleNavClick(cat.value, sub);
                              }} 
                              className="dropdown-sub-btn"
                            >
@@ -63,12 +69,15 @@ const Header = ({ cartCount, onCartClick, onNavClick, currentCategory }) => {
                 ))}
               </div>
             </li>
-            <li><button className={currentCategory === 'Nosotros' ? 'active' : ''} onClick={() => onNavClick('Nosotros', 'All')}>Quiénes somos</button></li>
-            <li><button className={currentCategory === 'Envios' ? 'active' : ''} onClick={() => onNavClick('Envios', 'All')}>Envíos</button></li>
-            <li><Link to="/empresas" className={`header-nav-link ${currentCategory === 'Empresas' ? 'active' : ''}`}>Empresas 🏢</Link></li>
+            <li><button className={currentCategory === 'Nosotros' ? 'active' : ''} onClick={() => handleNavClick('Nosotros', 'All')}>Quiénes somos</button></li>
+            <li><button className={currentCategory === 'Envios' ? 'active' : ''} onClick={() => handleNavClick('Envios', 'All')}>Envíos</button></li>
+            <li><Link to="/empresas" onClick={() => setIsMenuOpen(false)} className={`header-nav-link ${currentCategory === 'Empresas' ? 'active' : ''}`}>Empresas 🏢</Link></li>
           </ul>
         </nav>
         <div className="header-actions">
+          <button className="mobile-menu-btn" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
           <button className="theme-toggle" onClick={toggleTheme} title="Cambiar Tema" style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
             {isDark ? <Sun size={20} strokeWidth={1.5} /> : <Moon size={20} strokeWidth={1.5} />}
           </button>

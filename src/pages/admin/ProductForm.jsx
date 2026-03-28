@@ -223,8 +223,7 @@ const ProductForm = () => {
         image_url: primaryUrl,
         gallery_images: galleryUrls,
         has_free_packaging: ['Mates'].includes(category) || subCategory === 'Bombillones de Alpaca',
-        color_group: formData.color_group.trim() || null,
-        color_name: formData.color_name.trim() || null,
+        // color_group, color_name omitted to fix schema error until migration is run manually
         is_corporate: formData.is_corporate,
         corporate_pricing: formData.is_corporate
           ? corporateTiers
