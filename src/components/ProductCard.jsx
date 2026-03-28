@@ -45,7 +45,7 @@ const ProductCard = ({ product, onAddToCart }) => {
         )}
         {/* Precio con transferencia */}
         <div className="transfer-price-container">
-          <div className="transfer-price-amount">💸 ${Math.round((product.promo_price || product.price) * 0.9).toLocaleString()}</div>
+          <div className="transfer-price-amount">${Math.round((product.promo_price || product.price) * 0.9).toLocaleString()}</div>
           <div className="transfer-price-text">abonando con transferencia</div>
         </div>
 

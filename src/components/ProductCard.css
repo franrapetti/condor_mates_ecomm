@@ -132,13 +132,13 @@
 .add-to-cart-btn {
   background-color: var(--accent);
   color: white;
-  padding: 0.4rem;
+  padding: 0.65rem;
   border-radius: 4px;
-  font-weight: 600;
+  font-weight: 700;
   width: 100%;
   transition: background-color 0.2s;
-  font-size: 0.8rem;
-  margin-top: 0.35rem;
+  font-size: 0.88rem;
+  margin-top: 0;
   letter-spacing: 0.02em;
 }
 
