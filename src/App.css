@@ -366,3 +366,113 @@
   outline: none;
   border-color: var(--accent);
 }
+
+/* Social Proof Bar */
+.social-proof-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1rem 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.sp-item {
+  flex: 1;
+  min-width: 140px;
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--text-dark);
+  padding: 0.5rem 1rem;
+  border-right: 1px solid var(--border);
+}
+
+.sp-item:last-child {
+  border-right: none;
+}
+
+.sp-item strong {
+  color: var(--accent);
+}
+
+@media (max-width: 640px) {
+  .sp-item {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    min-width: 45%;
+  }
+  .sp-item:nth-child(even) {
+    border-right: none;
+  }
+  .sp-item:last-child, .sp-item:nth-last-child(2):nth-child(odd) {
+    border-bottom: none;
+  }
+}
+
+/* Color Variants */
+.color-variants {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.color-variant-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-light);
+  width: 100%;
+}
+
+.color-swatch {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.color-swatch:hover {
+  transform: scale(1.15);
+}
+
+.color-swatch.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+.color-swatch-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 2px solid var(--border);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--surface);
+  color: var(--text-dark);
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.color-swatch-name:hover {
+  border-color: var(--accent);
+}
+
+.color-swatch-name.active {
+  border-color: var(--accent);
+  background: rgba(35,74,46,0.08);
+  color: var(--accent);
+}
+

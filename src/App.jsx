@@ -4,6 +4,7 @@ import ProductDetail from './pages/public/ProductDetail';
 import CheckoutSuccess from './pages/public/CheckoutSuccess';
 import NotFound from './pages/public/NotFound';
 import Wishlist from './pages/public/Wishlist';
+import CorporatePage from './pages/public/CorporatePage';
 import Login from './pages/admin/Login';
 import AdminLayout from './components/admin/AdminLayout';
 import ProductsList from './pages/admin/ProductsList';
@@ -43,6 +44,7 @@ function App() {
                   <Route path="/producto/:id" element={<ProductDetail />} />
                   <Route path="/success" element={<CheckoutSuccess />} />
                   <Route path="/favoritos" element={<Wishlist />} />
+                  <Route path="/empresas" element={<CorporatePage />} />
                   <Route path="/admin/login" element={<Login />} />
                   
                   <Route path="/admin" element={

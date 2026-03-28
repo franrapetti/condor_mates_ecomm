@@ -96,7 +96,13 @@ const ProductForm = () => {
     stock: '',
     category_raw: CATEGORIES[0],
     quick_add_upsell: false,
+    color_group: '',
+    color_name: '',
+    is_corporate: false,
   });
+
+  // Corporate pricing tiers: [{min, max, price}]
+  const [corporateTiers, setCorporateTiers] = useState([{ min: 10, max: 49, price: '' }, { min: 50, max: '', price: '' }]);
 
   // images: array of { preview, file } for new files OR { url } for existing URLs
   const [images, setImages] = useState([]);
@@ -130,7 +136,14 @@ const ProductForm = () => {
         stock: data.stock ?? '',
         category_raw: catRaw,
         quick_add_upsell: data.quick_add_upsell,
+        color_group: data.color_group ?? '',
+        color_name: data.color_name ?? '',
+        is_corporate: data.is_corporate ?? false,
       });
+
+      if (data.corporate_pricing && Array.isArray(data.corporate_pricing)) {
+        setCorporateTiers(data.corporate_pricing.map(t => ({ ...t, max: t.max ?? '' })));
+      }
 
       // Reconstruct images array from existing URLs
       const existing = [];
@@ -209,7 +222,15 @@ const ProductForm = () => {
         quick_add_upsell: formData.quick_add_upsell,
         image_url: primaryUrl,
         gallery_images: galleryUrls,
-        has_free_packaging: ['Mates', 'Materas y Yerberas', 'Bombillas'].includes(category),
+        has_free_packaging: ['Mates'].includes(category) || subCategory === 'Bombillones de Alpaca',
+        color_group: formData.color_group.trim() || null,
+        color_name: formData.color_name.trim() || null,
+        is_corporate: formData.is_corporate,
+        corporate_pricing: formData.is_corporate
+          ? corporateTiers
+              .filter(t => t.price !== '')
+              .map(t => ({ min: Number(t.min), max: t.max !== '' ? Number(t.max) : null, price: Number(t.price) }))
+          : null,
       };
 
       setUploadProgress('Guardando en base de datos...');
@@ -323,6 +344,102 @@ const ProductForm = () => {
                 />
                 <span>Activar Cross-sell Modal al agregar al carrito</span>
               </label>
+            </div>
+          )}
+
+          {/* ── Color Variant ── */}
+          <div className="form-row">
+            <div className="form-group">
+              <label>Grupo de Color <span className="form-label-hint">(Opcional) Nombre del grupo compartido, ej: "mate-torpedo-premium"</span></label>
+              <input
+                type="text"
+                value={formData.color_group}
+                onChange={e => set('color_group', e.target.value)}
+                placeholder="Ej: mate-torpedo-cuero"
+              />
+            </div>
+            <div className="form-group">
+              <label>Nombre del Color <span className="form-label-hint">(Opcional) Ej: "Verde", "Natural", "Negro"</span></label>
+              <input
+                type="text"
+                value={formData.color_name}
+                onChange={e => set('color_name', e.target.value)}
+                placeholder="Ej: Verde Oliva"
+              />
+            </div>
+          </div>
+
+          {/* ── Empresarial ── */}
+          <div className="form-group toggle-group">
+            <label className="toggle-label">
+              <input
+                type="checkbox"
+                checked={formData.is_corporate}
+                onChange={e => set('is_corporate', e.target.checked)}
+              />
+              <span>🏢 Apto para Regalos Empresariales</span>
+            </label>
+          </div>
+
+          {formData.is_corporate && (
+            <div className="form-group">
+              <label>Precios por cantidad <span className="form-label-hint">(dejá precio vacío para "a consultar")</span></label>
+              <div className="corp-tiers-editor">
+                {corporateTiers.map((tier, i) => (
+                  <div key={i} className="corp-tier-row">
+                    <input
+                      type="number"
+                      min="1"
+                      value={tier.min}
+                      onChange={e => {
+                        const next = [...corporateTiers];
+                        next[i] = { ...next[i], min: e.target.value };
+                        setCorporateTiers(next);
+                      }}
+                      placeholder="Min"
+                      className="corp-tier-input"
+                    />
+                    <span className="corp-tier-sep">a</span>
+                    <input
+                      type="number"
+                      min="1"
+                      value={tier.max}
+                      onChange={e => {
+                        const next = [...corporateTiers];
+                        next[i] = { ...next[i], max: e.target.value };
+                        setCorporateTiers(next);
+                      }}
+                      placeholder="Max (∞)"
+                      className="corp-tier-input"
+                    />
+                    <span className="corp-tier-sep">unidades → $</span>
+                    <input
+                      type="number"
+                      min="0"
+                      value={tier.price}
+                      onChange={e => {
+                        const next = [...corporateTiers];
+                        next[i] = { ...next[i], price: e.target.value };
+                        setCorporateTiers(next);
+                      }}
+                      placeholder="Precio c/u"
+                      className="corp-tier-input corp-tier-price"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setCorporateTiers(prev => prev.filter((_, idx) => idx !== i))}
+                      className="corp-tier-remove"
+                    >✕</button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setCorporateTiers(prev => [...prev, { min: '', max: '', price: '' }])}
+                  className="corp-tier-add"
+                >
+                  + Agregar franja de precio
+                </button>
+              </div>
             </div>
           )}
 

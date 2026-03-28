@@ -162,6 +162,14 @@ function PublicCatalog() {
                 </div>
               </div>
             )}
+            {currentCategory === 'All' && !searchTerm && (
+              <div className="social-proof-bar fade-in">
+                <div className="sp-item">✅ <strong>+500 ventas</strong> concretadas</div>
+                <div className="sp-item">⭐ <strong>4.9/5</strong> de satisfacción</div>
+                <div className="sp-item">🚚 Envíos por <strong>Andreani</strong></div>
+                <div className="sp-item">💳 Pagos seguros por <strong>Mercado Pago</strong></div>
+              </div>
+            )}
             
             <div className="catalog-header">
               <div className="catalog-title-bar">

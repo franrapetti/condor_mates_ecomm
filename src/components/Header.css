@@ -54,6 +54,20 @@
   color: var(--accent);
 }
 
+.header-nav-link {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-light);
+  transition: color 0.2s;
+  padding: 0.5rem 0;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.header-nav-link:hover, .header-nav-link.active {
+  color: var(--accent);
+}
+
 .dropdown-parent {
   position: relative;
 }

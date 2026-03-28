@@ -19,6 +19,7 @@ function ProductDetail() {
   const [related, setRelated] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeImage, setActiveImage] = useState('');
+  const [activeImageIdx, setActiveImageIdx] = useState(0);
   const [soldCount, setSoldCount] = useState(0);
   
   // Reviews state
@@ -28,6 +29,9 @@ function ProductDetail() {
   
   // Bundling state
   const [bundleAddon, setBundleAddon] = useState(null);
+
+  // Color variants
+  const [colorVariants, setColorVariants] = useState([]);
 
   // Accordions and Shipping
   const [activeAccordion, setActiveAccordion] = useState('desc');
@@ -57,6 +61,7 @@ function ProductDetail() {
         if (error) throw error;
         setProduct(data);
         setActiveImage(data.image_url);
+        setActiveImageIdx(0);
 
         // ── Fetch Reviews ──
         // Fail gracefully if table doesn't exist yet
@@ -112,6 +117,17 @@ function ProductDetail() {
         setShippingResult(null);
         setPostalCode('');
         setActiveAccordion('desc');
+        setColorVariants([]);
+
+        // ── Fetch Color Variants ──
+        if (data.color_group) {
+          const { data: variants } = await supabase
+            .from('products')
+            .select('id, color_name, image_url')
+            .eq('color_group', data.color_group)
+            .neq('id', data.id);
+          if (variants) setColorVariants(variants);
+        }
       } catch (err) {
         navigate('/');
       } finally {
@@ -202,6 +218,28 @@ function ProductDetail() {
           <div className="product-gallery">
             <div className="main-image-container">
               <img src={activeImage} alt={product.name} className="main-image" />
+              {gallery.length > 1 && (
+                <>
+                  <button
+                    className="gallery-arrow gallery-arrow-prev"
+                    onClick={() => {
+                      const newIdx = (activeImageIdx - 1 + gallery.length) % gallery.length;
+                      setActiveImageIdx(newIdx);
+                      setActiveImage(gallery[newIdx]);
+                    }}
+                    aria-label="Imagen anterior"
+                  >‹</button>
+                  <button
+                    className="gallery-arrow gallery-arrow-next"
+                    onClick={() => {
+                      const newIdx = (activeImageIdx + 1) % gallery.length;
+                      setActiveImageIdx(newIdx);
+                      setActiveImage(gallery[newIdx]);
+                    }}
+                    aria-label="Imagen siguiente"
+                  >›</button>
+                </>
+              )}
             </div>
             {gallery.length > 1 && (
               <div className="thumbnail-list">
@@ -210,8 +248,8 @@ function ProductDetail() {
                     key={idx} 
                     src={img} 
                     alt={`Vista ${idx + 1}`} 
-                    className={`thumbnail ${activeImage === img ? 'active' : ''}`}
-                    onClick={() => setActiveImage(img)}
+                    className={`thumbnail ${activeImageIdx === idx ? 'active' : ''}`}
+                    onClick={() => { setActiveImage(img); setActiveImageIdx(idx); }}
                   />
                 ))}
               </div>
@@ -221,6 +259,26 @@ function ProductDetail() {
           <div className="product-info">
             {product.category === 'Mates' && <span className="category-badge">{product.sub_category}</span>}
             <h1 className="product-title-large">{product.name}</h1>
+
+            {/* Color Variants */}
+            {(colorVariants.length > 0 || product.color_name) && (
+              <div className="color-variants">
+                <span className="color-variant-label">🎨 Color:</span>
+                <span className="color-swatch-name active">
+                  {product.color_name || 'Este color'}
+                </span>
+                {colorVariants.map(v => (
+                  <span
+                    key={v.id}
+                    className="color-swatch-name"
+                    onClick={() => navigate(`/producto/${v.id}`)}
+                    style={{cursor:'pointer'}}
+                  >
+                    {v.color_name || 'Otro color'}
+                  </span>
+                ))}
+              </div>
+            )}
             
             {/* Reviews Summary */}
             {reviewCount > 0 && (
@@ -239,9 +297,8 @@ function ProductDetail() {
             ) : (
               <p className="product-price-large">${product.price.toLocaleString()}</p>
             )}
-
-            <p className="installments-text" style={{marginTop: '-0.5rem', marginBottom: '1.5rem', fontSize: '0.95rem', color: 'var(--text-dark)'}}>
-              💸 <strong>10% de descuento</strong> abonando por Transferencia o Depósito
+            <p className="transfer-price-detail">
+              💸 <strong style={{color:'#e53935'}}>${Math.round((product.promo_price || product.price) * 0.9).toLocaleString()}</strong> pagando por transferencia
             </p>
             
             {/* Social Proof */}
@@ -276,10 +333,9 @@ function ProductDetail() {
                 className={`detail-wishlist-btn ${isWishlisted(product.id) ? 'wishlisted' : ''}`}
                 onClick={() => toggleWishlist(product)}
                 title={isWishlisted(product.id) ? 'Quitar de favoritos' : 'Guardar en favoritos'}
-                style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'}}
+                aria-label={isWishlisted(product.id) ? 'Quitar de favoritos' : 'Guardar en favoritos'}
               >
-                <Heart size={20} fill={isWishlisted(product.id) ? "currentColor" : "none"} strokeWidth={1.5} /> 
-                {isWishlisted(product.id) ? 'Quitar de Favoritos' : 'Guardar en Favoritos'}
+                <Heart size={22} fill={isWishlisted(product.id) ? "currentColor" : "none"} strokeWidth={1.5} />
               </button>
             </div>
             <p className="secure-checkout-text">🔒 Pagos procesados encriptados via Mercado Pago</p>

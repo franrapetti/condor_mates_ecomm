@@ -61,8 +61,8 @@
 .product-price {
   font-size: 1.1rem;
   font-weight: 700;
-  color: var(--accent);
-  margin-bottom: 0.75rem;
+  color: var(--text-dark);
+  margin-bottom: 0.25rem;
 }
 
 .product-price-block {
@@ -76,7 +76,7 @@
 .product-price-promo {
   font-size: 1.15rem;
   font-weight: 800;
-  color: #e53935;
+  color: var(--text-dark);
 }
 
 .product-price-original {
@@ -84,6 +84,18 @@
   font-weight: 500;
   color: var(--text-light);
   text-decoration: line-through;
+}
+
+.transfer-price-text {
+  font-size: 0.82rem;
+  color: var(--text-light);
+  margin-top: 0;
+  margin-bottom: 0.65rem;
+}
+
+.transfer-price-amount {
+  color: #e53935;
+  font-weight: 700;
 }
 
 .discount-badge {

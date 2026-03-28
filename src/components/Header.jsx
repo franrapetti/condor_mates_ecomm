@@ -63,6 +63,7 @@ const Header = ({ cartCount, onCartClick, onNavClick, currentCategory, isDark, t
             </li>
             <li><button className={currentCategory === 'Nosotros' ? 'active' : ''} onClick={() => onNavClick('Nosotros', 'All')}>Quiénes somos</button></li>
             <li><button className={currentCategory === 'Envios' ? 'active' : ''} onClick={() => onNavClick('Envios', 'All')}>Envíos</button></li>
+            <li><Link to="/empresas" className={`header-nav-link ${currentCategory === 'Empresas' ? 'active' : ''}`}>Empresas 🏢</Link></li>
           </ul>
         </nav>
         <div className="header-actions">
