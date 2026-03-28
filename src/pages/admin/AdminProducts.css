@@ -68,9 +68,9 @@
 }
 
 .badge {
-  background: #fff;
-  color: #374151;
-  border: 1px solid #d1d5db;
+  background: var(--surface);
+  color: var(--text-dark);
+  border: 1px solid var(--border);
   padding: 0.25rem 0.5rem;
   border-radius: 12px;
   font-size: 0.75rem;
@@ -165,7 +165,7 @@
   text-align: center;
   cursor: pointer;
   transition: border-color 0.2s, background-color 0.2s;
-  background-color: var(--bg, #fafafa);
+  background-color: var(--background);
 }
 
 .dropzone-area:hover,

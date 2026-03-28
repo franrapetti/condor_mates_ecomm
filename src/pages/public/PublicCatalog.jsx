@@ -21,20 +21,7 @@ function PublicCatalog() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState('newest'); // newest, price_asc, price_desc
   
-  // Theme Management
-  const [isDark, setIsDark] = useState(() => {
-    return localStorage.getItem('mate_theme') === 'dark';
-  });
-
-  useEffect(() => {
-    if (isDark) {
-      document.body.classList.add('dark-theme');
-      localStorage.setItem('mate_theme', 'dark');
-    } else {
-      document.body.classList.remove('dark-theme');
-      localStorage.setItem('mate_theme', 'light');
-    }
-  }, [isDark]);
+  // Theme Management now handled by ThemeContext
 
   useEffect(() => {
     if (location.state?.category) {
@@ -49,7 +36,7 @@ function PublicCatalog() {
     fetchPublicProducts();
   }, []);
 
-  const toggleTheme = () => setIsDark(!isDark);
+  // ...
 
   const fetchPublicProducts = async () => {
     try {
@@ -101,8 +88,6 @@ function PublicCatalog() {
           setSearchTerm(''); // clear search on nav
         }}
         currentCategory={currentCategory}
-        isDark={isDark}
-        toggleTheme={toggleTheme}
       />
       
       <main className="container main-content">

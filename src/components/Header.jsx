@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Moon, Sun, Heart, ShoppingBag } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
 import './Header.css';
 
 const categoryTree = [
@@ -13,7 +14,8 @@ const categoryTree = [
   { name: 'Termos', value: 'Termos', subs: ['Termolar', 'Media Manija Cebador', 'Stanley Mate Sistem', 'Houdson'] }
 ];
 
-const Header = ({ cartCount, onCartClick, onNavClick, currentCategory, isDark, toggleTheme }) => {
+const Header = ({ cartCount, onCartClick, onNavClick, currentCategory }) => {
+  const { isDark, toggleTheme } = useTheme();
   const isProductActive = ['All', 'Mates', 'Yerbas', 'Bombillas', 'Materas y Yerberas', 'Accesorios', 'Termos'].includes(currentCategory);
 
   return (

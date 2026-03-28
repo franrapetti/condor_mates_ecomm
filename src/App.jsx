@@ -18,6 +18,7 @@ import GlobalCart from './components/GlobalCart';
 import ExitIntentPopup from './components/ExitIntentPopup';
 import MetaPixel from './components/MetaPixel';
 import { WishlistProvider } from './context/WishlistContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { useAnalytics } from './hooks/useAnalytics';
 import { HelmetProvider } from 'react-helmet-async';
 import './App.css';
@@ -30,7 +31,8 @@ const AnalyticsWrapper = () => {
 function App() {
   return (
     <HelmetProvider>
-      <AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
         <ToastProvider>
           <CartProvider>
             <WishlistProvider>
@@ -64,6 +66,7 @@ function App() {
           </CartProvider>
         </ToastProvider>
       </AuthProvider>
+      </ThemeProvider>
     </HelmetProvider>
   );
 }
