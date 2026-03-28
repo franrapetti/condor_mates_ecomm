@@ -51,16 +51,17 @@
 }
 
 .product-title {
-  font-size: 1rem;
-  font-weight: 500;
+  font-size: 1.05rem;
+  font-weight: 700;
   color: var(--text-dark);
   margin-bottom: 0.5rem;
   flex-grow: 1;
+  line-height: 1.25;
 }
 
 .product-price {
-  font-size: 1.1rem;
-  font-weight: 700;
+  font-size: 1.2rem;
+  font-weight: 800;
   color: var(--text-dark);
   margin-bottom: 0.25rem;
 }
@@ -74,7 +75,7 @@
 }
 
 .product-price-promo {
-  font-size: 1.15rem;
+  font-size: 1.2rem;
   font-weight: 800;
   color: var(--text-dark);
 }
@@ -87,15 +88,16 @@
 }
 
 .transfer-price-text {
-  font-size: 0.82rem;
-  color: var(--text-light);
-  margin-top: 0;
+  font-size: 0.9rem;
+  color: var(--text-dark);
+  margin-top: 0.1rem;
   margin-bottom: 0.65rem;
 }
 
 .transfer-price-amount {
   color: #e53935;
-  font-weight: 700;
+  font-weight: 800;
+  font-size: 1rem;
 }
 
 .discount-badge {
@@ -192,16 +194,17 @@
     padding: 0.75rem;
   }
   .product-title {
-    font-size: 0.85rem;
-    line-height: 1.2;
+    font-size: 0.92rem;
+    font-weight: 700;
+    line-height: 1.22;
     margin-bottom: 0.35rem;
   }
   .product-price {
-    font-size: 0.95rem;
-    margin-bottom: 0.5rem;
+    font-size: 1.05rem;
+    margin-bottom: 0.4rem;
   }
   .product-price-promo {
-    font-size: 1rem;
+    font-size: 1.05rem;
   }
   .product-price-original {
     font-size: 0.8rem;
@@ -209,6 +212,12 @@
   .discount-badge {
     font-size: 0.65rem;
     padding: 1px 5px;
+  }
+  .transfer-price-text {
+    font-size: 0.85rem;
+  }
+  .transfer-price-amount {
+    font-size: 0.95rem;
   }
   .add-to-cart-btn {
     padding: 0.5rem;
