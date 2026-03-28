@@ -44,8 +44,10 @@ const ProductCard = ({ product, onAddToCart }) => {
           <p className="product-price">${product.price.toLocaleString()}</p>
         )}
         {/* Precio con transferencia */}
-        <p className="transfer-price-text">💸 <strong className="transfer-price-amount">${Math.round((product.promo_price || product.price) * 0.9).toLocaleString()}</strong> pagando por transferencia</p>
-        
+        <div className="transfer-price-container">
+          <div className="transfer-price-amount">💸 ${Math.round((product.promo_price || product.price) * 0.9).toLocaleString()}</div>
+          <div className="transfer-price-text">abonando con transferencia</div>
+        </div>
 
         {product.stock !== null && product.stock !== undefined && product.stock <= 3 && product.stock > 0 && (
           <span className="low-stock-pill">⚡ Últimas {product.stock} unidades</span>
