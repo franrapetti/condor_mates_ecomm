@@ -30,11 +30,11 @@
 
 .logo {
   font-family: var(--font-logo);
-  font-size: 1.8rem;
-  font-weight: 400;
+  font-size: 1.65rem;
+  font-weight: 800;
   color: var(--accent);
   cursor: pointer;
-  letter-spacing: 0.02em;
+  letter-spacing: -0.01em;
 }
 
 .nav-links {
