@@ -14,7 +14,7 @@ const ProductCard = ({ product, onAddToCart }) => {
     <div className="product-card">
       <div className="product-image-container">
         <Link to={`/producto/${product.id}`}>
-          <img src={product.image_url} alt={product.name} />
+          <img src={product.image_url} alt={product.name} loading="lazy" decoding="async" />
         </Link>
         {(product.category === 'Mates' || product.sub_category === 'Bombillones de Alpaca') && (
           <span className="packaging-badge">🎁 Packaging Incluido</span>
