@@ -5,14 +5,14 @@ import { useLaunchTimer } from '../hooks/useLaunchTimer';
 import { Heart } from 'lucide-react';
 import './ProductCard.css';
 
-const ProductCard = ({ product, onAddToCart }) => {
+const ProductCard = ({ product, onAddToCart, noZoom }) => {
   const { toggleWishlist, isWishlisted } = useWishlist();
   const { isLaunched } = useLaunchTimer();
   const wishlisted = isWishlisted(product.id);
 
   return (
     <div className="product-card">
-      <div className="product-image-container">
+      <div className={`product-image-container ${noZoom ? 'no-zoom' : ''}`}>
         <Link to={`/producto/${product.id}`}>
           <img src={product.image_url} alt={product.name} loading="lazy" decoding="async" />
         </Link>

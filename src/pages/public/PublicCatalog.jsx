@@ -207,9 +207,18 @@ function PublicCatalog() {
               <p>No hay productos que coincidan con la búsqueda.</p>
             ) : (
               <div className="product-grid">
-                {visibleProducts.map(product => (
-                  <ProductCard key={product.id} product={product} onAddToCart={addToCart} />
-                ))}
+                {visibleProducts.map(product => {
+                  const newest10Ids = products.slice(0, 10).map(p => p.id);
+                  const isRecent10 = newest10Ids.includes(product.id);
+                  return (
+                    <ProductCard 
+                      key={product.id} 
+                      product={product} 
+                      onAddToCart={addToCart} 
+                      noZoom={isRecent10}
+                    />
+                  );
+                })}
               </div>
             )}
           </div>
