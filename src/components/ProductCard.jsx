@@ -16,7 +16,7 @@ const ProductCard = ({ product, onAddToCart }) => {
         <Link to={`/producto/${product.id}`}>
           <img src={product.image_url} alt={product.name} loading="lazy" decoding="async" />
         </Link>
-        {(product.category === 'Mates' || product.sub_category === 'Bombillones de Alpaca') && (
+        {isLaunched && (product.category === 'Mates' || product.sub_category === 'Bombillones de Alpaca') && (
           <span className="packaging-badge">🎁 Packaging Incluido</span>
         )}
         <button
@@ -32,11 +32,11 @@ const ProductCard = ({ product, onAddToCart }) => {
           {wishlisted ? <Heart size={18} fill="currentColor" strokeWidth={1.5} /> : <Heart size={18} strokeWidth={1.5} />}
         </button>
       </div>
-      <div className="product-info">
-        <Link to={`/producto/${product.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-          <h3 className="product-title">{product.name}</h3>
-        </Link>
-        {isLaunched && (
+      {isLaunched && (
+        <div className="product-info">
+          <Link to={`/producto/${product.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+            <h3 className="product-title">{product.name}</h3>
+          </Link>
           <>
             {product.promo_price ? (
               <div className="product-price-block">
@@ -67,8 +67,8 @@ const ProductCard = ({ product, onAddToCart }) => {
               {product.stock === 0 ? 'Sin Stock' : 'Agregar al carrito'}
             </button>
           </>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

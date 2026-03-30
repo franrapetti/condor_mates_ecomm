@@ -169,7 +169,7 @@ function PublicCatalog() {
               <div className="catalog-title-bar">
                 <h2>
                   {currentCategory === 'All' 
-                    ? 'Catálogo' 
+                    ? (isLaunched ? 'Catálogo' : 'Elegí tus favoritos') 
                     : mateSubCategory !== 'All' 
                       ? `${mateSubCategory}` 
                       : currentCategory}

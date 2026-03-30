@@ -17,15 +17,8 @@
   position: relative;
   width: 100%;
   aspect-ratio: 1 / 1;
-  background-color: var(--border);
-  animation: pulse-skeleton 2s infinite ease-in-out;
+  background-color: var(--surface);
   overflow: hidden;
-}
-
-@keyframes pulse-skeleton {
-  0% { opacity: 0.6; }
-  50% { opacity: 0.9; }
-  100% { opacity: 0.6; }
 }
 
 .product-image-container img {
