@@ -27,6 +27,8 @@
   object-fit: cover;
   transition: transform 0.3s ease;
   background-color: transparent;
+  background-position: bottom;
+  object-position: bottom;
 }
 
 .packaging-badge {
@@ -111,7 +113,8 @@
   color: #c0392b;
   font-weight: 800;
   font-family: var(--font-display);
-  font-size: 1.35rem; /* Larger than list price */
+  font-size: 1.35rem;
+  /* Larger than list price */
   line-height: 1.1;
 }
 
@@ -153,7 +156,7 @@
   position: absolute;
   top: 8px;
   left: 8px;
-  background: rgba(255,255,255,0.9);
+  background: rgba(255, 255, 255, 0.9);
   border: none;
   border-radius: 50%;
   width: 34px;
@@ -163,7 +166,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
   transition: transform 0.2s, background 0.2s;
   backdrop-filter: blur(4px);
 }
@@ -178,9 +181,17 @@
 }
 
 @keyframes heartPop {
-  0%   { transform: scale(1); }
-  50%  { transform: scale(1.35); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.35);
+  }
+
+  100% {
+    transform: scale(1);
+  }
 }
 
 /* Stock badges */
@@ -217,40 +228,50 @@
   .product-info {
     padding: 0.5rem 0.65rem;
   }
+
   .product-title {
     font-size: 0.92rem;
     font-weight: 700;
     line-height: 1.22;
     margin-bottom: 0.35rem;
   }
+
   .product-price {
     font-size: 1.05rem;
     margin-bottom: 0.4rem;
   }
+
   .product-price-promo {
     font-size: 1.05rem;
   }
+
   .product-price-original {
     font-size: 0.8rem;
   }
+
   .discount-badge {
     font-size: 0.65rem;
     padding: 1px 5px;
   }
+
   .transfer-price-text {
     font-size: 0.85rem;
   }
+
   .transfer-price-amount {
     font-size: 0.95rem;
   }
+
   .add-to-cart-btn {
     padding: 0.5rem;
     font-size: 0.8rem;
   }
+
   .packaging-badge {
     font-size: 0.6rem;
     padding: 2px 6px;
   }
+
   .wishlist-btn {
     width: 28px;
     height: 28px;
@@ -259,4 +280,3 @@
     left: 6px;
   }
 }
-
