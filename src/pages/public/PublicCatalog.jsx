@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import Header from '../../components/Header';
 import ProductCard from '../../components/ProductCard';
+import ProductCardSkeleton from '../../components/ProductSkeleton';
 import CountdownTimer from '../../components/CountdownTimer';
 import { useLaunchTimer } from '../../hooks/useLaunchTimer';
 import { useCart } from '../../context/CartContext';
@@ -197,7 +198,11 @@ function PublicCatalog() {
             </div>
 
             {loading ? (
-              <p>Cargando catálogo...</p>
+              <div className="product-grid fade-in">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <ProductCardSkeleton key={i} />
+                ))}
+              </div>
             ) : visibleProducts.length === 0 ? (
               <p>No hay productos que coincidan con la búsqueda.</p>
             ) : (

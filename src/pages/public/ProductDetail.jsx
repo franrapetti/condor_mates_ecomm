@@ -6,6 +6,7 @@ import { useWishlist } from '../../context/WishlistContext';
 import { useLaunchTimer } from '../../hooks/useLaunchTimer';
 import Header from '../../components/Header';
 import ProductCard from '../../components/ProductCard';
+import { ProductDetailSkeleton } from '../../components/ProductSkeleton';
 import { Helmet } from 'react-helmet-async';
 import { Heart, ShoppingBag } from 'lucide-react';
 import './ProductDetail.css';
@@ -183,7 +184,7 @@ function ProductDetail() {
     setIsCartOpen(true);
   };
 
-  if (loading) return <div className="container main-content"><p>Cargando producto...</p></div>;
+  if (loading) return <ProductDetailSkeleton />;
   if (!product) return null;
 
   const gallery = [product.image_url, ...(product.gallery_images || [])].filter(Boolean);
