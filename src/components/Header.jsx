@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Moon, Sun, Heart, ShoppingBag, Menu, X } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
+import { useLaunchTimer } from '../hooks/useLaunchTimer';
 import './Header.css';
 
 const categoryTree = [
@@ -16,6 +17,7 @@ const categoryTree = [
 
 const Header = ({ cartCount, onCartClick, onNavClick, currentCategory }) => {
   const { isDark, toggleTheme } = useTheme();
+  const { isLaunched } = useLaunchTimer();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const isProductActive = ['All', 'Mates', 'Yerbas', 'Bombillas', 'Materas y Yerberas', 'Accesorios', 'Termos'].includes(currentCategory);
 
@@ -84,10 +86,12 @@ const Header = ({ cartCount, onCartClick, onNavClick, currentCategory }) => {
           <Link to="/favoritos" className="wishlist-header-btn" title="Mis Favoritos" style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
             <Heart size={20} strokeWidth={1.5} />
           </Link>
-          <button className="cart-btn" onClick={onCartClick} style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-            <ShoppingBag size={20} strokeWidth={1.5} />
-            {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
-          </button>
+          {isLaunched && (
+            <button className="cart-btn" onClick={onCartClick} style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+              <ShoppingBag size={20} strokeWidth={1.5} />
+              {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
+            </button>
+          )}
         </div>
       </div>
     </header>

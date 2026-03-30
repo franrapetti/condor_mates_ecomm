@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import Header from '../../components/Header';
 import ProductCard from '../../components/ProductCard';
+import CountdownTimer from '../../components/CountdownTimer';
+import { useLaunchTimer } from '../../hooks/useLaunchTimer';
 import { useCart } from '../../context/CartContext';
 import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
@@ -20,6 +22,7 @@ function PublicCatalog() {
   // Search & Filters
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState('newest'); // newest, price_asc, price_desc
+  const { isLaunched } = useLaunchTimer();
   
   // Theme Management now handled by ThemeContext
 
@@ -139,13 +142,19 @@ function PublicCatalog() {
         ) : (
           <div className="fade-in">
             {currentCategory === 'All' && !searchTerm && (
-              <div className="hero-banner fade-in">
-                <div className="hero-content">
-                  <span className="hero-badge">📦 Envíos al instante + Regalo</span>
-                  <h1 className="hero-title">Elevá tu ritual<br/>de cada mañana.</h1>
-                  <p className="hero-subtitle">Mates artesanales, bombillas y accesorios premium. Diseñados con pasión para conectarte con la verdadera tradición en cada cebada.</p>
-                </div>
-              </div>
+              <>
+                {!isLaunched ? (
+                  <CountdownTimer />
+                ) : (
+                  <div className="hero-banner fade-in">
+                    <div className="hero-content">
+                      <span className="hero-badge">📦 Envíos al instante + Regalo</span>
+                      <h1 className="hero-title">Elevá tu ritual<br/>de cada mañana.</h1>
+                      <p className="hero-subtitle">Mates artesanales, bombillas y accesorios premium. Diseñados con pasión para conectarte con la verdadera tradición en cada cebada.</p>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
             {currentCategory === 'All' && !searchTerm && (
               <div className="social-proof-bar fade-in">

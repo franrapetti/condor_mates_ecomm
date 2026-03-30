@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
+import { useLaunchTimer } from '../../hooks/useLaunchTimer';
 import Header from '../../components/Header';
 import ProductCard from '../../components/ProductCard';
 import { Helmet } from 'react-helmet-async';
@@ -14,6 +15,7 @@ function ProductDetail() {
   const navigate = useNavigate();
   const { addToCart, cartCount, setIsCartOpen } = useCart();
   const { toggleWishlist, isWishlisted } = useWishlist();
+  const { isLaunched } = useLaunchTimer();
   
   const [product, setProduct] = useState(null);
   const [related, setRelated] = useState([]);
@@ -288,18 +290,22 @@ function ProductDetail() {
               </div>
             )}
             
-            {product.promo_price ? (
-              <div className="product-price-block detail-price-block">
-                <span className="product-price-promo detail-price-promo">${product.promo_price.toLocaleString()}</span>
-                <span className="product-price-original">${product.price.toLocaleString()}</span>
-                <span className="discount-badge">{Math.round((1 - product.promo_price / product.price) * 100)}% OFF</span>
-              </div>
-            ) : (
-              <p className="product-price-large">${product.price.toLocaleString()}</p>
+            {isLaunched && (
+              <>
+                {product.promo_price ? (
+                  <div className="product-price-block detail-price-block">
+                    <span className="product-price-promo detail-price-promo">${product.promo_price.toLocaleString()}</span>
+                    <span className="product-price-original">${product.price.toLocaleString()}</span>
+                    <span className="discount-badge">{Math.round((1 - product.promo_price / product.price) * 100)}% OFF</span>
+                  </div>
+                ) : (
+                  <p className="product-price-large">${product.price.toLocaleString()}</p>
+                )}
+                <p className="transfer-price-detail">
+                  💸 <strong style={{color:'#e53935'}}>${Math.round((product.promo_price || product.price) * 0.9).toLocaleString()}</strong> pagando por transferencia
+                </p>
+              </>
             )}
-            <p className="transfer-price-detail">
-              💸 <strong style={{color:'#e53935'}}>${Math.round((product.promo_price || product.price) * 0.9).toLocaleString()}</strong> pagando por transferencia
-            </p>
             
             {/* Social Proof */}
             <div className="product-social-proof">
@@ -315,20 +321,24 @@ function ProductDetail() {
             </div>
             
             {/* Trust Badges Minimal */}
-            <div className="trust-badges">
-              <span>💳 Pagos Seguros MP</span>
-              <span>🚚 Envíos por Andreani</span>
-              <span>🛡️ Compra Protegida</span>
-            </div>
+            {isLaunched && (
+              <div className="trust-badges">
+                <span>💳 Pagos Seguros MP</span>
+                <span>🚚 Envíos por Andreani</span>
+                <span>🛡️ Compra Protegida</span>
+              </div>
+            )}
             
             <div className="detail-cta-row">
-              <button 
-                className="add-to-cart-large" 
-                onClick={() => addToCart(product)}
-                disabled={product.stock === 0}
-              >
-                {product.stock === 0 ? 'Sin Stock' : 'Agregar al Carrito 🛒'}
-              </button>
+              {isLaunched && (
+                <button 
+                  className="add-to-cart-large" 
+                  onClick={() => addToCart(product)}
+                  disabled={product.stock === 0}
+                >
+                  {product.stock === 0 ? 'Sin Stock' : 'Agregar al Carrito 🛒'}
+                </button>
+              )}
               <button 
                 className={`detail-wishlist-btn ${isWishlisted(product.id) ? 'wishlisted' : ''}`}
                 onClick={() => toggleWishlist(product)}
@@ -338,29 +348,31 @@ function ProductDetail() {
                 <Heart size={22} fill={isWishlisted(product.id) ? "currentColor" : "none"} strokeWidth={1.5} />
               </button>
             </div>
-            <p className="secure-checkout-text">🔒 Pagos procesados encriptados via Mercado Pago</p>
+            {isLaunched && <p className="secure-checkout-text">🔒 Pagos procesados encriptados via Mercado Pago</p>}
 
             {/* Calculador Andreani */}
-            <div className="shipping-calculator">
-              <h4>📦 Calcular envío con Andreani</h4>
-              <form onSubmit={handleCalculateShipping} className="shipping-form">
-                <input 
-                  type="number" 
-                  placeholder="Tu Código Postal (Ej: 5000)" 
-                  value={postalCode}
-                  onChange={e => setPostalCode(e.target.value)}
-                  required
-                />
-                <button type="submit">Calcular</button>
-              </form>
-              {shippingResult && (
-                <div className="shipping-result fade-in">
-                  <p>Retiro en Sucursal Andreani: <strong>${(shippingResult.cost - 1000).toLocaleString()}</strong></p>
-                  <p>Envío a Domicilio: <strong>${shippingResult.cost.toLocaleString()}</strong></p>
-                  <small>Llega envuelto y protegido en {shippingResult.days} días hábiles.</small>
-                </div>
-              )}
-            </div>
+            {isLaunched && (
+              <div className="shipping-calculator">
+                <h4>📦 Calcular envío con Andreani</h4>
+                <form onSubmit={handleCalculateShipping} className="shipping-form">
+                  <input 
+                    type="number" 
+                    placeholder="Tu Código Postal (Ej: 5000)" 
+                    value={postalCode}
+                    onChange={e => setPostalCode(e.target.value)}
+                    required
+                  />
+                  <button type="submit">Calcular</button>
+                </form>
+                {shippingResult && (
+                  <div className="shipping-result fade-in">
+                    <p>Retiro en Sucursal Andreani: <strong>${(shippingResult.cost - 1000).toLocaleString()}</strong></p>
+                    <p>Envío a Domicilio: <strong>${shippingResult.cost.toLocaleString()}</strong></p>
+                    <small>Llega envuelto y protegido en {shippingResult.days} días hábiles.</small>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Information Accordions */}
             <div className="product-accordions">
@@ -408,7 +420,7 @@ function ProductDetail() {
             </div>
 
             {/* Armá tu Kit Section (Upselling) */}
-            {bundleAddon && (
+            {isLaunched && bundleAddon && (
               <div className="bundle-section fade-in">
                 <h3 style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
                   <ShoppingBag size={22} strokeWidth={1.5} /> Armá tu Kit Perfecto

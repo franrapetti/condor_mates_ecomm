@@ -1,0 +1,98 @@
+.countdown-banner {
+  background: linear-gradient(135deg, #111 0%, #064e3b 100%);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4);
+}
+
+.countdown-banner::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(circle at center, rgba(74, 229, 119, 0.1) 0%, transparent 60%);
+  z-index: 1;
+}
+
+.countdown-banner .hero-content {
+  z-index: 2;
+}
+
+.countdown-badge {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #fff;
+}
+
+.countdown-clock {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.time-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  padding: 1.5rem 1.25rem;
+  min-width: 90px;
+  backdrop-filter: blur(8px);
+}
+
+.time-val {
+  font-size: 3rem;
+  font-weight: 800;
+  line-height: 1;
+  color: #fff;
+  font-feature-settings: "tnum";
+  font-variant-numeric: tabular-nums;
+}
+
+.time-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #a7f3d0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: 0.5rem;
+}
+
+.time-sep {
+  font-size: 3rem;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: -1.5rem;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.2; }
+  100% { opacity: 1; }
+}
+
+@media (max-width: 600px) {
+  .countdown-clock {
+    gap: 0.5rem;
+  }
+  .time-block {
+    min-width: 65px;
+    padding: 1rem 0.5rem;
+    border-radius: 12px;
+  }
+  .time-val {
+    font-size: 1.8rem;
+  }
+  .time-label {
+    font-size: 0.65rem;
+  }
+  .time-sep {
+    font-size: 2rem;
+    margin-top: -1rem;
+  }
+}
