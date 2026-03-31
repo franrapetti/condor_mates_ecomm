@@ -281,6 +281,11 @@ const ProductForm = () => {
                 onChange={e => set('price', e.target.value)}
                 placeholder="Ej: 12000"
               />
+              {formData.price && (
+                <small className="form-label-hint" style={{ marginTop: '0.3rem', display: 'block', color: 'var(--accent)' }}>
+                  Aprox. transferencia (10% OFF): ${Math.round(formData.price * 0.9).toLocaleString()}
+                </small>
+              )}
             </div>
             <div className="form-group">
               <label>

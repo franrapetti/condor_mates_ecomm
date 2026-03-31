@@ -260,7 +260,7 @@ function ProductDetail() {
           </div>
           
           <div className="product-info">
-            {product.category === 'Mates' && <span className="category-badge">{product.sub_category}</span>}
+            {product.category && <span className="category-badge">{product.sub_category || product.category}</span>}
             <h1 className="product-title-large">{product.name}</h1>
 
             {/* Color Variants */}
@@ -303,7 +303,7 @@ function ProductDetail() {
                   <p className="product-price-large">${product.price.toLocaleString()}</p>
                 )}
                 <p className="transfer-price-detail">
-                  💸 <strong style={{color:'#e53935'}}>${Math.round((product.promo_price || product.price) * 0.9).toLocaleString()}</strong> pagando por transferencia
+                  💸 <strong style={{color:'#e53935'}}>${Math.round((product.promo_price || product.price) * 0.9).toLocaleString()}</strong> con transferencia (10% OFF)
                 </p>
               </>
             )}
