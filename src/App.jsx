@@ -15,6 +15,7 @@ import { ToastProvider } from './context/ToastContext';
 import { CartProvider } from './context/CartContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import GlobalCart from './components/GlobalCart';
+import PublicLayout from './components/PublicLayout';
 import ExitIntentPopup from './components/ExitIntentPopup';
 import MetaPixel from './components/MetaPixel';
 import { WishlistProvider } from './context/WishlistContext';
@@ -42,11 +43,13 @@ function App() {
                 <GlobalCart />
                 <ExitIntentPopup />
                 <Routes>
-                  <Route path="/" element={<PublicCatalog />} />
-                  <Route path="/producto/:id" element={<ProductDetail />} />
-                  <Route path="/success" element={<CheckoutSuccess />} />
-                  <Route path="/favoritos" element={<Wishlist />} />
-                  <Route path="/empresas" element={<CorporatePage />} />
+                  <Route element={<PublicLayout />}>
+                    <Route path="/" element={<PublicCatalog />} />
+                    <Route path="/producto/:id" element={<ProductDetail />} />
+                    <Route path="/success" element={<CheckoutSuccess />} />
+                    <Route path="/favoritos" element={<Wishlist />} />
+                    <Route path="/empresas" element={<CorporatePage />} />
+                  </Route>
                   <Route path="/admin/login" element={<Login />} />
                   
                   <Route path="/admin" element={

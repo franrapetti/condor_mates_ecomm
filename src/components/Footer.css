@@ -1,0 +1,41 @@
+.dev-footer {
+  margin-top: 4rem;
+  padding: 1.5rem 1rem;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: white;
+  text-align: center;
+  border-top-left-radius: 40px;
+  border-top-right-radius: 40px;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+  box-sizing: border-box;
+}
+
+.dev-footer-content p {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  font-weight: 500;
+  opacity: 0.95;
+}
+
+.dev-link {
+  color: white;
+  text-decoration: none;
+  font-weight: 700;
+  padding-bottom: 2px;
+  border-bottom: 2px solid rgba(255,255,255,0.4);
+  transition: all 0.3s;
+}
+
+.dev-link:hover {
+  border-bottom-color: white;
+  text-shadow: 0 0 10px rgba(255,255,255,0.5);
+}
+
+@media (min-width: 768px) {
+  .dev-footer {
+    border-top-left-radius: 80px;
+    border-top-right-radius: 80px;
+    padding: 2rem 1rem;
+  }
+}
