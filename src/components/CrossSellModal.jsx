@@ -1,5 +1,5 @@
-// src/components/CrossSellModal.jsx
 import React from 'react';
+import { Link } from 'react-router-dom';
 import './CrossSellModal.css';
 
 const CrossSellModal = ({ isOpen, onClose, onQuickAdd, crossSells = [] }) => {
@@ -15,9 +15,13 @@ const CrossSellModal = ({ isOpen, onClose, onQuickAdd, crossSells = [] }) => {
         <div className="cross-sell-items">
           {crossSells.map(item => (
             <div key={item.id} className="cross-sell-card">
-              <img src={item.image} alt={item.name} />
+              <Link to={`/producto/${item.id}`} onClick={onClose} style={{ textDecoration: 'none', color: 'inherit' }}>
+                <img src={item.image_url} alt={item.name} />
+              </Link>
               <div className="cross-sell-info">
-                <h4>{item.name}</h4>
+                <Link to={`/producto/${item.id}`} onClick={onClose} style={{ textDecoration: 'none', color: 'inherit' }}>
+                  <h4>{item.name}</h4>
+                </Link>
                 <p>${item.price?.toLocaleString()}</p>
                 <button 
                   className="quick-add-btn"

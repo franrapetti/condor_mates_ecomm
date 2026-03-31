@@ -41,6 +41,9 @@ function ProductDetail() {
   const [postalCode, setPostalCode] = useState('');
   const [shippingResult, setShippingResult] = useState(null);
 
+  // Zoom Lightbox
+  const [isZoomOpen, setIsZoomOpen] = useState(false);
+
   const [isDark, setIsDark] = useState(() => document.body.classList.contains('dark-theme'));
 
   const toggleTheme = () => {
@@ -219,8 +222,8 @@ function ProductDetail() {
         
         <div className="product-detail-layout">
           <div className="product-gallery">
-            <div className="main-image-container">
-              <img src={activeImage} alt={product.name} className="main-image" />
+            <div className="main-image-container" onClick={() => setIsZoomOpen(true)} style={{cursor: 'zoom-in'}}>
+              <img src={activeImage} alt={product.name} className="main-image" decoding="async" />
               {gallery.length > 1 && (
                 <>
                   <button
@@ -266,7 +269,9 @@ function ProductDetail() {
             {/* Color Variants */}
             {(colorVariants.length > 0 || product.color_name) && (
               <div className="color-variants">
-                <span className="color-variant-label">🎨 Color:</span>
+                <span className="color-variant-label">
+                  {product.category === 'Yerbas' ? '⚖️ Tamaño:' : '🎨 Color:'}
+                </span>
                 <span className="color-swatch-name active">
                   {product.color_name || 'Este color'}
                 </span>
@@ -524,6 +529,14 @@ function ProductDetail() {
         )}
 
       </main>
+
+      {/* Image Zoom Modal */}
+      {isZoomOpen && (
+        <div className="zoom-lightbox-overlay" onClick={() => setIsZoomOpen(false)}>
+          <button className="zoom-lightbox-close" onClick={() => setIsZoomOpen(false)} aria-label="Cerrar zoom">✕</button>
+          <img src={activeImage} alt={product.name} className="zoom-lightbox-image" onClick={e => e.stopPropagation()} />
+        </div>
+      )}
     </>
   );
 }

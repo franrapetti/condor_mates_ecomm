@@ -11,6 +11,7 @@ export const CartProvider = ({ children }) => {
   });
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCrossSellOpen, setIsCrossSellOpen] = useState(false);
+  const [allCrossSells, setAllCrossSells] = useState([]);
   const [crossSells, setCrossSells] = useState([]);
 
   const { addToast } = useToast();
@@ -24,8 +25,9 @@ export const CartProvider = ({ children }) => {
       const { data } = await supabase.from('products')
         .select('*')
         .in('category', ['Yerbas', 'Bombillas'])
-        .limit(2);
-      if (data) setCrossSells(data);
+        .not('name', 'ilike', '%Kurupí%')
+        .limit(15);
+      if (data) setAllCrossSells(data);
     };
     fetchCrossSells();
   }, []);
@@ -52,7 +54,10 @@ export const CartProvider = ({ children }) => {
     const currentQty = existing ? existing.quantity : 0;
     if (currentQty + quantity <= maxStock) {
       addToast(`¡${product.name} agregado al carrito!`, 'success');
-      if (product.category === 'Mates' && product.quick_add_upsell && crossSells.length > 0) {
+      if (product.category === 'Mates' && product.quick_add_upsell && allCrossSells.length > 0) {
+        // Randomize 2 cross sells
+        const shuffled = [...allCrossSells].sort(() => 0.5 - Math.random());
+        setCrossSells(shuffled.slice(0, 2));
         setIsCrossSellOpen(true);
       } else {
         setIsCartOpen(true);

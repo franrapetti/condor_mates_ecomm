@@ -75,8 +75,42 @@ function PublicCatalog() {
   } else if (sortOrder === 'price_desc') {
     visibleProducts.sort((a, b) => b.price - a.price);
   } else {
-    // Newest is already handled by Supabase default order, but we enforce it just in case
-    visibleProducts.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    // Advanced Default Sorting Logic
+    // 1. Separate priority items
+    let priorities = [];
+    let others = [];
+    
+    visibleProducts.forEach(p => {
+      const isRanchero = p.name.toLowerCase().includes('ranchero');
+      const isBombillon = p.name.toLowerCase().includes('bombillon') || p.name.toLowerCase().includes('bombillón');
+      const isTermo = p.category === 'Termos';
+      const isCheapMate = p.category === 'Mates' && p.price <= 40000;
+      const isExpensiveMate = p.category === 'Mates' && p.price >= 55000; // Uno o dos caros
+      
+      if (isRanchero || isBombillon || isTermo || isCheapMate || isExpensiveMate) {
+        priorities.push(p);
+      } else {
+        others.push(p);
+      }
+    });
+
+    // Shuffle priorities
+    priorities.sort(() => 0.5 - Math.random());
+    
+    // Sort others by sold_count (desc), fallback to newest
+    others.sort((a, b) => {
+      const countA = a.sold_count || 0;
+      const countB = b.sold_count || 0;
+      if (countA !== countB) return countB - countA;
+      return new Date(b.created_at) - new Date(a.created_at);
+    });
+    
+    // Mix them back: First 8 priorities, then the rest
+    const selectedPriorities = priorities.slice(0, 8);
+    const unselectedPriorities = priorities.slice(8);
+    unselectedPriorities.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)); // Or sold_count
+    
+    visibleProducts = [...selectedPriorities, ...others, ...unselectedPriorities];
   }
 
   const crossSells = products.filter(p => p.category === 'Yerbas' || p.category === 'Bombillas').slice(0, 2);

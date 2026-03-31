@@ -16,7 +16,7 @@
 .product-image-container {
   position: relative;
   width: 100%;
-  aspect-ratio: 1 / 1;
+  aspect-ratio: 4 / 3;
   background-color: var(--surface);
   overflow: hidden;
 }
@@ -24,16 +24,9 @@
 .product-image-container img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   transition: transform 0.3s ease;
   background-color: transparent;
-  background-position: bottom;
-  object-position: bottom;
-}
-
-.product-image-container.no-zoom img {
-  object-fit: contain;
-  object-position: center;
 }
 
 .packaging-badge {
