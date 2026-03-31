@@ -99,6 +99,8 @@ const ProductForm = () => {
     color_group: '',
     color_name: '',
     is_corporate: false,
+    show_stock_alert: false,
+    is_priority: false,
   });
 
   // Corporate pricing tiers: [{min, max, price}]
@@ -139,6 +141,8 @@ const ProductForm = () => {
         color_group: data.color_group ?? '',
         color_name: data.color_name ?? '',
         is_corporate: data.is_corporate ?? false,
+        show_stock_alert: data.show_stock_alert ?? false,
+        is_priority: data.is_priority ?? false,
       });
 
       if (data.corporate_pricing && Array.isArray(data.corporate_pricing)) {
@@ -227,6 +231,8 @@ const ProductForm = () => {
         color_name: formData.color_name || null,
         is_corporate: formData.is_corporate || false,
         corporate_pricing: formData.is_corporate ? corporateTiers : null,
+        show_stock_alert: formData.show_stock_alert || false,
+        is_priority: formData.is_priority || false,
       };
 
       setUploadProgress('Guardando en base de datos...');
@@ -372,13 +378,31 @@ const ProductForm = () => {
 
           {/* ── Empresarial ── */}
           <div className="form-group toggle-group">
-            <label className="toggle-label">
+            <label className="toggle-label" style={{ marginBottom: '1rem' }}>
               <input
                 type="checkbox"
                 checked={formData.is_corporate}
                 onChange={e => set('is_corporate', e.target.checked)}
               />
               <span>🏢 Apto para Regalos Empresariales</span>
+            </label>
+
+            <label className="toggle-label" style={{ marginBottom: '1rem' }}>
+              <input
+                type="checkbox"
+                checked={formData.show_stock_alert}
+                onChange={e => set('show_stock_alert', e.target.checked)}
+              />
+              <span>🔥 Mostrar etiqueta "Últimas Unidades"</span>
+            </label>
+
+            <label className="toggle-label">
+              <input
+                type="checkbox"
+                checked={formData.is_priority}
+                onChange={e => set('is_priority', e.target.checked)}
+              />
+              <span>⭐ Marcar como Destacado (Arriba en el Catálogo)</span>
             </label>
           </div>
 

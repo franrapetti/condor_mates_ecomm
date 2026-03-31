@@ -81,20 +81,14 @@ function PublicCatalog() {
     let others = [];
     
     visibleProducts.forEach(p => {
-      const isRanchero = p.name.toLowerCase().includes('ranchero');
-      const isBombillon = p.name.toLowerCase().includes('bombillon') || p.name.toLowerCase().includes('bombillón');
-      const isTermo = p.category === 'Termos';
-      const isCheapMate = p.category === 'Mates' && p.price <= 40000;
-      const isExpensiveMate = p.category === 'Mates' && p.price >= 55000; // Uno o dos caros
-      
-      if (isRanchero || isBombillon || isTermo || isCheapMate || isExpensiveMate) {
+      if (p.is_priority) {
         priorities.push(p);
       } else {
         others.push(p);
       }
     });
 
-    // Shuffle priorities
+    // Shuffle priorities to keep top section fresh
     priorities.sort(() => 0.5 - Math.random());
     
     // Sort others by sold_count (desc), fallback to newest
@@ -105,12 +99,7 @@ function PublicCatalog() {
       return new Date(b.created_at) - new Date(a.created_at);
     });
     
-    // Mix them back: First 8 priorities, then the rest
-    const selectedPriorities = priorities.slice(0, 8);
-    const unselectedPriorities = priorities.slice(8);
-    unselectedPriorities.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)); // Or sold_count
-    
-    visibleProducts = [...selectedPriorities, ...others, ...unselectedPriorities];
+    visibleProducts = [...priorities, ...others];
   }
 
   const crossSells = products.filter(p => p.category === 'Yerbas' || p.category === 'Bombillas').slice(0, 2);

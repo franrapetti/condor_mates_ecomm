@@ -53,8 +53,8 @@ const ProductCard = ({ product, onAddToCart, noZoom }) => {
               <div className="transfer-price-text">con transferencia (10% OFF)</div>
             </div>
 
-            {product.stock !== null && product.stock !== undefined && product.stock <= 3 && product.stock > 0 && (
-              <span className="low-stock-pill">⚡ Últimas {product.stock} unidades</span>
+            {product.show_stock_alert && (
+              <span className="low-stock-pill">🔥 Últimas unidades</span>
             )}
             {product.stock === 0 && (
               <span className="no-stock-pill">😔 Sin stock</span>
