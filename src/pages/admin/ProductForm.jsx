@@ -223,7 +223,10 @@ const ProductForm = () => {
         image_url: primaryUrl,
         gallery_images: galleryUrls,
         has_free_packaging: ['Mates'].includes(category) || subCategory === 'Bombillones de Alpaca',
-        // color_group, color_name, is_corporate, corporate_pricing omitted to fix schema error until migration is run manually
+        color_group: formData.color_group || null,
+        color_name: formData.color_name || null,
+        is_corporate: formData.is_corporate || false,
+        corporate_pricing: formData.is_corporate ? corporateTiers : null,
       };
 
       setUploadProgress('Guardando en base de datos...');
