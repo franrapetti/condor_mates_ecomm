@@ -104,13 +104,11 @@
 
 .transfer-price-container {
   display: flex;
-  flex-direction: column;
-  background-color: var(--background);
-  border: 1px dashed var(--border);
-  padding: 4px 6px;
-  border-radius: 6px;
+  align-items: center;
+  gap: 0.3rem;
+  flex-wrap: wrap;
   margin-top: 0.15rem;
-  margin-bottom: 0.2rem;
+  margin-bottom: 0.4rem;
   align-self: flex-start;
 }
 
@@ -118,13 +116,12 @@
   color: #c0392b;
   font-weight: 800;
   font-family: var(--font-display);
-  font-size: 1.35rem;
-  /* Larger than list price */
+  font-size: 1.15rem; /* slightly smaller since it's inline */
   line-height: 1.1;
 }
 
 .transfer-price-text {
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   color: var(--text-light);
   line-height: 1.2;
 }

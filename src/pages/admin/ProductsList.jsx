@@ -49,7 +49,20 @@ const ProductsList = () => {
   return (
     <div className="admin-page">
       <div className="admin-page-header">
-        <h1>Catálogo de Productos</h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <h1>Catálogo de Productos</h1>
+          <span style={{ 
+            background: 'var(--surface, #f3f4f6)', 
+            border: '1px solid var(--border, #e5e7eb)',
+            borderRadius: '12px', 
+            fontSize: '0.85rem', 
+            fontWeight: 600, 
+            padding: '4px 10px', 
+            color: 'var(--text-dark, #4b5563)' 
+          }}>
+            {products.length} artículos
+          </span>
+        </div>
         <Link to="/admin/products/new" className="btn-primary">+ Nuevo Producto</Link>
       </div>
 
