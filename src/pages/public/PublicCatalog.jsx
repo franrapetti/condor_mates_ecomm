@@ -130,13 +130,13 @@ function PublicCatalog() {
                 <p>Llevar la mejor experiencia matera a cada rincón del país, cuidando exactamente cada detalle de la tradición.</p>
               </div>
               <div className="capsule green-light">
-                <h3>Artesanos Locales</h3>
-                <p>Trabajamos mano a mano con creadores regionales para asegurar auténtica calidad en la calabaza y el cuero.</p>
+                <h3>Criterio de Selección</h3>
+                <p>Elegimos cada pieza con un criterio riguroso para asegurar la máxima calidad en la calabaza y el cuero.</p>
               </div>
               <div className="capsule green-accent">
                 <span className="huge-text">100%</span>
                 <h3>Originalidad</h3>
-                <p>Diseño propio pensado para tu día a día.</p>
+                <p>Estilo exclusivo seleccionado para tu día a día.</p>
               </div>
             </div>
           </div>
@@ -174,7 +174,7 @@ function PublicCatalog() {
                     <div className="hero-content">
                       <span className="hero-badge">📦 Envíos al instante + Regalo</span>
                       <h1 className="hero-title">Elevá tu ritual<br/>de cada mañana.</h1>
-                      <p className="hero-subtitle">Mates artesanales, bombillas y accesorios premium. Diseñados con pasión para conectarte con la verdadera tradición en cada cebada.</p>
+                      <p className="hero-subtitle">Mates, bombillas y accesorios premium. Seleccionados con criterio para conectarte con la verdadera tradición en cada cebada.</p>
                     </div>
                   </div>
                 )}

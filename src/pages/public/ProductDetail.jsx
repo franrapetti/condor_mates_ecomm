@@ -401,11 +401,9 @@ function ProductDetail() {
                   Descripción
                   <span>{activeAccordion === 'desc' ? '−' : '+'}</span>
                 </button>
-                {activeAccordion === 'desc' && (
                   <div className="accordion-content fade-in">
-                    <p>Cada pieza es seleccionada a mano por nuestros artesanos. Elaboración 100% original buscando siempre la mejor resonancia y durabilidad para tu ritual matero.</p>
+                    <p>Cada pieza es seleccionada con criterio por nuestro equipo, buscando siempre la mejor calidad y durabilidad para tu ritual matero. Curado y terminado bajo estándares de excelencia.</p>
                   </div>
-                )}
               </div>
               
               <div className="accordion-item">
