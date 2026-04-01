@@ -126,59 +126,93 @@ const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem
           </div>
         ) : isCheckout ? (
           <div className="checkout-form-container">
-            <form className="checkout-form" onSubmit={handleCheckoutSubmit}>
-              <div className="form-group">
-                <label>Nombre Completo</label>
-                <input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Ej: Juan Pérez" />
-              </div>
-              <div className="form-group">
-                <label>Email (para envío del recibo)</label>
-                <input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} placeholder="Ej: juan@email.com" />
-              </div>
-              <div className="form-group">
-                <label>Ciudad de Envío</label>
-                <input required type="text" value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} placeholder="Ej: Córdoba Capital" />
-              </div>
-              <div className="form-group">
-                <label>Notas Adicionales (Opcional)</label>
-                <textarea rows="3" value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} placeholder="Instrucciones para la entrega, etc." />
-              </div>
-              
-              <div className="cart-total checkout-total">
-                <span>Total a pagar:</span>
-                <span className="total-price">${total.toLocaleString()}</span>
-              </div>
-              
-              <div className="checkout-actions">
-                <button type="button" className="btn-back" onClick={() => setIsCheckout(false)}>← Volver al carrito</button>
+            {!preferenceId ? (
+              <form className="checkout-form fade-in" onSubmit={handleCheckoutSubmit}>
+                <div className="form-group">
+                  <label>Nombre Completo</label>
+                  <input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Ej: Juan Pérez" />
+                </div>
+                <div className="form-group">
+                  <label>Email (para envío del recibo)</label>
+                  <input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} placeholder="Ej: juan@email.com" />
+                </div>
+                <div className="form-group">
+                  <label>Ciudad de Envío</label>
+                  <input required type="text" value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} placeholder="Ej: Córdoba Capital" />
+                </div>
+                <div className="form-group">
+                  <label>Notas Adicionales (Opcional)</label>
+                  <textarea rows="3" value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} placeholder="Instrucciones para la entrega, etc." />
+                </div>
                 
-                {!preferenceId ? (
-                  <>
-                    <button type="submit" onClick={() => setSubmitAction('mp')} className="whatsapp-btn mp-btn" disabled={isPaying} style={{backgroundColor: '#009ee3'}}>
-                      {isPaying ? 'Conectando Seguro...' : '💳 Pagar Seguro con Mercado Pago'}
-                    </button>
-                    <button type="submit" onClick={() => setSubmitAction('whatsapp')} className="whatsapp-btn " disabled={isPaying} style={{marginTop: '-0.5rem', backgroundColor: '#25D366', color: 'white', border: 'none'}}>
-                      💬 Acordar con Vendedor
-                    </button>
-                    
-                    <div className="trust-badges-container">
-                      <div className="trust-logos">
-                        <img src="https://http2.mlstatic.com/frontend-assets/ml-web-navigation/ui-navigation/5.19.1/mercadolibre/logo__small@2x.png" alt="Mercado Pago" title="MercadoPago" />
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/4/41/Visa_Logo.png" alt="Visa" title="Visa" />
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/b/b7/MasterCard_Logo.svg" alt="Mastercard" title="Mastercard" />
-                      </div>
-                      <p className="trust-text" style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px'}}>
-                        <ShieldCheck size={14} /> PAGO 100% SEGURO Y CIFRADO
-                      </p>
+                <div className="cart-total checkout-total">
+                  <span>Total a pagar:</span>
+                  <span className="total-price">${total.toLocaleString()}</span>
+                </div>
+                
+                <div className="checkout-actions">
+                  <button type="button" className="btn-back" onClick={() => setIsCheckout(false)}>← Volver al carrito</button>
+                  
+                  <button type="submit" onClick={() => setSubmitAction('mp')} className="whatsapp-btn mp-btn" disabled={isPaying} style={{backgroundColor: '#009ee3'}}>
+                    {isPaying ? 'Conectando Seguro...' : '💳 Pagar Seguro con Mercado Pago'}
+                  </button>
+                  <button type="submit" onClick={() => setSubmitAction('whatsapp')} className="whatsapp-btn " disabled={isPaying} style={{marginTop: '-0.5rem', backgroundColor: '#25D366', color: 'white', border: 'none'}}>
+                    💬 Acordar con Vendedor
+                  </button>
+                  
+                  <div className="trust-badges-container">
+                    <div className="trust-logos">
+                      <img src="https://http2.mlstatic.com/frontend-assets/ml-web-navigation/ui-navigation/5.19.1/mercadolibre/logo__small@2x.png" alt="Mercado Pago" title="MercadoPago" />
+                      <img src="https://upload.wikimedia.org/wikipedia/commons/4/41/Visa_Logo.png" alt="Visa" title="Visa" />
+                      <img src="https://upload.wikimedia.org/wikipedia/commons/b/b7/MasterCard_Logo.svg" alt="Mastercard" title="Mastercard" />
                     </div>
-                  </>
-                ) : (
+                    <p className="trust-text" style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px'}}>
+                      <ShieldCheck size={14} /> PAGO 100% SEGURO Y CIFRADO
+                    </p>
+                  </div>
+                </div>
+              </form>
+            ) : (
+              <div className="checkout-summary fade-in">
+                <div className="summary-success-icon">✓</div>
+                <h3 className="summary-title">¡Casi listo!</h3>
+                <p className="summary-subtitle">Revisá tu pedido y elegí cómo pagar</p>
+                
+                <div className="summary-card">
+                  <h4>Tus Datos</h4>
+                  <p><strong>{formData.name}</strong></p>
+                  <p>{formData.email}</p>
+                  <p>📍 {formData.city}</p>
+                  {formData.notes && <p className="summary-notes">🗒️ {formData.notes}</p>}
+                </div>
+
+                <div className="summary-card">
+                  <h4>Tu Pedido</h4>
+                  <ul className="summary-items">
+                    {cartItems.map(item => (
+                      <li key={item.id}>
+                        <div className="summary-item-info">
+                          <span className="summary-qty">{item.quantity}x</span> {item.name}
+                        </div>
+                        <span className="summary-item-price">${((item.promo_price || item.price) * item.quantity).toLocaleString()}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="summary-total">
+                    <span>Total a pagar:</span>
+                    <span className="summary-total-price">${total.toLocaleString()}</span>
+                  </div>
+                </div>
+
+                <div className="summary-actions">
                   <div className="mp-wallet-container">
+                    <p className="mp-instruction">Hacé click en pagar de forma segura 👇</p>
                     <Wallet initialization={{ preferenceId }} customization={{ texts: { valueProp: 'security_details' } }} />
                   </div>
-                )}
+                  <button type="button" className="btn-back btn-back-link" onClick={() => setPreferenceId(null)}>← Corregir mis datos</button>
+                </div>
               </div>
-            </form>
+            )}
           </div>
         ) : (
           <>
