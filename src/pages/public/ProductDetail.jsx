@@ -534,7 +534,42 @@ function ProductDetail() {
       {isZoomOpen && (
         <div className="zoom-lightbox-overlay" onClick={() => setIsZoomOpen(false)}>
           <button className="zoom-lightbox-close" onClick={() => setIsZoomOpen(false)} aria-label="Cerrar zoom">✕</button>
-          <img src={activeImage} alt={product.name} className="zoom-lightbox-image" onClick={e => e.stopPropagation()} />
+          
+          {gallery.length > 1 && (
+            <>
+              <button 
+                className="zoom-nav-btn zoom-prev" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const newIdx = (activeImageIdx - 1 + gallery.length) % gallery.length;
+                  setActiveImageIdx(newIdx);
+                  setActiveImage(gallery[newIdx]);
+                }}
+                aria-label="Imagen anterior"
+              >
+                ‹
+              </button>
+              <button 
+                className="zoom-nav-btn zoom-next" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const newIdx = (activeImageIdx + 1) % gallery.length;
+                  setActiveImageIdx(newIdx);
+                  setActiveImage(gallery[newIdx]);
+                }}
+                aria-label="Imagen siguiente"
+              >
+                ›
+              </button>
+            </>
+          )}
+
+          <img 
+            src={activeImage} 
+            alt={product.name} 
+            className="zoom-lightbox-image" 
+            onClick={e => e.stopPropagation()} 
+          />
         </div>
       )}
     </>
