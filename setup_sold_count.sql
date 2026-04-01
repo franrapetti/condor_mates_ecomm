@@ -29,3 +29,4 @@ CREATE TRIGGER trg_update_sold_count
 AFTER INSERT OR UPDATE ON public.orders
 FOR EACH ROW
 EXECUTE FUNCTION update_product_sold_count();
+
