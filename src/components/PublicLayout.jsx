@@ -4,12 +4,12 @@ import Footer from './Footer';
 
 const PublicLayout = () => {
   return (
-    <>
-      <div className="public-content-wrap">
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <div className="public-content-wrap" style={{ flex: 1 }}>
         <Outlet />
       </div>
       <Footer />
-    </>
+    </div>
   );
 };
 
