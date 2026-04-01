@@ -31,7 +31,7 @@ function ProductDetail() {
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   
   // Bundling state
-  const [bundleAddon, setBundleAddon] = useState(null);
+  const [bundleItems, setBundleItems] = useState([]);
 
   // Color variants
   const [colorVariants, setColorVariants] = useState([]);
@@ -78,20 +78,34 @@ function ProductDetail() {
           console.warn('Reviews table might not be set up yet.');
         }
 
-        // ── Fetch Related / Bundle ──
-        // For bundling: if it's a Mate, try suggesting a Termo or Bombilla
-        let addonCat = data.category;
-        if (data.category === 'Mates') addonCat = 'Termos - Termolar'; // Ex: suggest a Termo
-        
-        const { data: addonData, error: addonErr } = await supabase.from('products')
-          .select('*')
-          .ilike('category', addonCat === 'Mates' ? '%Termos%' : '%Mates%')
-          .limit(1);
+        // ── Fetch Bundle Items (Matera + Bombilla) ──
+        if (data.category === 'Mates') {
+          // Fetch Materas (Materas y Yerberas)
+          const { data: materas } = await supabase.from('products')
+            .select('*')
+            .ilike('category', '%Matera%')
+            .gte('price', 15000) // Filtrar materas descartables o muy baratas
+            .order('price', { ascending: true })
+            .limit(5);
+          
+          // Fetch Bombillas
+          const { data: bombillas } = await supabase.from('products')
+            .select('*')
+            .ilike('category', '%Bombilla%')
+            .not('name', 'ilike', '%mini%')
+            .order('price', { ascending: true })
+            .limit(5);
 
-        if (addonData && addonData.length > 0 && data.category === 'Mates') {
-          setBundleAddon(addonData[0]);
+          const kitItems = [];
+          if (materas && materas.length > 0) {
+            kitItems.push(materas[Math.floor(Math.random() * materas.length)]);
+          }
+          if (bombillas && bombillas.length > 0) {
+            kitItems.push(bombillas[Math.floor(Math.random() * bombillas.length)]);
+          }
+          setBundleItems(kitItems);
         } else {
-          setBundleAddon(null);
+          setBundleItems([]);
         }
 
         const { data: relatedData } = await supabase.from('products')
@@ -183,7 +197,7 @@ function ProductDetail() {
 
   const handleBundleAdd = () => {
     addToCart(product);
-    if (bundleAddon) addToCart(bundleAddon);
+    bundleItems.forEach(item => addToCart(item));
     setIsCartOpen(true);
   };
 
@@ -426,27 +440,33 @@ function ProductDetail() {
             </div>
 
             {/* Armá tu Kit Section (Upselling) */}
-            {isLaunched && bundleAddon && (
+            {isLaunched && bundleItems.length > 0 && (
               <div className="bundle-section fade-in">
                 <h3 style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                  <ShoppingBag size={22} strokeWidth={1.5} /> Armá tu Kit Perfecto
+                   ✨ Armá tu Kit Perfecto
                 </h3>
-                <p className="bundle-desc">Agregá ambos productos y completá tu experiencia matera original.</p>
+                <p className="bundle-desc">Agregá estos accesorios ideales y llevate la experiencia completa.</p>
                 <div className="bundle-items">
                   <div className="bundle-item main">
                     <img src={product.image_url} alt="Mate" />
+                    <span>Tu Mate</span>
                   </div>
-                  <span className="bundle-plus">+</span>
-                  <div className="bundle-item addon">
-                    <img src={bundleAddon.image_url} alt="Accesorio" />
-                    <div className="bundle-addon-info">
-                      <strong>{bundleAddon.name}</strong>
-                      <span>${(bundleAddon.promo_price || bundleAddon.price).toLocaleString()}</span>
-                    </div>
-                  </div>
+                  
+                  {bundleItems.map(item => (
+                    <React.Fragment key={item.id}>
+                      <span className="bundle-plus">+</span>
+                      <div className="bundle-item addon">
+                        <img src={item.image_url} alt={item.name} />
+                        <div className="bundle-addon-info">
+                          <strong>{item.name}</strong>
+                          <span>${(item.promo_price || item.price).toLocaleString()}</span>
+                        </div>
+                      </div>
+                    </React.Fragment>
+                  ))}
                 </div>
                 <button className="add-bundle-btn" onClick={handleBundleAdd} style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'}}>
-                  Sumar Combo al Carrito <ShoppingBag size={18} strokeWidth={2} />
+                  Sumar Kit Completo al Carrito 🛒
                 </button>
               </div>
             )}

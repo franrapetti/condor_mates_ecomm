@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { useCart } from '../../context/CartContext';
-import { Helmet } from 'react-helmet-async';
-import './CheckoutSuccess.css';
+import { notifyNewOrder } from '../../lib/notifications';
 
 const CheckoutSuccess = () => {
   const [searchParams] = useSearchParams();
@@ -15,18 +13,30 @@ const CheckoutSuccess = () => {
 
   useEffect(() => {
     // Recover cart snapshot from sessionStorage
+    let savedCart = [];
+    let savedTotal = 0;
     try {
-      const savedCart = sessionStorage.getItem('mate_last_cart');
-      const savedTotal = sessionStorage.getItem('mate_last_total');
-      if (savedCart) setLastCart(JSON.parse(savedCart));
-      if (savedTotal) setLastTotal(parseFloat(savedTotal));
+      const savedCartRaw = sessionStorage.getItem('mate_last_cart');
+      const savedTotalRaw = sessionStorage.getItem('mate_last_total');
+      if (savedCartRaw) savedCart = JSON.parse(savedCartRaw);
+      if (savedTotalRaw) savedTotal = parseFloat(savedTotalRaw);
+      setLastCart(savedCart);
+      setLastTotal(savedTotal);
     } catch (e) {
       // Ignore parse errors
     }
 
-    // Clear cart after successful payment
+    // Clear cart after successful payment and Notify Admin
     if (status === 'approved') {
       clearCart();
+      
+      // Send WhatsApp Notification (Once per session/payment)
+      const notifiedKey = `notified_${paymentId}`;
+      if (paymentId && !sessionStorage.getItem(notifiedKey)) {
+        notifyNewOrder({ paymentId, items: savedCart, total: savedTotal });
+        sessionStorage.setItem(notifiedKey, 'true');
+      }
+
       if (window.fbq && paymentId) {
         window.fbq('track', 'Purchase', { currency: 'ARS', transaction_id: paymentId });
       }
