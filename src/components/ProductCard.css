@@ -16,8 +16,8 @@
 .product-image-container {
   position: relative;
   width: 100%;
-  aspect-ratio: 4 / 3;
-  background-color: var(--surface);
+  aspect-ratio: 4 / 5;
+  background-color: rgba(35, 74, 46, 0.05); /* Soft fill color instead of pure white/surface */
   overflow: hidden;
 }
 
@@ -82,21 +82,21 @@
 }
 
 .product-price-large {
-  font-size: 1.1rem;
+  font-size: 1.25rem;
   font-weight: 800;
   font-family: var(--font-display);
   color: var(--text-dark);
 }
 
 .product-price-promo {
-  font-size: 1.1rem;
+  font-size: 1.25rem;
   font-weight: 800;
   font-family: var(--font-display);
   color: var(--text-dark);
 }
 
 .product-price-original {
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   font-weight: 500;
   color: var(--text-light);
   text-decoration: line-through;
@@ -113,8 +113,8 @@
 }
 
 .transfer-price-amount {
-  font-weight: 700;
-  font-size: 0.85rem;
+  font-weight: 800;
+  font-size: 1.3rem;
   color: #1b5e20;
 }
 
@@ -237,16 +237,20 @@
   }
 
   .product-price {
-    font-size: 1.05rem;
+    font-size: 1.15rem;
     margin-bottom: 0.4rem;
   }
 
+  .product-price-large {
+    font-size: 1.15rem;
+  }
+
   .product-price-promo {
-    font-size: 1.05rem;
+    font-size: 1.15rem;
   }
 
   .product-price-original {
-    font-size: 0.8rem;
+    font-size: 0.85rem;
   }
 
   .discount-badge {
@@ -255,11 +259,12 @@
   }
 
   .transfer-price-text {
-    font-size: 0.85rem;
+    font-size: 0.70rem;
+    line-height: 1;
   }
 
   .transfer-price-amount {
-    font-size: 0.95rem;
+    font-size: 1.15rem;
   }
 
   .add-to-cart-btn {
