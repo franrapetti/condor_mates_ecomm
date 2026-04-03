@@ -104,22 +104,29 @@ function ProductCard({ product, selected, onToggle }) {
 function VisualBox({ selections, discount, subtotal, finalPrice, itemCount, onAddToCart }) {
   const items = Object.values(selections).filter(Boolean);
   return (
-    <div className="bg-white rounded-2xl border border-bone-300 shadow-xl p-6 flex flex-col gap-5 sticky top-6">
-      <h3 className="text-xs font-black uppercase tracking-[0.2em] text-gray-400">Resumen del Combo</h3>
+    <div className="bg-white rounded-3xl border border-bone-300 shadow-2xl p-6 flex flex-col gap-6 sticky top-6 overflow-hidden">
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-forest-500 to-forest-700" />
       
-      <div className="flex flex-col gap-2.5">
+      <div className="flex justify-between items-center">
+        <h3 className="text-[0.65rem] font-black uppercase tracking-[0.2em] text-gray-400">Resumen del Combo</h3>
+        <span className="text-[0.65rem] font-black text-forest-700 bg-forest-50 px-2 py-1 rounded-md">{itemCount}/5 Categorías</span>
+      </div>
+      
+      <div className="flex flex-col gap-3 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
         {items.length === 0 ? (
-          <div className="py-6 text-center">
-             <ShoppingBag size={24} className="mx-auto text-gray-200 mb-2" />
-             <p className="text-sm text-gray-400 font-medium">No hay productos aún</p>
+          <div className="py-10 text-center opacity-40">
+             <ShoppingBag size={32} strokeWidth={1.5} className="mx-auto text-gray-300 mb-3" />
+             <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">Tu combo está vacío</p>
           </div>
         ) : (
           items.map(p => (
-            <div key={p.id} className="flex items-center gap-3 bg-gray-50 p-2 rounded-xl border border-gray-100">
-               <img src={p.image_url} alt={p.name} className="w-10 h-10 object-cover rounded-lg" />
+            <div key={p.id} className="flex items-center gap-3 bg-gray-50/50 p-2.5 rounded-2xl border border-gray-100 hover:bg-gray-100/50 transition-colors group">
+               <div className="w-12 h-12 rounded-xl overflow-hidden border border-gray-200">
+                 <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
+               </div>
                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-bold text-gray-800 truncate">{p.name}</p>
-                  <p className="text-xs font-bold text-[var(--forest-dark)]">${(p.promo_price || p.price).toLocaleString()}</p>
+                  <p className="text-[0.7rem] font-black text-gray-900 truncate leading-tight">{p.name}</p>
+                  <p className="text-[0.75rem] font-bold text-forest-700 mt-0.5">${(p.promo_price || p.price).toLocaleString()}</p>
                </div>
             </div>
           ))
@@ -127,36 +134,51 @@ function VisualBox({ selections, discount, subtotal, finalPrice, itemCount, onAd
       </div>
 
       {itemCount > 0 && (
-        <div className="pt-2">
-          <div className="flex justify-between items-center mb-1.5">
-            <span className="text-[0.7rem] font-bold text-gray-400">{itemCount} PRODUCTOS</span>
-            <span className="text-[0.7rem] font-black text-[var(--forest-dark)] bg-green-50 px-2.5 py-1 rounded-full">{discount > 0 ? `${discount}% OFF ACTIVADO` : 'SUMÁ PARA DESCUENTO'}</span>
+        <div className="pt-2 border-t border-dashed border-gray-200">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-[0.7rem] font-black text-gray-400 uppercase tracking-widest">Progreso del Descuento</span>
+            {discount > 0 && <span className="text-[0.7rem] font-black text-green-600">¡{discount}% OFF!</span>}
           </div>
-          <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-            <div className="h-full bg-[var(--forest-dark)] transition-all duration-700" style={{ width: `${(itemCount / 4) * 100}%` }} />
+          <div className="w-full bg-gray-100 h-2.5 rounded-full overflow-hidden p-0.5 border border-gray-200/50">
+            <div 
+              className="h-full bg-forest-700 rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(35,74,46,0.3)]" 
+              style={{ width: `${Math.min((itemCount / 4) * 100, 100)}%` }} 
+            />
           </div>
+          <p className="text-[0.6rem] font-bold text-gray-400 mt-2 text-center">
+            {itemCount < 2 ? 'Agregá 1 más para 5% OFF' : itemCount < 3 ? 'Agregá 1 más para 8% OFF' : itemCount < 4 ? 'Agregá 1 más para 14% OFF' : '¡Máximo descuento alcanzado!'}
+          </p>
         </div>
       )}
 
       {itemCount > 0 && (
-        <div className="border-t border-dashed border-gray-200 pt-5">
-           {discount > 0 && (
-             <div className="flex justify-between text-sm mb-1 opacity-60">
-                <span className="line-through text-gray-400">${subtotal.toLocaleString()}</span>
-                <span className="font-bold text-green-600">-{discount}%</span>
+        <div className="mt-auto">
+           <div className="space-y-1 mb-4">
+             {discount > 0 && (
+               <div className="flex justify-between items-center text-xs">
+                  <span className="font-bold text-gray-400">Subtotal</span>
+                  <span className="font-bold text-gray-500">${subtotal.toLocaleString()}</span>
+               </div>
+             )}
+             <div className="flex justify-between items-end">
+                <span className="text-sm font-black text-gray-900 uppercase tracking-tighter">Total Final</span>
+                <span className="text-3xl font-black text-forest-800 leading-none">${finalPrice.toLocaleString()}</span>
              </div>
-           )}
-           <div className="flex justify-between items-end mb-4">
-              <span className="text-sm font-bold text-gray-500">Total</span>
-              <span className="text-2xl font-black text-gray-900">${finalPrice.toLocaleString()}</span>
            </div>
+           
            <button 
              onClick={onAddToCart}
-             className="w-full py-4 bg-[var(--forest-dark)] text-white rounded-xl font-black text-sm uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-lg flex items-center justify-center gap-2"
+             className="combo-submit-btn"
            >
-             Cargar Combo <ArrowRight size={16} />
+             <span>Confirmar y Comprar</span>
+             <ArrowRight size={18} strokeWidth={3} />
            </button>
-           <p className="text-center text-[0.7rem] text-gray-400 mt-3 font-medium">💸 Envíos gratis a todo el país superando los $120.000</p>
+           
+           <div className="flex items-center justify-center gap-2 mt-4 py-2 bg-gray-50 rounded-xl border border-gray-100">
+             <span className="text-[0.65rem] font-black text-gray-400 uppercase">Envíos Gratis</span>
+             <div className="w-1 h-1 rounded-full bg-gray-300" />
+             <span className="text-[0.65rem] font-black text-forest-700 uppercase">Todo el país</span>
+           </div>
         </div>
       )}
     </div>
@@ -214,10 +236,11 @@ export default function ComboBuilder() {
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-10 items-start">
           
-          <main className="min-h-[500px]">
-            {activeCategory === null ? (
-              /* Landing Grid View */
-              <div className="fade-in">
+          <main className="combo-main-overflow">
+            <div className={`combo-transition-wrapper ${activeCategory ? 'is-picking' : ''}`}>
+              
+              {/* Landing Grid View */}
+              <section className="combo-view landing-view">
                 <div className="mb-6 flex items-center justify-between">
                    <h2 className="text-xl font-black tracking-tight text-gray-800 uppercase">1. Seleccioná Categorías</h2>
                 </div>
@@ -257,69 +280,71 @@ export default function ComboBuilder() {
                      )}
                   </div>
                 )}
-              </div>
-            ) : (
-              /* Picker View */
-              <div className="combo-picker-layout">
-                <aside className="picker-sidebar">
-                   <button 
-                     className="sidebar-icon-btn mb-2 bg-[#e8e4db] hover:bg-white" 
-                     onClick={() => setActiveCategory(null)}
-                   >
-                     <ChevronLeft size={20} />
-                   </button>
-                   {CATEGORIES.map(cat => (
+              </section>
+
+              {/* Picker View */}
+              <section className="combo-view picker-view">
+                <div className="combo-picker-layout">
+                  <aside className="picker-sidebar">
                      <button 
-                       key={cat.key}
-                       className={`sidebar-icon-btn ${activeCategory === cat.key ? 'active' : ''}`}
-                       onClick={() => setActiveCategory(cat.key)}
-                       title={cat.label}
+                       className="sidebar-icon-btn mb-2 bg-[#e8e4db] hover:bg-white" 
+                       onClick={() => setActiveCategory(null)}
                      >
-                       <span className="relative">
-                         {cat.emoji}
-                         {selections[cat.key] && (
-                           <div className="absolute -top-1 -right-1 w-3 h-3 bg-white rounded-full flex items-center justify-center border border-[var(--forest-dark)]">
-                              <Check size={8} className="text-[var(--forest-dark)]" strokeWidth={4} />
-                           </div>
-                         )}
-                       </span>
+                       <ChevronLeft size={20} />
                      </button>
-                   ))}
-                </aside>
+                     {CATEGORIES.map(cat => (
+                       <button 
+                         key={cat.key}
+                         className={`sidebar-icon-btn ${activeCategory === cat.key ? 'active' : ''}`}
+                         onClick={() => setActiveCategory(cat.key)}
+                         title={cat.label}
+                       >
+                         <span className="relative">
+                           {cat.emoji}
+                           {selections[cat.key] && (
+                             <div className="absolute -top-1 -right-1 w-3 h-3 bg-white rounded-full flex items-center justify-center border border-[var(--forest-dark)]">
+                                <Check size={8} className="text-[var(--forest-dark)]" strokeWidth={4} />
+                             </div>
+                           )}
+                         </span>
+                       </button>
+                     ))}
+                  </aside>
 
-                <div className="fade-in">
-                   <div className="flex items-center justify-between mb-6">
-                      <div className="flex items-center gap-3">
-                        <span className="text-2xl">{CATEGORIES.find(c => c.key === activeCategory)?.emoji}</span>
-                        <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tight">{activeCategory}</h2>
-                      </div>
-                      <button 
-                        onClick={() => setActiveCategory(null)}
-                        className="text-xs font-bold text-gray-400 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-white"
-                      >
-                        VOLVER AL MENÚ
-                      </button>
-                   </div>
+                  <div className="flex-1">
+                     <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-3">
+                          <span className="text-2xl">{CATEGORIES.find(c => c.key === activeCategory)?.emoji}</span>
+                          <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tight">{activeCategory}</h2>
+                        </div>
+                        <button 
+                          onClick={() => setActiveCategory(null)}
+                          className="text-xs font-bold text-gray-400 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-white"
+                        >
+                          VOLVER AL MENÚ
+                        </button>
+                     </div>
 
-                   {loading ? (
-                     <div className="picker-grid">
-                        {[1,2,3,4,5,6].map(i => <div key={i} className="aspect-[4/5] bg-gray-100 rounded-2xl animate-pulse" />)}
-                     </div>
-                   ) : (
-                     <div className="picker-grid">
-                        {products[activeCategory]?.map(p => (
-                          <ProductCard 
-                            key={p.id} 
-                            product={p} 
-                            selected={selections[activeCategory]?.id === p.id}
-                            onToggle={(product) => handleToggle(activeCategory, product)}
-                          />
-                        ))}
-                     </div>
-                   )}
+                     {loading ? (
+                       <div className="picker-grid">
+                          {[1,2,3,4,5,6].map(i => <div key={i} className="aspect-[4/5] bg-gray-100 rounded-2xl animate-pulse" />)}
+                       </div>
+                     ) : (
+                       <div className="picker-grid">
+                          {products[activeCategory]?.map(p => (
+                            <ProductCard 
+                              key={p.id} 
+                              product={p} 
+                              selected={selections[activeCategory]?.id === p.id}
+                              onToggle={(product) => handleToggle(activeCategory, product)}
+                            />
+                          ))}
+                       </div>
+                     )}
+                  </div>
                 </div>
-              </div>
-            )}
+              </section>
+            </div>
           </main>
 
           <aside className="hidden lg:block">

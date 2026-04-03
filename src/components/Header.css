@@ -95,8 +95,32 @@
   flex-direction: row;
   gap: 3rem;
   width: max-content;
-  max-width: 90vw;
+  max-width: 95vw;
   flex-wrap: wrap;
+  
+  /* Robust Centering */
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Adjust position based on screen edge */
+@media (min-width: 901px) {
+  .dropdown-parent:hover .dropdown-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+  }
+}
+
+.dropdown-menu::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 0;
+  right: 0;
+  height: 10px;
+  background: transparent;
 }
 
 .mobile-menu-btn {

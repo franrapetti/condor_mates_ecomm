@@ -29,19 +29,21 @@
 
 .kpi-card {
   background: var(--surface);
-  padding: 1.5rem;
-  border-radius: 12px;
+  padding: 1.75rem;
+  border-radius: 16px;
   border: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.5rem;
   position: relative;
   overflow: hidden;
-  transition: box-shadow 0.15s;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: var(--shadow-sm);
 }
 
 .kpi-card:hover {
-  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.06);
+  transform: translateY(-2px);
 }
 
 .kpi-card::before {
@@ -215,33 +217,39 @@
 
 /* ── STATUS BADGES ── */
 .status-badge {
-  padding: 3px 10px;
-  border-radius: 20px;
-  font-size: 0.72rem;
-  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  display: inline-block;
+  letter-spacing: 0.08em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .status-badge.paid {
-  background: rgba(16, 185, 129, 0.12);
-  color: #059669;
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
 }
 
 .status-badge.pending {
-  background: rgba(245, 158, 11, 0.12);
-  color: #d97706;
+  background: #fffbeb;
+  color: #92400e;
+  border: 1px solid #fde68a;
 }
 
 .status-badge.shipped {
-  background: rgba(2, 132, 199, 0.12);
-  color: #0284c7;
+  background: #f0f9ff;
+  color: #075985;
+  border: 1px solid #bae6fd;
 }
 
 .status-badge.canceled {
-  background: rgba(239, 68, 68, 0.12);
-  color: #dc2626;
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
 }
 
 /* ── TABLE ACTION BUTTON ── */

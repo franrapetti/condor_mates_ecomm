@@ -8,13 +8,15 @@
 
 /* ── SIDEBAR ── */
 .adm-sidebar {
-  width: 230px;
+  width: 250px;
   flex-shrink: 0;
   background: var(--surface);
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  position: relative;
+  z-index: 20;
 }
 
 .adm-brand {
@@ -28,23 +30,23 @@
 }
 
 .adm-brand-logo {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 0.95rem;
-  letter-spacing: -0.02em;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 900;
+  font-size: 1.1rem;
+  letter-spacing: -0.03em;
   color: var(--text-dark);
+  text-transform: uppercase;
 }
 
 .adm-brand-pill {
-  font-size: 0.68rem;
-  font-weight: 700;
+  font-size: 0.6rem;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  background: var(--background);
-  border: 1px solid var(--border);
-  color: var(--text-light);
-  padding: 2px 7px;
-  border-radius: 6px;
+  letter-spacing: 0.1em;
+  background: var(--accent);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
 }
 
 /* ── NAV ── */

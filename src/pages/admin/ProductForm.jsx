@@ -258,250 +258,264 @@ const ProductForm = () => {
 
   return (
     <div className="admin-page">
-      <div className="admin-page-header">
-        <h1>{isEditing ? 'Editar Producto' : 'Nuevo Producto'}</h1>
-        <Link to="/admin" className="btn-secondary">Cancelar</Link>
-      </div>
-
-      <div className="form-container">
-        <form onSubmit={handleSubmit} className="admin-form">
-
-          {/* ── Nombre ── */}
-          <div className="form-group">
-            <label>Nombre del Producto</label>
-            <input
-              type="text"
-              required
-              value={formData.name}
-              onChange={e => set('name', e.target.value)}
-              placeholder="Ej: Mate Torpedo Premium"
-            />
+      <form onSubmit={handleSubmit} className="admin-form">
+        <header className="adm-page-header sticky-header">
+          <div className="adm-page-title">
+            <h1>{isEditing ? 'Editar Producto' : 'Nuevo Producto'}</h1>
+            {isEditing && <span className="adm-count-pill">ID: {id.slice(0,8)}</span>}
           </div>
+          <div className="adm-page-actions">
+            <Link to="/admin" className="btn-secondary">Cancelar</Link>
+            <button type="submit" className="btn-primary" disabled={loading}>
+              {loading ? (
+                <span>{uploadProgress || 'Guardando...'}</span>
+              ) : (
+                <span>{isEditing ? '✓ Guardar Cambios' : '+ Crear Producto'}</span>
+              )}
+            </button>
+          </div>
+        </header>
 
-          {/* ── Precios ── */}
-          <div className="form-row">
+        <div className="form-sections-grid">
+          {/* ── SECCIÓN 1: Básicos & Precios ── */}
+          <div className="form-section-card">
+            <h3 className="section-title">📦 Información Básica</h3>
+            
             <div className="form-group">
-              <label>Precio Regular (ARS)</label>
+              <label>Nombre del Producto</label>
               <input
-                type="number"
+                type="text"
                 required
-                min="0"
-                value={formData.price}
-                onChange={e => set('price', e.target.value)}
-                placeholder="Ej: 12000"
+                value={formData.name}
+                onChange={e => set('name', e.target.value)}
+                placeholder="Ej: Mate Torpedo Premium"
               />
-              {formData.price && (
-                <small className="form-label-hint" style={{ marginTop: '0.3rem', display: 'block', color: 'var(--accent)' }}>
-                  Aprox. transferencia (10% OFF): ${Math.round(formData.price * 0.9).toLocaleString()}
-                </small>
-              )}
             </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label>Precio Regular (ARS)</label>
+                <input
+                  type="number"
+                  required
+                  min="0"
+                  value={formData.price}
+                  onChange={e => set('price', e.target.value)}
+                  placeholder="Ej: 12000"
+                />
+                {formData.price && (
+                  <small className="form-label-hint" style={{ marginTop: '0.3rem', display: 'block', color: 'var(--accent)' }}>
+                    Aprox. transferencia (10% OFF): ${Math.round(formData.price * 0.9).toLocaleString()}
+                  </small>
+                )}
+              </div>
+              <div className="form-group">
+                <label>
+                  Precio Promocional <span className="form-label-hint">(Opcional)</span>
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={formData.promo_price}
+                  onChange={e => set('promo_price', e.target.value)}
+                  placeholder="Ej: 9500"
+                />
+                {formData.promo_price && formData.price && Number(formData.promo_price) < Number(formData.price) && (
+                  <small className="form-hint-success">
+                    {Math.round((1 - formData.promo_price / formData.price) * 100)}% de descuento ✓
+                  </small>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* ── SECCIÓN 2: Categoría & Inventario ── */}
+          <div className="form-section-card">
+            <h3 className="section-title">📊 Categoría & Inventario</h3>
+            
             <div className="form-group">
-              <label>
-                Precio Promocional <span className="form-label-hint">(Opcional)</span>
-              </label>
+              <label>Categoría</label>
+              <select
+                value={formData.category_raw}
+                onChange={e => set('category_raw', e.target.value)}
+              >
+                {CATEGORIES.map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label>Stock Disponible</label>
               <input
                 type="number"
                 min="0"
-                value={formData.promo_price}
-                onChange={e => set('promo_price', e.target.value)}
-                placeholder="Ej: 9500"
+                value={formData.stock}
+                onChange={e => set('stock', e.target.value)}
+                placeholder="Ej: 10"
               />
-              {formData.promo_price && formData.price && Number(formData.promo_price) < Number(formData.price) && (
-                <small className="form-hint-success">
-                  {Math.round((1 - formData.promo_price / formData.price) * 100)}% de descuento ✓
-                </small>
-              )}
             </div>
+
+            {formData.category_raw.startsWith('Mates') && (
+              <div className="form-group toggle-group">
+                <label className="toggle-label">
+                  <input
+                    type="checkbox"
+                    checked={formData.quick_add_upsell}
+                    onChange={e => set('quick_add_upsell', e.target.checked)}
+                  />
+                  <span>Activar Cross-sell Modal</span>
+                </label>
+              </div>
+            )}
           </div>
 
-          {/* ── Stock ── */}
-          <div className="form-group">
-            <label>Stock Disponible</label>
-            <input
-              type="number"
-              min="0"
-              value={formData.stock}
-              onChange={e => set('stock', e.target.value)}
-              placeholder="Ej: 10"
-            />
-          </div>
+          {/* ── SECCIÓN 3: Configuración Avanzada ── */}
+          <div className="form-section-card">
+            <h3 className="section-title">⚙️ Configuración & Atributos</h3>
+            
+            <div className="form-row">
+              <div className="form-group">
+                <label>Grupo de Color</label>
+                <input
+                  type="text"
+                  value={formData.color_group}
+                  onChange={e => set('color_group', e.target.value)}
+                  placeholder="Ej: mate-torpedo-cuero"
+                />
+              </div>
+              <div className="form-group">
+                <label>Nombre del Color</label>
+                <input
+                  type="text"
+                  value={formData.color_name}
+                  onChange={e => set('color_name', e.target.value)}
+                  placeholder="Ej: Verde Oliva"
+                />
+              </div>
+            </div>
 
-          {/* ── Categoría ── */}
-          <div className="form-group">
-            <label>Categoría</label>
-            <select
-              value={formData.category_raw}
-              onChange={e => set('category_raw', e.target.value)}
-            >
-              {CATEGORIES.map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* ── Cross-sell toggle ── */}
-          {formData.category_raw.startsWith('Mates') && (
-            <div className="form-group toggle-group">
-              <label className="toggle-label">
+            <div className="form-group toggle-group mt-4">
+              <label className="toggle-label mb-3">
                 <input
                   type="checkbox"
-                  checked={formData.quick_add_upsell}
-                  onChange={e => set('quick_add_upsell', e.target.checked)}
+                  checked={formData.is_priority}
+                  onChange={e => set('is_priority', e.target.checked)}
                 />
-                <span>Activar Cross-sell Modal al agregar al carrito</span>
+                <span>⭐ Marcar como Destacado (Arriba en catálogo)</span>
               </label>
-            </div>
-          )}
 
-          {/* ── Color Variant ── */}
-          <div className="form-row">
-            <div className="form-group">
-              <label>Grupo de Color <span className="form-label-hint">(Opcional) Nombre del grupo compartido, ej: "mate-torpedo-premium"</span></label>
-              <input
-                type="text"
-                value={formData.color_group}
-                onChange={e => set('color_group', e.target.value)}
-                placeholder="Ej: mate-torpedo-cuero"
-              />
-            </div>
-            <div className="form-group">
-              <label>Nombre del Color <span className="form-label-hint">(Opcional) Ej: "Verde", "Natural", "Negro"</span></label>
-              <input
-                type="text"
-                value={formData.color_name}
-                onChange={e => set('color_name', e.target.value)}
-                placeholder="Ej: Verde Oliva"
-              />
+              <label className="toggle-label mb-3">
+                <input
+                  type="checkbox"
+                  checked={formData.show_stock_alert}
+                  onChange={e => set('show_stock_alert', e.target.checked)}
+                />
+                <span>🔥 Mostrar etiqueta "Últimas Unidades"</span>
+              </label>
             </div>
           </div>
 
-          {/* ── Empresarial ── */}
-          <div className="form-group toggle-group">
-            <label className="toggle-label" style={{ marginBottom: '1rem' }}>
+          {/* ── SECCIÓN 4: Regalos Empresariales ── */}
+          <div className="form-section-card">
+            <h3 className="section-title">🏢 Regalos Empresariales</h3>
+            
+            <label className="toggle-label mb-4">
               <input
                 type="checkbox"
                 checked={formData.is_corporate}
                 onChange={e => set('is_corporate', e.target.checked)}
               />
-              <span>🏢 Apto para Regalos Empresariales</span>
+              <span>Apto para Regalos Empresariales</span>
             </label>
 
-            <label className="toggle-label" style={{ marginBottom: '1rem' }}>
-              <input
-                type="checkbox"
-                checked={formData.show_stock_alert}
-                onChange={e => set('show_stock_alert', e.target.checked)}
-              />
-              <span>🔥 Mostrar etiqueta "Últimas Unidades"</span>
-            </label>
-
-            <label className="toggle-label">
-              <input
-                type="checkbox"
-                checked={formData.is_priority}
-                onChange={e => set('is_priority', e.target.checked)}
-              />
-              <span>⭐ Marcar como Destacado (Arriba en el Catálogo)</span>
-            </label>
+            {formData.is_corporate && (
+              <div className="corp-tiers-list">
+                <label>Precios por cantidad</label>
+                <div className="corp-tiers-editor">
+                  {corporateTiers.map((tier, i) => (
+                    <div key={i} className="corp-tier-row">
+                      <input
+                        type="number"
+                        min="1"
+                        value={tier.min}
+                        onChange={e => {
+                          const next = [...corporateTiers];
+                          next[i] = { ...next[i], min: e.target.value };
+                          setCorporateTiers(next);
+                        }}
+                        placeholder="Min"
+                        className="corp-tier-input"
+                      />
+                      <span className="corp-tier-sep">a</span>
+                      <input
+                        type="number"
+                        min="1"
+                        value={tier.max}
+                        onChange={e => {
+                          const next = [...corporateTiers];
+                          next[i] = { ...next[i], max: e.target.value };
+                          setCorporateTiers(next);
+                        }}
+                        placeholder="Max"
+                        className="corp-tier-input"
+                      />
+                      <span className="corp-tier-sep">unidades → $</span>
+                      <input
+                        type="number"
+                        min="0"
+                        value={tier.price}
+                        onChange={e => {
+                          const next = [...corporateTiers];
+                          next[i] = { ...next[i], price: e.target.value };
+                          setCorporateTiers(next);
+                        }}
+                        placeholder="Precio"
+                        className="corp-tier-input corp-tier-price"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setCorporateTiers(prev => prev.filter((_, idx) => idx !== i))}
+                        className="corp-tier-remove"
+                      >✕</button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setCorporateTiers(prev => [...prev, { min: '', max: '', price: '' }])}
+                    className="corp-tier-add"
+                  >
+                    + Agregar franja de precio
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
-          {formData.is_corporate && (
-            <div className="form-group">
-              <label>Precios por cantidad <span className="form-label-hint">(dejá precio vacío para "a consultar")</span></label>
-              <div className="corp-tiers-editor">
-                {corporateTiers.map((tier, i) => (
-                  <div key={i} className="corp-tier-row">
-                    <input
-                      type="number"
-                      min="1"
-                      value={tier.min}
-                      onChange={e => {
-                        const next = [...corporateTiers];
-                        next[i] = { ...next[i], min: e.target.value };
-                        setCorporateTiers(next);
-                      }}
-                      placeholder="Min"
-                      className="corp-tier-input"
-                    />
-                    <span className="corp-tier-sep">a</span>
-                    <input
-                      type="number"
-                      min="1"
-                      value={tier.max}
-                      onChange={e => {
-                        const next = [...corporateTiers];
-                        next[i] = { ...next[i], max: e.target.value };
-                        setCorporateTiers(next);
-                      }}
-                      placeholder="Max (∞)"
-                      className="corp-tier-input"
-                    />
-                    <span className="corp-tier-sep">unidades → $</span>
-                    <input
-                      type="number"
-                      min="0"
-                      value={tier.price}
-                      onChange={e => {
-                        const next = [...corporateTiers];
-                        next[i] = { ...next[i], price: e.target.value };
-                        setCorporateTiers(next);
-                      }}
-                      placeholder="Precio c/u"
-                      className="corp-tier-input corp-tier-price"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setCorporateTiers(prev => prev.filter((_, idx) => idx !== i))}
-                      className="corp-tier-remove"
-                    >✕</button>
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={() => setCorporateTiers(prev => [...prev, { min: '', max: '', price: '' }])}
-                  className="corp-tier-add"
-                >
-                  + Agregar franja de precio
-                </button>
-              </div>
+          {/* ── SECCIÓN 5: Imágenes ── */}
+          <div className="form-section-card full-width">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="section-title m-0">🖼️ Imágenes del Producto</h3>
+              <span className="text-[0.7rem] font-bold text-gray-400">LA PRIMERA ES LA PRINCIPAL</span>
             </div>
-          )}
-
-          {/* ── Images ── */}
-          <div className="form-group">
-            <label>
-              Imágenes del Producto
-              <span className="form-label-hint"> · La primera es la imagen principal</span>
-            </label>
+            
             <ImageDropzone
               images={images}
               onAdd={handleAddImages}
               onRemove={handleRemoveImage}
               onSetPrimary={handleSetPrimary}
             />
+            
             <div className="image-quality-tips">
-              <p className="quality-tip-title">📐 Recomendaciones para imágenes de calidad:</p>
+              <p className="quality-tip-title">📐 Recomendaciones de calidad:</p>
               <ul className="quality-tip-list">
-                <li>✅ <strong>Formato cuadrado</strong> recomendado (1:1) — ej: 800×800px o 1200×1200px</li>
-                <li>✅ <strong>Fondo blanco o neutro</strong> para mostrar mejor el producto</li>
-                <li>✅ <strong>Peso máximo:</strong> 2 MB por imagen (JPG o WEBP comprimido)</li>
-                <li>✅ <strong>Varias fotos:</strong> mostrá frente, lateral y detalle para aumentar conversiones</li>
+                <li>✅ Formato cuadrado (1:1) · Fondo blanco o neutro</li>
+                <li>✅ Peso máximo 2MB · Mostrá frente, lateral y detalles</li>
               </ul>
             </div>
           </div>
-
-          {/* ── Submit ── */}
-          <button type="submit" className="btn-primary btn-submit" disabled={loading}>
-            {loading ? (
-              <span>{uploadProgress || 'Guardando...'}</span>
-            ) : (
-              <span>{isEditing ? '✓ Guardar Cambios' : '+ Crear Producto'}</span>
-            )}
-          </button>
-
-        </form>
-      </div>
+        </div>
+      </form>
     </div>
   );
 };
