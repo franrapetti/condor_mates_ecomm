@@ -501,9 +501,16 @@
 }
 
 /* back-compat alias (ProductsList still uses .admin-page) */
-.admin-page { }
-.admin-page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.75rem; }
-.admin-page-header h1 { font-size: 1.4rem; font-weight: 700; color: var(--text-dark); letter-spacing: -0.02em; }
+/* back-compat alias (ProductsList uses .adm-page-header) */
+.adm-page-header { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  margin-bottom: 2rem; 
+  flex-wrap: wrap; 
+  gap: 1rem; 
+}
+.adm-page-header h1 { font-size: 1.4rem; font-weight: 700; color: var(--text-dark); letter-spacing: -0.02em; margin: 0; }
 
 /* ── TOP CLICKED ANALYTICS WIDGET ── */
 .top-clicked-widget {
@@ -511,42 +518,54 @@
   border: 1px solid var(--border);
   border-radius: 14px;
   padding: 1.25rem 1.5rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
 }
 
 .top-clicked-widget h3 {
   font-size: 0.95rem;
   font-weight: 700;
   color: var(--text-dark);
-  margin: 0 0 0.85rem 0;
+  margin: 0 0 1rem 0;
   letter-spacing: -0.01em;
 }
 
-.top-clicked-widget > div {
+.top-clicked-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
-.top-clicked-widget > div > div {
+.top-clicked-item {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  flex-direction: column;
+  gap: 0.25rem;
   background: var(--background);
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 0.5rem 0.85rem;
+  padding: 0.65rem 1rem;
   flex: 1;
-  min-width: 180px;
+  min-width: 140px;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.top-clicked-widget > div > div strong {
-  font-size: 0.85rem;
+.top-clicked-item:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.top-clicked-name {
+  font-size: 0.82rem;
+  font-weight: 700;
   color: var(--text-dark);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 160px;
+}
+
+.top-clicked-count {
+  font-size: 0.75rem;
+  color: var(--accent);
+  font-weight: 600;
 }
 
 /* ── IMAGE QUALITY TIPS ── */

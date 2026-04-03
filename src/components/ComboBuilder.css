@@ -1,0 +1,225 @@
+/* ─── COMBO BUILDER PREMIUM STYLES ─────────────────────────────────────────── */
+
+:root {
+  --forest-dark: var(--accent);
+  --forest-light: #3d8055;
+  --bone-bg: var(--background);
+  --ivory: var(--surface);
+  --gold-accent: #d4af37;
+}
+
+/* ── Landing Grid ── */
+.combo-landing-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .combo-landing-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .combo-landing-grid {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1.25rem;
+  }
+}
+
+.category-card {
+  aspect-ratio: 1 / 1.1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+}
+
+.category-card:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 12px 24px rgba(35, 74, 46, 0.12);
+  border-color: var(--forest-dark);
+}
+
+.category-card.selected {
+  border-color: var(--forest-dark);
+  background: rgba(35, 74, 46, 0.02);
+}
+
+.category-card-icon {
+  font-size: 2.5rem;
+  transition: transform 0.3s ease;
+}
+
+.category-card:hover .category-card-icon {
+  transform: scale(1.1);
+}
+
+.category-card-label {
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #444;
+}
+
+/* Selected Image State */
+.category-card-image-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.category-card-image-bg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.category-card:hover .category-card-image-bg img {
+  transform: scale(1.08);
+}
+
+.category-card-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 60%);
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.category-card.has-selection .category-card-overlay {
+  opacity: 1;
+}
+
+.category-card.has-selection .category-card-label {
+  position: absolute;
+  bottom: 0.75rem;
+  color: white;
+  z-index: 3;
+}
+
+/* ── Picker View ── */
+.combo-picker-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  animation: slideInUp 0.5s ease-out;
+}
+
+@media (min-width: 1024px) {
+  .combo-picker-layout {
+    grid-template-columns: 80px 1fr;
+    gap: 2rem;
+  }
+}
+
+.picker-sidebar {
+  display: flex;
+  flex-direction: row;
+  overflow-x: auto;
+  gap: 0.75rem;
+  padding-bottom: 0.5rem;
+}
+
+@media (min-width: 1024px) {
+  .picker-sidebar {
+    flex-direction: column;
+    overflow-x: visible;
+    padding-bottom: 0;
+    position: sticky;
+    top: 2rem;
+  }
+}
+
+.sidebar-icon-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  border: 2px solid transparent;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.sidebar-icon-btn.active {
+  background: var(--forest-dark);
+  color: white;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(35, 74, 46, 0.3);
+}
+
+.sidebar-icon-btn:hover:not(.active) {
+  border-color: var(--forest-dark);
+  background: rgba(35, 74, 46, 0.05);
+}
+
+/* ── Animations ── */
+@keyframes slideInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ── Progress Indicators ── */
+.step-indicator {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.step-dot {
+  height: 4px;
+  flex: 1;
+  border-radius: 2px;
+  background: var(--border);
+  transition: background 0.3s;
+}
+
+.step-dot.active {
+  background: var(--forest-dark);
+}
+
+/* ── Product Selection Cards ── */
+.picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 1rem;
+}
+
+.picker-card-check {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 10;
+  background: var(--forest-dark);
+  color: white;
+  border-radius: 50%;
+  padding: 4px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}

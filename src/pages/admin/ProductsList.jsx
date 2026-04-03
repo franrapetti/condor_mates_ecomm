@@ -52,7 +52,7 @@ const ProductsList = () => {
 
   return (
     <div className="admin-page">
-      <div className="admin-page-header">
+      <div className="adm-page-header">
         <div className="adm-page-title">
           <h1>Catálogo de Productos</h1>
           <span className="adm-count-pill">{products.length} artículos</span>
@@ -60,12 +60,13 @@ const ProductsList = () => {
         <Link to="/admin/products/new" className="btn-primary">+ Nuevo Producto</Link>
       </div>
 
-      <div className="top-clicked-widget" style={{background: '#f8fafc', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem', border: '1px solid #e2e8f0'}}>
+      <div className="top-clicked-widget">
         <h3>🔥 Top Productos Más Visitados</h3>
-        <div style={{display: 'flex', gap: '1rem', marginTop: '0.5rem'}}>
+        <div className="top-clicked-grid">
           {topClickedProducts.map(p => (
-            <div key={p.id} style={{fontSize: '0.9rem'}}>
-              <strong>{p.name}</strong>: {p.click_count || 0} clics
+            <div key={p.id} className="top-clicked-item">
+              <span className="top-clicked-name">{p.name}</span>
+              <span className="top-clicked-count">{p.click_count || 0} clics</span>
             </div>
           ))}
         </div>
