@@ -504,3 +504,78 @@
 .admin-page { }
 .admin-page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.75rem; }
 .admin-page-header h1 { font-size: 1.4rem; font-weight: 700; color: var(--text-dark); letter-spacing: -0.02em; }
+
+/* ── TOP CLICKED ANALYTICS WIDGET ── */
+.top-clicked-widget {
+  background: linear-gradient(135deg, var(--surface) 0%, rgba(35, 74, 46, 0.04) 100%);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.top-clicked-widget h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin: 0 0 0.85rem 0;
+  letter-spacing: -0.01em;
+}
+
+.top-clicked-widget > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.top-clicked-widget > div > div {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.5rem 0.85rem;
+  flex: 1;
+  min-width: 180px;
+}
+
+.top-clicked-widget > div > div strong {
+  font-size: 0.85rem;
+  color: var(--text-dark);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+}
+
+/* ── IMAGE QUALITY TIPS ── */
+.image-quality-tips {
+  margin-top: 1rem;
+  background: rgba(35, 74, 46, 0.04);
+  border: 1px dashed rgba(35, 74, 46, 0.25);
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+}
+
+.quality-tip-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin: 0 0 0.5rem 0;
+}
+
+.quality-tip-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.quality-tip-list li {
+  font-size: 0.8rem;
+  color: var(--text-dark);
+  line-height: 1.4;
+}

@@ -46,6 +46,10 @@ const ProductsList = () => {
     return <span style={{background:'#e6fced',color:'#008a3d',padding:'2px 8px',borderRadius:'10px',fontSize:'0.78rem',fontWeight:700}}>{stock} ud.</span>;
   };
 
+  const topClickedProducts = [...products]
+    .sort((a, b) => (b.click_count || 0) - (a.click_count || 0))
+    .slice(0, 3);
+
   return (
     <div className="admin-page">
       <div className="admin-page-header">
@@ -54,6 +58,17 @@ const ProductsList = () => {
           <span className="adm-count-pill">{products.length} artículos</span>
         </div>
         <Link to="/admin/products/new" className="btn-primary">+ Nuevo Producto</Link>
+      </div>
+
+      <div className="top-clicked-widget" style={{background: '#f8fafc', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem', border: '1px solid #e2e8f0'}}>
+        <h3>🔥 Top Productos Más Visitados</h3>
+        <div style={{display: 'flex', gap: '1rem', marginTop: '0.5rem'}}>
+          {topClickedProducts.map(p => (
+            <div key={p.id} style={{fontSize: '0.9rem'}}>
+              <strong>{p.name}</strong>: {p.click_count || 0} clics
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="table-container">
@@ -70,6 +85,7 @@ const ProductsList = () => {
                 <th>Categoría</th>
                 <th>Precio</th>
                 <th>Stock</th>
+                <th>Clicks</th>
                 <th>Upsell</th>
                 <th>Acciones</th>
               </tr>
@@ -87,6 +103,7 @@ const ProductsList = () => {
                   </td>
                   <td style={{fontWeight: 700}}>${product.price?.toLocaleString()}</td>
                   <td>{getStockBadge(product.stock ?? 0)}</td>
+                  <td>{product.click_count || 0}</td>
                   <td>{product.quick_add_upsell ? '✅' : '—'}</td>
                   <td>
                     <div className="action-buttons">

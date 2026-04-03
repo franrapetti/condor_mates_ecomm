@@ -74,6 +74,15 @@ function ProductDetail() {
       setActiveImage(data.image_url);
       setActiveImageIdx(0);
 
+      // ── Increment click_count ──
+      if (!silent) {
+        try {
+          await supabase.rpc('increment_click_count', { product_id: productId });
+        } catch (_) {
+          // silently ignore if RPC not set up yet
+        }
+      }
+
       // ── Fetch Reviews ──
       try {
         const { data: revs } = await supabase.from('reviews').select('*').eq('product_id', productId).order('created_at', { ascending: false });

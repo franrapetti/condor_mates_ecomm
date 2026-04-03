@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { supabase } from '../lib/supabaseClient';
 import { useWishlist } from '../context/WishlistContext';
 import { useLaunchTimer } from '../hooks/useLaunchTimer';
 import { Heart } from 'lucide-react';
@@ -10,10 +11,16 @@ const ProductCard = ({ product, onAddToCart, noZoom }) => {
   const { isLaunched } = useLaunchTimer();
   const wishlisted = isWishlisted(product.id);
 
+  const handleProductClick = () => {
+    try {
+      supabase.rpc('increment_click_count', { product_id: product.id }).catch(() => {});
+    } catch (_) {}
+  };
+
   return (
     <div className="product-card">
       <div className={`product-image-container ${noZoom ? 'no-zoom' : ''}`}>
-        <Link to={`/producto/${product.id}`}>
+        <Link to={`/producto/${product.id}`} onClick={handleProductClick}>
           <img src={product.image_url} alt={product.name} loading="lazy" decoding="async" />
         </Link>
         {isLaunched && (product.category === 'Mates' || product.sub_category === 'Bombillones de Alpaca') && (

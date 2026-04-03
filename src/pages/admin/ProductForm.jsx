@@ -480,6 +480,15 @@ const ProductForm = () => {
               onRemove={handleRemoveImage}
               onSetPrimary={handleSetPrimary}
             />
+            <div className="image-quality-tips">
+              <p className="quality-tip-title">📐 Recomendaciones para imágenes de calidad:</p>
+              <ul className="quality-tip-list">
+                <li>✅ <strong>Formato cuadrado</strong> recomendado (1:1) — ej: 800×800px o 1200×1200px</li>
+                <li>✅ <strong>Fondo blanco o neutro</strong> para mostrar mejor el producto</li>
+                <li>✅ <strong>Peso máximo:</strong> 2 MB por imagen (JPG o WEBP comprimido)</li>
+                <li>✅ <strong>Varias fotos:</strong> mostrá frente, lateral y detalle para aumentar conversiones</li>
+              </ul>
+            </div>
           </div>
 
           {/* ── Submit ── */}
