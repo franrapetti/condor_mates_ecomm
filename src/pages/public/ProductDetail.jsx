@@ -21,6 +21,7 @@ function ProductDetail() {
   const [product, setProduct] = useState(null);
   const [related, setRelated] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isVariantSwitching, setIsVariantSwitching] = useState(false);
   const [activeImage, setActiveImage] = useState('');
   const [activeImageIdx, setActiveImageIdx] = useState(0);
   const [soldCount, setSoldCount] = useState(0);
@@ -58,104 +59,85 @@ function ProductDetail() {
     }
   };
 
-  useEffect(() => {
-    const fetchProduct = async () => {
-      try {
+  const fetchProduct = async (productId, silent = false) => {
+    try {
+      if (!silent) {
         setLoading(true);
-        window.scrollTo(0,0);
-        const { data, error } = await supabase.from('products').select('*').eq('id', id).single();
-        if (error) throw error;
-        setProduct(data);
-        setActiveImage(data.image_url);
-        setActiveImageIdx(0);
-
-        // ── Fetch Reviews ──
-        // Fail gracefully if table doesn't exist yet
-        try {
-          const { data: revs } = await supabase.from('reviews').select('*').eq('product_id', id).order('created_at', { ascending: false });
-          if (revs) setReviews(revs);
-        } catch (e) {
-          console.warn('Reviews table might not be set up yet.');
-        }
-
-        // ── Fetch Bundle Items (Matera + Bombilla) ──
-        if (data.category === 'Mates') {
-          // Fetch Materas (Materas y Yerberas)
-          const { data: materas } = await supabase.from('products')
-            .select('*')
-            .ilike('category', '%Matera%')
-            .gte('price', 15000) // Filtrar materas descartables o muy baratas
-            .order('price', { ascending: true })
-            .limit(5);
-          
-          // Fetch Bombillas
-          const { data: bombillas } = await supabase.from('products')
-            .select('*')
-            .ilike('category', '%Bombilla%')
-            .not('name', 'ilike', '%mini%')
-            .order('price', { ascending: true })
-            .limit(5);
-
-          const kitItems = [];
-          if (materas && materas.length > 0) {
-            kitItems.push(materas[Math.floor(Math.random() * materas.length)]);
-          }
-          if (bombillas && bombillas.length > 0) {
-            kitItems.push(bombillas[Math.floor(Math.random() * bombillas.length)]);
-          }
-          setBundleItems(kitItems);
-        } else {
-          setBundleItems([]);
-        }
-
-        const { data: relatedData } = await supabase.from('products')
-          .select('*')
-          .eq('category', data.category)
-          .neq('id', data.id)
-          .limit(4);
-        setRelated((relatedData || []).filter(p => p.id !== data.id).slice(0, 3));
-        
-        // Fetch sold count for social proof
-        const { data: orderData } = await supabase
-          .from('orders')
-          .select('items')
-          .in('status', ['paid', 'shipped']);
-        
-        if (orderData) {
-          let count = 0;
-          orderData.forEach(order => {
-            if (order.items) {
-              order.items.forEach(item => {
-                if (item.id === data.id) count += item.quantity;
-              });
-            }
-          });
-          setSoldCount(count);
-        }
-        
-        // Reset state on navigation
-        setShippingResult(null);
-        setPostalCode('');
-        setActiveAccordion('desc');
-        setColorVariants([]);
-
-        // ── Fetch Color Variants ──
-        if (data.color_group) {
-          const { data: variants } = await supabase
-            .from('products')
-            .select('id, color_name, image_url')
-            .eq('color_group', data.color_group)
-            .neq('id', data.id);
-          if (variants) setColorVariants(variants);
-        }
-      } catch (err) {
-        navigate('/');
-      } finally {
-        setLoading(false);
+        window.scrollTo(0, 0);
+      } else {
+        setIsVariantSwitching(true);
       }
-    };
-    fetchProduct();
-  }, [id, navigate]);
+
+      const { data, error } = await supabase.from('products').select('*').eq('id', productId).single();
+      if (error) throw error;
+      setProduct(data);
+      setActiveImage(data.image_url);
+      setActiveImageIdx(0);
+
+      // ── Fetch Reviews ──
+      try {
+        const { data: revs } = await supabase.from('reviews').select('*').eq('product_id', productId).order('created_at', { ascending: false });
+        if (revs) setReviews(revs);
+      } catch (e) {
+        console.warn('Reviews table might not be set up yet.');
+      }
+
+      // ── Fetch Bundle Items ──
+      if (data.category === 'Mates') {
+        const { data: materas } = await supabase.from('products')
+          .select('*').ilike('category', '%Matera%').gte('price', 15000)
+          .order('price', { ascending: true }).limit(5);
+        const { data: bombillas } = await supabase.from('products')
+          .select('*').ilike('category', '%Bombilla%').not('name', 'ilike', '%mini%')
+          .order('price', { ascending: true }).limit(5);
+        const kitItems = [];
+        if (materas?.length) kitItems.push(materas[Math.floor(Math.random() * materas.length)]);
+        if (bombillas?.length) kitItems.push(bombillas[Math.floor(Math.random() * bombillas.length)]);
+        setBundleItems(kitItems);
+      } else {
+        setBundleItems([]);
+      }
+
+      const { data: relatedData } = await supabase.from('products')
+        .select('*').eq('category', data.category).neq('id', data.id).limit(4);
+      setRelated((relatedData || []).filter(p => p.id !== data.id).slice(0, 3));
+
+      const { data: orderData } = await supabase.from('orders').select('items').in('status', ['paid', 'shipped']);
+      if (orderData) {
+        let count = 0;
+        orderData.forEach(order => {
+          order.items?.forEach(item => { if (item.id === data.id) count += item.quantity; });
+        });
+        setSoldCount(count);
+      }
+
+      setShippingResult(null);
+      setPostalCode('');
+      setActiveAccordion('desc');
+      setColorVariants([]);
+
+      if (data.color_group) {
+        const { data: variants } = await supabase.from('products')
+          .select('id, color_name, image_url')
+          .eq('color_group', data.color_group)
+          .neq('id', data.id);
+        if (variants) setColorVariants(variants);
+      }
+    } catch (err) {
+      if (!silent) navigate('/');
+    } finally {
+      setLoading(false);
+      setIsVariantSwitching(false);
+    }
+  };
+
+  const handleVariantSwitch = (variantId) => {
+    navigate(`/producto/${variantId}`, { replace: true });
+  };
+
+  useEffect(() => {
+    fetchProduct(id, false);
+  }, [id]);
 
   const handleCalculateShipping = (e) => {
     e.preventDefault();
@@ -201,7 +183,7 @@ function ProductDetail() {
     setIsCartOpen(true);
   };
 
-  if (loading) return <ProductDetailSkeleton />;
+  if (loading && !isVariantSwitching) return <ProductDetailSkeleton />;
   if (!product) return null;
 
   const gallery = [product.image_url, ...(product.gallery_images || [])].filter(Boolean);
@@ -234,7 +216,7 @@ function ProductDetail() {
       <main className="container main-content fade-in">
         <button className="btn-back detail-back" onClick={() => navigate(-1)}>← Volver al catálogo</button>
         
-        <div className="product-detail-layout">
+        <div className="product-detail-layout" style={{ opacity: isVariantSwitching ? 0.45 : 1, transition: 'opacity 0.2s ease' }}>
           <div className="product-gallery">
             <div className="main-image-container" onClick={() => setIsZoomOpen(true)} style={{cursor: 'zoom-in'}}>
               <img src={activeImage} alt={product.name} className="main-image" decoding="async" />
@@ -293,7 +275,7 @@ function ProductDetail() {
                   <span
                     key={v.id}
                     className="color-swatch-name"
-                    onClick={() => navigate(`/producto/${v.id}`)}
+                    onClick={() => handleVariantSwitch(v.id)}
                     style={{cursor:'pointer'}}
                   >
                     {v.color_name || 'Otro color'}

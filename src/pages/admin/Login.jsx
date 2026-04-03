@@ -17,35 +17,45 @@ const Login = () => {
       await login(email, password);
       navigate('/admin');
     } catch (err) {
-      setError('Error al iniciar sesión: ' + err.message);
+      setError('Credenciales incorrectas. Intentá de nuevo.');
     }
   };
 
   return (
     <div className="admin-login-container">
-      <div className="admin-login-box">
-        <h2>Admin Login</h2>
+      <div className="admin-login-card">
+        <div className="admin-login-header">
+          <div>
+            <span className="admin-login-logo">Cóndor Mates</span>
+            <span className="admin-login-pill">Admin</span>
+          </div>
+          <p className="admin-login-subtitle">Ingresá para gestionar tu tienda</p>
+        </div>
+
         {error && <div className="error-message">{error}</div>}
+
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label>Email</label>
-            <input 
-              type="email" 
-              value={email} 
-              onChange={e => setEmail(e.target.value)} 
-              required 
+            <input
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="admin@condormates.com"
+              required
             />
           </div>
           <div className="form-group">
-            <label>Password</label>
-            <input 
-              type="password" 
-              value={password} 
-              onChange={e => setPassword(e.target.value)} 
-              required 
+            <label>Contraseña</label>
+            <input
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder="••••••••"
+              required
             />
           </div>
-          <button type="submit" className="login-btn">Entrar</button>
+          <button type="submit" className="login-btn">Entrar al panel</button>
         </form>
       </div>
     </div>

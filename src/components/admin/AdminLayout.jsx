@@ -2,52 +2,80 @@ import React from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
-import { Moon, Sun } from 'lucide-react';
+import { LayoutGrid, ShoppingBag, Moon, Sun, LogOut, ExternalLink } from 'lucide-react';
 import './AdminLayout.css';
+
+const NAV_LINKS = [
+  { to: '/admin',        end: true,  icon: <LayoutGrid size={18} />,  label: 'Catálogo'  },
+  { to: '/admin/orders', end: false, icon: <ShoppingBag size={18} />, label: 'Ventas'    },
+];
 
 const AdminLayout = () => {
   const { logout, user } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
+  const initials = user?.email?.[0]?.toUpperCase() ?? 'A';
+
   const handleLogout = async () => {
-    try {
-      await logout();
-      navigate('/admin/login');
-    } catch (err) {
-      console.error(err);
-    }
+    try { await logout(); navigate('/admin/login'); }
+    catch (err) { console.error(err); }
   };
 
   return (
-    <div className="admin-layout">
-      <aside className="admin-sidebar">
-        <div className="admin-brand">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-            <h2>Mate Shop Admin</h2>
-            <button className="theme-toggle" onClick={toggleTheme} title="Cambiar Tema" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.3rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text-dark)', cursor: 'pointer' }}>
-              {isDark ? <Sun size={16} /> : <Moon size={16} />}
-            </button>
-          </div>
-          <p className="admin-user">{user?.email}</p>
+    <div className="adm-shell">
+
+      {/* ── Sidebar ── */}
+      <aside className="adm-sidebar">
+        <div className="adm-brand">
+          <span className="adm-brand-logo">Cóndor Mates</span>
+          <span className="adm-brand-pill">Admin</span>
         </div>
-        <nav className="admin-nav">
-          <NavLink to="/admin" end className={({ isActive }) => isActive ? 'active' : ''}>
-            📦 Catálogo
-          </NavLink>
-          <NavLink to="/admin/orders" className={({ isActive }) => isActive ? 'active' : ''}>
-            💰 Ventas
-          </NavLink>
+
+        <nav className="adm-nav">
+          {NAV_LINKS.map(({ to, end, icon, label }) => (
+            <NavLink
+              key={to}
+              to={to}
+              end={end}
+              className={({ isActive }) => `adm-nav-link${isActive ? ' adm-nav-link--active' : ''}`}
+            >
+              {icon}
+              {label}
+            </NavLink>
+          ))}
         </nav>
-        <div className="admin-footer">
-          <button onClick={handleLogout} className="logout-btn">Logout</button>
+
+        <div className="adm-sidebar-footer">
+          <a href="/" target="_blank" rel="noreferrer" className="adm-nav-link adm-nav-link--muted">
+            <ExternalLink size={17} />
+            Ver tienda
+          </a>
+          <button onClick={handleLogout} className="adm-nav-link adm-nav-link--danger">
+            <LogOut size={17} />
+            Salir
+          </button>
         </div>
       </aside>
-      <main className="admin-content">
-        <div className="admin-content-inner">
+
+      {/* ── Main ── */}
+      <div className="adm-main">
+        <header className="adm-topbar">
+          <div style={{ flex: 1 }} />
+          <div className="adm-topbar-right">
+            <button className="adm-theme-btn" onClick={toggleTheme} title="Cambiar tema">
+              {isDark ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
+            <div className="adm-avatar">{initials}</div>
+            <span className="adm-user-email">{user?.email}</span>
+          </div>
+        </header>
+
+        <div className="adm-content">
           <Outlet />
         </div>
-      </main>
+      </div>
+
     </div>
   );
 };

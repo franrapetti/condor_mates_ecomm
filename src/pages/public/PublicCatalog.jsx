@@ -104,6 +104,10 @@ function PublicCatalog() {
 
   const crossSells = products.filter(p => p.category === 'Yerbas' || p.category === 'Bombillas').slice(0, 2);
 
+  const scrollToCatalog = () => {
+    document.getElementById('catalog-section')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
     <>
       <Header 
@@ -116,8 +120,79 @@ function PublicCatalog() {
         }}
         currentCategory={currentCategory}
       />
-      
-      <main className="container main-content">
+
+      {/* Full-bleed Hero — only on main catalog view */}
+      {currentCategory === 'All' && !searchTerm && isLaunched && (
+        <>
+          <section className="hero-fullbleed fade-in" style={{ position: 'relative', overflow: 'hidden' }}>
+            {/* Responsive background via <picture> */}
+            <picture style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
+              <source media="(min-width: 768px)" srcSet="/hero-bg.png" />
+              <img
+                src="/hero-bg-mobile.png"
+                alt=""
+                aria-hidden="true"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  objectPosition: 'center',
+                  display: 'block',
+                }}
+                onError={(e) => { e.currentTarget.src = '/hero-bg.png'; }}
+              />
+            </picture>
+            <div className="hero-fullbleed-overlay" />
+            <div className="hero-fullbleed-content" style={{ position: 'relative', zIndex: 1 }}>
+              <span className="hero-badge">📦 Envíos al instante + Regalo</span>
+              <h1 className="hero-fullbleed-title">Elevá tu ritual<br/>de cada mañana.</h1>
+              <p className="hero-fullbleed-subtitle">Mates, bombillas y accesorios premium. Seleccionados con criterio para conectarte con la verdadera tradición en cada cebada.</p>
+              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginTop: '1.5rem' }}>
+                <button className="hero-fullbleed-cta" onClick={scrollToCatalog}>
+                  Explorar Catálogo ↓
+                </button>
+                <a
+                  href="/combo"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    background: 'rgba(255,255,255,0.15)',
+                    backdropFilter: 'blur(8px)',
+                    color: 'white',
+                    border: '1px solid rgba(255,255,255,0.35)',
+                    borderRadius: '8px',
+                    padding: '0.7rem 1.2rem',
+                    fontWeight: 700,
+                    fontSize: '0.9rem',
+                    textDecoration: 'none',
+                    transition: 'background 0.2s',
+                  }}
+                >
+                  ✨ Armá tu Combo
+                </a>
+              </div>
+            </div>
+          </section>
+
+
+          {/* Trust Metrics Bar */}
+          <div className="trust-bar fade-in">
+            <div className="trust-bar-item">✅ <strong>+500 ventas</strong> concretadas</div>
+            <div className="trust-bar-item">⭐ <strong>4.9/5</strong> de satisfacción</div>
+            <div className="trust-bar-item">🚚 Envíos por <strong>Andreani</strong></div>
+            <div className="trust-bar-item">💳 Pagos seguros por <strong>Mercado Pago</strong></div>
+          </div>
+        </>
+      )}
+
+      {currentCategory === 'All' && !searchTerm && !isLaunched && (
+        <main className="container main-content">
+          <CountdownTimer />
+        </main>
+      )}
+
+      <main className="container main-content" id="catalog-section">
         {currentCategory === 'Nosotros' ? (
           <div className="page-section fade-in modern-layout">
             <div className="capsule-hero">
@@ -164,31 +239,7 @@ function PublicCatalog() {
             </div>
           </div>
         ) : (
-          <div className="fade-in">
-            {currentCategory === 'All' && !searchTerm && (
-              <>
-                {!isLaunched ? (
-                  <CountdownTimer />
-                ) : (
-                  <div className="hero-banner fade-in">
-                    <div className="hero-content">
-                      <span className="hero-badge">📦 Envíos al instante + Regalo</span>
-                      <h1 className="hero-title">Elevá tu ritual<br/>de cada mañana.</h1>
-                      <p className="hero-subtitle">Mates, bombillas y accesorios premium. Seleccionados con criterio para conectarte con la verdadera tradición en cada cebada.</p>
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-            {isLaunched && currentCategory === 'All' && !searchTerm && (
-              <div className="social-proof-bar fade-in">
-                <div className="sp-item">✅ <strong>+500 ventas</strong> concretadas</div>
-                <div className="sp-item">⭐ <strong>4.9/5</strong> de satisfacción</div>
-                <div className="sp-item">🚚 Envíos por <strong>Andreani</strong></div>
-                <div className="sp-item">💳 Pagos seguros por <strong>Mercado Pago</strong></div>
-              </div>
-            )}
-            
+          <div className="fade-in catalog-main-content">
             <div className="catalog-header">
               <div className="catalog-title-bar">
                 <h2>
