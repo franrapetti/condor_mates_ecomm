@@ -11,6 +11,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: relative; /* Anchor for the absolute dropdown */
 }
 
 /* Hamburger: hidden on desktop, shown on mobile */
@@ -88,15 +89,17 @@
 }
 
 .desktop-nav {
-  position: static; /* dropdown uses fixed positioning, no anchor needed */
+  position: static; 
 }
 
 .dropdown-menu {
-  /* Fixed positioning = always centered to the viewport, regardless of trigger position */
-  position: fixed;
-  top: 74px; /* height of sticky header */
-  left: 50%;
-  transform: translateX(-50%) translateY(10px);
+  /* Absolute relative to .header-content */
+  position: absolute;
+  top: calc(100% + 5px); 
+  left: 0;
+  right: 0;
+  margin: 0 auto; /* Centers the max-content width block */
+  transform: translateY(10px);
   background-color: var(--surface);
   border-radius: 16px;
   box-shadow: 0 20px 40px -8px rgba(0, 0, 0, 0.14), 0 0 0 1px rgba(0,0,0,0.05);
@@ -109,12 +112,12 @@
   pointer-events: none;
   z-index: 1000;
 
-  /* 4-column grid → 7 items = 2 rows */
   display: grid;
-  grid-template-columns: repeat(4, minmax(110px, auto));
+  /* 4 columns: exactly 2 rows for 7 categories */
+  grid-template-columns: repeat(4, minmax(110px, 1fr));
   gap: 0.75rem 2rem;
   width: max-content;
-  max-width: min(92vw, 800px);
+  max-width: 100%;
 }
 
 /* Invisible hover bridge so the menu stays open */
@@ -131,7 +134,7 @@
 .dropdown-parent:hover .dropdown-menu {
   opacity: 1;
   visibility: visible;
-  transform: translateX(-50%) translateY(0);
+  transform: translateY(0);
   pointer-events: auto;
 }
 

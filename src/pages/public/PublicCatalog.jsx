@@ -8,6 +8,7 @@ import { useLaunchTimer } from '../../hooks/useLaunchTimer';
 import { useCart } from '../../context/CartContext';
 import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
+import { getImgUrl } from '../../lib/imageUtils';
 
 function PublicCatalog() {
   const [products, setProducts] = useState([]);
@@ -156,9 +157,9 @@ function PublicCatalog() {
           >
             {/* Responsive background via <picture> — URLs loaded from admin settings */}
             <picture style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
-              <source media="(min-width: 768px)" srcSet={heroDesktop} />
+              <source media="(min-width: 768px)" srcSet={getImgUrl(heroDesktop, { w: 1920, q: 75 })} />
               <img
-                src={heroMobile}
+                src={getImgUrl(heroMobile, { w: 800, q: 75 })}
                 alt=""
                 aria-hidden="true"
                 style={{
