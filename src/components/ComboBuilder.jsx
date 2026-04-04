@@ -270,6 +270,9 @@ export default function ComboBuilder() {
       
       addToCart({ 
         ...p, 
+        id: `${p.id}_combo`, // Force unique ID so it doesn't merge with normal catalog purchases
+        combo_parent_id: p.id,
+        name: p.name + (isDiscounted ? ` (Combo -${discount}%)` : ' (Combo)'),
         promo_price: appliedPrice, // Override promo_price with combo price
         is_combo_item: true,
         combo_discount: isDiscounted ? discount : 0,
