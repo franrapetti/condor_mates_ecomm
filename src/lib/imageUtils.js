@@ -35,7 +35,10 @@ export function getImgUrl(rawUrl, { w = 800, q = 80, resize = 'cover' } = {}) {
   if (!SUPABASE_STORAGE_PATTERN.test(rawUrl)) return rawUrl;
 
   try {
-    const url = new URL(rawUrl);
+    // Supabase image resizer requires the path to be /render/image/public/ instead of /object/public/
+    const transformedUrl = rawUrl.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/');
+    
+    const url = new URL(transformedUrl);
     url.searchParams.set('width', String(w));
     url.searchParams.set('quality', String(q));
     url.searchParams.set('resize', resize);
