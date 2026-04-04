@@ -36,27 +36,26 @@ export function getImgUrl(rawUrl, { w = 800, h = null, q = 70, resize = 'contain
     return rawUrl;
   }
 
-  // 1. Rewrite endpoint to activate Supabase Image Transformations engine
-  let transformedUrl = rawUrl.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/');
-  
-  // 2. Build parameters manually to avoid 'new URL()' failure on relative paths
-  const params = [];
-  
-  // 3. Cap width (Max 2000 per Supabase, 1600 is safer)
-  const safeWidth = Math.min(w, 1600);
-  params.push(`width=${safeWidth}`);
-  
-  if (h) {
-    params.push(`height=${h}`);
+  try {
+    const url = new URL(rawUrl);
+    
+    // Cap width (Max 2000 per Supabase, 1600 is safer)
+    const safeWidth = Math.min(w, 1600);
+    url.searchParams.set('width', String(safeWidth));
+    
+    if (h) {
+      url.searchParams.set('height', String(h));
+    }
+    
+    url.searchParams.set('quality', String(q));
+    url.searchParams.set('resize', resize);
+    url.searchParams.set('format', 'webp'); // Force WebP for all images
+    
+    return url.toString();
+  } catch (err) {
+    console.error('Error transforming image URL:', err);
+    return rawUrl;
   }
-  
-  params.push(`quality=${q}`);
-  params.push(`resize=${resize}`);
-  params.push('format=webp'); // Force WebP for all images
-  
-  // Join params and append with ? (or & if there are already params)
-  const separator = transformedUrl.includes('?') ? '&' : '?';
-  return `${transformedUrl}${separator}${params.join('&')}`;
 }
 
 /**
