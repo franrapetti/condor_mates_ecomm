@@ -31,31 +31,9 @@ const SUPABASE_STORAGE_PATTERN = /\/storage\/v1\/object\/public\//;
 export function getImgUrl(rawUrl, { w = 800, h = null, q = 70, resize = 'contain' } = {}) {
   if (!rawUrl) return '';
 
-  // Only transform URLs that contain the Supabase public storage endpoint
-  if (!rawUrl.includes('/storage/v1/object/public/')) {
-    return rawUrl;
-  }
-
-  try {
-    const url = new URL(rawUrl);
-    
-    // Cap width (Max 2000 per Supabase, 1600 is safer)
-    const safeWidth = Math.min(w, 1600);
-    url.searchParams.set('width', String(safeWidth));
-    
-    if (h) {
-      url.searchParams.set('height', String(h));
-    }
-    
-    url.searchParams.set('quality', String(q));
-    url.searchParams.set('resize', resize);
-    url.searchParams.set('format', 'webp'); // Force WebP for all images
-    
-    return url.toString();
-  } catch (err) {
-    console.error('Error transforming image URL:', err);
-    return rawUrl;
-  }
+  // Currently returning the raw URL without modifications to ensure the Supabase CDN Cache is hit.
+  // When you activate Image Transformations in the Supabase Dashboard, we can reinstate the query parameters.
+  return rawUrl;
 }
 
 /**
