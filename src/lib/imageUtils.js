@@ -31,36 +31,32 @@ const SUPABASE_STORAGE_PATTERN = /\/storage\/v1\/object\/public\//;
 export function getImgUrl(rawUrl, { w = 800, h = null, q = 70, resize = 'contain' } = {}) {
   if (!rawUrl) return '';
 
-  // Only transform Supabase storage URLs
-  if (!SUPABASE_STORAGE_PATTERN.test(rawUrl)) return rawUrl;
-
-  try {
-    // 1. Rewrite to the transformation endpoint
-    const transformedUrl = rawUrl.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/');
-    
-    const url = new URL(transformedUrl);
-    
-    // 2. Cap width/height to avoid engine timeouts
-    const safeWidth = Math.min(w, 1600);
-    url.searchParams.set('width', String(safeWidth));
-    
-    if (h) {
-      url.searchParams.set('height', String(h));
-    }
-    
-    url.searchParams.set('quality', String(q));
-    
-    // 3. Always set resize mode explicitly to avoid CDN defaults
-    url.searchParams.set('resize', resize);
-    
-    // 4. Force WebP for smaller payloads
-    url.searchParams.set('format', 'webp');
-    
-    return url.toString();
-  } catch (err) {
-    console.error('Error transforming image URL:', err);
+  // Only transform URLs that contain the Supabase public storage endpoint
+  if (!rawUrl.includes('/storage/v1/object/public/')) {
     return rawUrl;
   }
+
+  // 1. Rewrite endpoint to activate Supabase Image Transformations engine
+  let transformedUrl = rawUrl.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/');
+  
+  // 2. Build parameters manually to avoid 'new URL()' failure on relative paths
+  const params = [];
+  
+  // 3. Cap width (Max 2000 per Supabase, 1600 is safer)
+  const safeWidth = Math.min(w, 1600);
+  params.push(`width=${safeWidth}`);
+  
+  if (h) {
+    params.push(`height=${h}`);
+  }
+  
+  params.push(`quality=${q}`);
+  params.push(`resize=${resize}`);
+  params.push('format=webp'); // Force WebP for all images
+  
+  // Join params and append with ? (or & if there are already params)
+  const separator = transformedUrl.includes('?') ? '&' : '?';
+  return `${transformedUrl}${separator}${params.join('&')}`;
 }
 
 /**
