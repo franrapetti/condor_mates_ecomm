@@ -18,9 +18,9 @@ const CATEGORIES = [
 
 const DISCOUNT_TIERS = [
   { min: 1, max: 1, pct: 0,  label: 'Precio base',    color: 'bg-bone-300' },
-  { min: 2, max: 2, pct: 5,  label: '5% de descuento', color: 'bg-green-100' },
-  { min: 3, max: 3, pct: 8,  label: '8% de descuento', color: 'bg-green-200' },
-  { min: 4, max: 99, pct: 14, label: '14% de descuento', color: 'bg-forest-700' },
+  { min: 2, max: 2, pct: 10, label: '10% de descuento', color: 'bg-green-100' },
+  { min: 3, max: 3, pct: 15, label: '15% de descuento', color: 'bg-green-200' },
+  { min: 4, max: 99, pct: 20, label: '20% de descuento', color: 'bg-forest-700' },
 ];
 
 // ─── PACKAGING ALGORITHM ──────────────────────────────────────────────────────
@@ -153,7 +153,7 @@ function VisualBox({ selections, discount, subtotal, finalPrice, itemCount, onAd
             />
           </div>
           <p className="text-[0.6rem] font-bold text-gray-400 mt-2 text-center">
-            {itemCount < 2 ? 'Agregá 1 más para 5% OFF' : itemCount < 3 ? 'Agregá 1 más para 8% OFF' : itemCount < 4 ? 'Agregá 1 más para 14% OFF' : '¡Máximo descuento alcanzado!'}
+            {itemCount < 2 ? 'Agregá 1 más para 10% OFF' : itemCount < 3 ? 'Agregá 1 más para 15% OFF' : itemCount < 4 ? 'Agregá 1 más para 20% OFF' : '¡Máximo descuento alcanzado!'}
           </p>
         </div>
       )}
@@ -216,9 +216,23 @@ export default function ComboBuilder() {
 
   const selectedItems = useMemo(() => Object.values(selections).filter(Boolean), [selections]);
   const itemCount = selectedItems.length;
+  
+  // Raw subtotal (without discounts)
   const subtotal = useMemo(() => selectedItems.reduce((acc, p) => acc + (p.promo_price || p.price), 0), [selectedItems]);
+  
+  // Get active discount percentage based on item count
   const discount = useMemo(() => (DISCOUNT_TIERS.slice().reverse().find(t => itemCount >= t.min))?.pct || 0, [itemCount]);
-  const finalPrice = Math.round(subtotal * (1 - discount / 100));
+  
+  // Margen Protegido: Apply discount only to items that are NOT Yerbas
+  const finalPrice = useMemo(() => {
+    return Math.round(selectedItems.reduce((acc, p) => {
+      const pPrice = p.promo_price || p.price;
+      if (p.category === 'Yerbas') {
+        return acc + pPrice; // Full price for Yerba to protect margin
+      }
+      return acc + (pPrice * (1 - discount / 100)); // Discounted price for other items
+    }, 0));
+  }, [selectedItems, discount]);
 
   const handleToggle = (cat, product) => {
     setSelections(prev => ({ ...prev, [cat]: prev[cat]?.id === product.id ? null : product }));
