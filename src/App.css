@@ -238,9 +238,7 @@
   position: relative;
   width: 100%;
   min-height: 82vh;
-  background-image: url('/hero-bg.png');
-  background-size: cover;
-  background-position: center 30%;
+  /* background-image removed — handled dynamically via <picture> in React */
   display: flex;
   align-items: flex-end;
   justify-content: flex-start;

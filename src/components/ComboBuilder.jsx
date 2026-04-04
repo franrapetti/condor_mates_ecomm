@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { useCart } from '../context/CartContext';
-import { ShoppingBag, Package, ChevronLeft, Check, ArrowRight } from 'lucide-react';
+import { ShoppingBag, Package, ChevronLeft, Check, ArrowRight, ArrowLeft } from 'lucide-react';
 import { getImgUrl } from '../lib/imageUtils';
 import './ComboBuilder.css';
 
@@ -250,9 +251,18 @@ export default function ComboBuilder() {
         
         {/* Header Section */}
         <div className="mb-12 text-center lg:text-left">
-           <span className="text-[0.65rem] font-black tracking-[0.3em] uppercase text-[var(--forest-dark)] bg-green-50 px-4 py-1.5 rounded-full border border-green-100">Configurador Pro Premium</span>
-           <h1 className="text-4xl lg:text-5xl font-black mt-4 tracking-tighter text-gray-900" style={{ fontFamily: 'Montserrat, sans-serif' }}>ARMA TU COMBO PERFECTO</h1>
-           <p className="text-gray-500 mt-2 text-lg font-medium">Elegí tus favoritos y el descuento se aplica solo. 🧉🦅</p>
+           {/* Back arrow */}
+           <Link
+             to="/"
+             className="inline-flex items-center gap-2 text-sm font-bold text-gray-400 hover:text-gray-700 transition-colors mb-4"
+           >
+             <ArrowLeft size={16} />
+             Volver al catálogo
+           </Link>
+           <h1 className="text-4xl lg:text-5xl font-black mt-2 tracking-tighter text-gray-900" style={{ fontFamily: 'Montserrat, sans-serif' }}>ARMÁ TU COMBO 🧉</h1>
+           <p className="text-gray-500 mt-3 text-lg font-medium max-w-xl">
+             Elegí tus productos favoritos — cuantos más sumás, mayor descuento autómatico te llevás.
+           </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-10 items-start">
