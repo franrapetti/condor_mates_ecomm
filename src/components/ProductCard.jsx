@@ -23,7 +23,7 @@ const ProductCard = ({ product, onAddToCart, noZoom }) => {
       <div className={`product-image-container ${noZoom ? 'no-zoom' : ''}`}>
         <Link to={`/producto/${product.id}`} onClick={handleProductClick}>
           <img 
-            src={getImgUrl(product.image_url, { w: 600, q: 82 })} 
+            src={getImgUrl(product.image_url, { w: 400, q: 65 })} 
             alt={product.name} 
             loading="lazy" 
             decoding="async" 

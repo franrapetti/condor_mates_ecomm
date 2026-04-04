@@ -280,6 +280,15 @@
   text-shadow: 0 2px 20px rgba(0, 0, 0, 0.4);
 }
 
+.handwriting-accent {
+  font-family: 'Caveat', cursive, sans-serif;
+  color: var(--accent-light);
+  display: inline-block;
+  transform: rotate(-3deg);
+  margin: 0 4px;
+  font-weight: 700;
+}
+
 .hero-fullbleed-subtitle {
   font-size: clamp(1rem, 1.8vw, 1.2rem);
   color: rgba(255, 255, 255, 0.82);
