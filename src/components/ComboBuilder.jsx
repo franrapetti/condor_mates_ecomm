@@ -77,30 +77,41 @@ function CategoryCard({ cat, selected, onClick }) {
 
 function ProductCard({ product, selected, onToggle }) {
   const isSelected = !!selected;
-  const handleClick = () => {
-    // Analytics tracking
-    supabase.rpc('increment_click_count', { product_id: product.id }).catch(() => {});
+  const handleClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Analytics tracking (bomb-proofed)
+    try {
+      if (supabase && supabase.rpc) {
+        supabase.rpc('increment_click_count', { product_id: product.id }).catch(() => {});
+      }
+    } catch (err) {
+      console.warn("Analytics error ignored", err);
+    }
+    
     onToggle(product);
   };
 
   return (
     <button
+      type="button"
       onClick={handleClick}
-      className={`relative text-left w-full rounded-2xl border-2 overflow-hidden transition-all duration-200 group bg-white ${isSelected ? 'border-[var(--forest-dark)] ring-1 ring-[var(--forest-dark)]' : 'border-gray-100 hover:border-gray-200 hover:shadow-md'}`}
+      className={`relative text-left w-full rounded-2xl border-2 overflow-hidden transition-all duration-200 group bg-white ${isSelected ? 'border-[var(--forest-dark)] ring-1 ring-[var(--forest-dark)]' : 'border-gray-100 hover:border-gray-200 hover:shadow-md cursor-pointer'}`}
     >
-      <div className="aspect-[4/5] w-full overflow-hidden bg-gray-50">
+      <div className="aspect-[4/5] w-full overflow-hidden bg-gray-50 pointer-events-none">
         <img 
-          src={getImgUrl(product.image_url, { w: 400, q: 80 })} 
+          src={product.image_url} 
           alt={product.name} 
           className="w-full h-full object-cover transition-transform group-hover:scale-110" 
         />
       </div>
-      <div className="p-3">
+      <div className="p-3 pointer-events-none">
         <p className="text-[0.8rem] font-bold text-gray-800 line-clamp-1">{product.name}</p>
         <p className="text-[0.85rem] font-black text-[var(--forest-dark)] mt-0.5">${(product.promo_price || product.price).toLocaleString()}</p>
       </div>
       {isSelected && (
-        <div className="absolute top-2 right-2 bg-[var(--forest-dark)] text-white w-5 h-5 rounded-full flex items-center justify-center">
+        <div className="absolute top-2 right-2 bg-[var(--forest-dark)] text-white w-5 h-5 rounded-full flex items-center justify-center pointer-events-none shadow-md">
           <Check size={12} strokeWidth={3} />
         </div>
       )}
