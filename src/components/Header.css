@@ -96,10 +96,8 @@
   /* Absolute relative to .header-content */
   position: absolute;
   top: calc(100% + 5px); 
-  left: 0;
-  right: 0;
-  margin: 0 auto; /* Centers the max-content width block */
-  transform: translateY(10px);
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
   background-color: var(--surface);
   border-radius: 16px;
   box-shadow: 0 20px 40px -8px rgba(0, 0, 0, 0.14), 0 0 0 1px rgba(0,0,0,0.05);
@@ -114,10 +112,10 @@
 
   display: grid;
   /* 4 columns: exactly 2 rows for 7 categories */
-  grid-template-columns: repeat(4, minmax(110px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 0.75rem 2rem;
-  width: max-content;
-  max-width: 100%;
+  width: 90vw;
+  max-width: 800px;
 }
 
 /* Invisible hover bridge so the menu stays open */
@@ -134,14 +132,14 @@
 .dropdown-parent:hover .dropdown-menu {
   opacity: 1;
   visibility: visible;
-  transform: translateY(0);
+  transform: translateX(-50%) translateY(0);
   pointer-events: auto;
 }
 
 .dropdown-group {
   display: flex;
   flex-direction: column;
-  min-width: max-content;
+  min-width: 0;
   align-items: flex-start;
 }
 
@@ -255,7 +253,7 @@
   .dropdown-menu {
     grid-template-columns: repeat(2, 1fr);
     gap: 0.75rem 1.25rem;
-    width: 90vw;
+    width: 95vw;
     max-width: 420px;
   }
   .dropdown-main-btn {
