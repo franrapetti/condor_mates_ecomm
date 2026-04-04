@@ -186,6 +186,12 @@ function VisualBox({ selections, discount, subtotal, finalPrice, itemCount, onAd
              <div className="w-1 h-1 rounded-full bg-gray-300" />
              <span className="text-[0.65rem] font-black text-forest-700 uppercase">Todo el país</span>
            </div>
+
+           {Object.values(selections).some(p => p && p.category === 'Yerbas') && (
+             <p className="text-[0.55rem] text-center text-gray-400 mt-2 leading-tight">
+               *La yerba desbloquea el nivel de descuento para el combo, pero mantiene su precio de lista.
+             </p>
+           )}
         </div>
       )}
     </div>
