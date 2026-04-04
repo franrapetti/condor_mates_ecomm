@@ -259,8 +259,22 @@ export default function ComboBuilder() {
 
   const handleAddToCart = () => {
     selectedItems.forEach(p => {
-      // Attach packaging note to each item  
-      addToCart({ ...p, packaging_note: packaging || null });
+      // Calculate individual discounted price to inject into the cart
+      let appliedPrice = p.promo_price || p.price;
+      let isDiscounted = false;
+      
+      if (p.category !== 'Yerbas' && discount > 0) {
+         appliedPrice = Math.round(appliedPrice * (1 - discount / 100));
+         isDiscounted = true;
+      }
+      
+      addToCart({ 
+        ...p, 
+        promo_price: appliedPrice, // Override promo_price with combo price
+        is_combo_item: true,
+        combo_discount: isDiscounted ? discount : 0,
+        packaging_note: packaging || null 
+      });
     });
     setIsCartOpen(true);
   };
@@ -405,7 +419,7 @@ export default function ComboBuilder() {
             </div>
           </main>
 
-          <aside className="hidden lg:block">
+          <aside className="block lg:block">
             <VisualBox 
               selections={selections}
               discount={discount}

@@ -160,6 +160,10 @@ const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem
                     💬 Acordar con Vendedor
                   </button>
                   
+                  <div style={{ textAlign: 'center', fontSize: '0.85rem', color: '#25D366', fontWeight: 'bold', marginTop: '0.5rem', paddingBottom: '0.5rem' }}>
+                    Con transferencia pagás solo ${Math.round(total * 0.9).toLocaleString()} (-10% OFF Extra)
+                  </div>
+                  
                   <div className="trust-badges-container">
                     <div className="trust-logos">
                       <img src="https://http2.mlstatic.com/frontend-assets/ml-web-navigation/ui-navigation/5.19.1/mercadolibre/logo__small@2x.png" alt="Mercado Pago" title="MercadoPago" />
