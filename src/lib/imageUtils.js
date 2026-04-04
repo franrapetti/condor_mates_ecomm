@@ -28,7 +28,7 @@ const SUPABASE_STORAGE_PATTERN = /\/storage\/v1\/object\/public\//;
  * @param {'cover'|'contain'|'fill'} [opts.resize] - Resize mode (default 'cover').
  * @returns {string} - Optimized URL.
  */
-export function getImgUrl(rawUrl, { w = 800, q = 80, resize = 'cover' } = {}) {
+export function getImgUrl(rawUrl, { w = 800, q = 80, resize = 'contain' } = {}) {
   if (!rawUrl) return '';
 
   // Only transform Supabase storage URLs
@@ -39,9 +39,14 @@ export function getImgUrl(rawUrl, { w = 800, q = 80, resize = 'cover' } = {}) {
     const transformedUrl = rawUrl.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/');
     
     const url = new URL(transformedUrl);
-    url.searchParams.set('width', String(w));
-    url.searchParams.set('quality', String(q));
-    url.searchParams.set('resize', resize);
+    if (w) url.searchParams.set('width', String(w));
+    if (q) url.searchParams.set('quality', String(q));
+    
+    // Only set resize if we want something other than standard scaling
+    if (resize && resize !== 'contain') {
+      url.searchParams.set('resize', resize);
+    }
+    
     return url.toString();
   } catch {
     // Fallback to raw URL if parsing fails
