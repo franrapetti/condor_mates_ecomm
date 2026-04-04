@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useCart } from '../context/CartContext';
 import { ShoppingBag, Package, ChevronLeft, Check, ArrowRight } from 'lucide-react';
+import { getImgUrl } from '../lib/imageUtils';
 import './ComboBuilder.css';
 
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
@@ -58,7 +59,7 @@ function CategoryCard({ cat, selected, onClick }) {
     >
       {hasSelection && (
         <div className="category-card-image-bg">
-          <img src={selected.image_url} alt={selected.name} />
+          <img src={getImgUrl(selected.image_url, { w: 300, q: 80 })} alt={selected.name} />
           <div className="category-card-overlay" />
         </div>
       )}
@@ -87,7 +88,11 @@ function ProductCard({ product, selected, onToggle }) {
       className={`relative text-left w-full rounded-2xl border-2 overflow-hidden transition-all duration-200 group bg-white ${isSelected ? 'border-[var(--forest-dark)] ring-1 ring-[var(--forest-dark)]' : 'border-gray-100 hover:border-gray-200 hover:shadow-md'}`}
     >
       <div className="aspect-[4/5] w-full overflow-hidden bg-gray-50">
-        <img src={product.image_url} alt={product.name} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
+        <img 
+          src={getImgUrl(product.image_url, { w: 400, q: 80 })} 
+          alt={product.name} 
+          className="w-full h-full object-cover transition-transform group-hover:scale-110" 
+        />
       </div>
       <div className="p-3">
         <p className="text-[0.8rem] font-bold text-gray-800 line-clamp-1">{product.name}</p>

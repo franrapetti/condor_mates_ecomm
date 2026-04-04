@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabaseClient';
 import { useWishlist } from '../context/WishlistContext';
 import { useLaunchTimer } from '../hooks/useLaunchTimer';
 import { Heart } from 'lucide-react';
+import { getImgUrl } from '../lib/imageUtils';
 import './ProductCard.css';
 
 const ProductCard = ({ product, onAddToCart, noZoom }) => {
@@ -21,7 +22,12 @@ const ProductCard = ({ product, onAddToCart, noZoom }) => {
     <div className="product-card">
       <div className={`product-image-container ${noZoom ? 'no-zoom' : ''}`}>
         <Link to={`/producto/${product.id}`} onClick={handleProductClick}>
-          <img src={product.image_url} alt={product.name} loading="lazy" decoding="async" />
+          <img 
+            src={getImgUrl(product.image_url, { w: 600, q: 82 })} 
+            alt={product.name} 
+            loading="lazy" 
+            decoding="async" 
+          />
         </Link>
         {isLaunched && (product.category === 'Mates' || product.sub_category === 'Bombillones de Alpaca') && (
           <span className="packaging-badge">🎁 Packaging Incluido</span>

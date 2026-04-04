@@ -7,12 +7,11 @@
   padding: 1rem 0;
 }
 
-/* The header-content becomes the positioning parent for the mega-menu */
 .header-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  position: relative; /* KEY: makes dropdown position relative to this container */
+  /* Do NOT set position:relative here — breaks dropdown centering */
 }
 
 .header-logo {
@@ -74,13 +73,18 @@
 }
 
 .dropdown-parent {
-  position: static; /* Do NOT use relative here — inherits from .header-content */
+  position: static;
+}
+
+/* The nav itself becomes the centering anchor */
+.desktop-nav {
+  position: relative;
 }
 
 .dropdown-menu {
   position: absolute;
-  /* Anchor to the full header-content width */
-  top: calc(100% + 0.5rem);
+  top: calc(100% + 0.75rem);
+  /* Center the dropdown relative to the nav element */
   left: 50%;
   transform: translateX(-50%) translateY(10px);
   background-color: var(--surface);
@@ -89,19 +93,21 @@
   padding: 2rem 2.5rem;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.2s;
+  transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+              visibility 0.22s;
   pointer-events: none;
   z-index: 1000;
-  
+
   display: flex;
   flex-direction: row;
   gap: 3rem;
   width: max-content;
-  max-width: min(90vw, 900px);
+  max-width: min(90vw, 860px);
   flex-wrap: wrap;
 }
 
-/* Bridge gap so menu stays open on hover */
+/* Invisible hover bridge so the menu stays open */
 .dropdown-menu::before {
   content: '';
   position: absolute;
