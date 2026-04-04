@@ -162,11 +162,12 @@ function PublicCatalog() {
                 src={heroMobile ? getImgUrl(heroMobile, { w: 1000, h: 1200, q: 75, resize: 'cover' }) : ''}
                 alt=""
                 aria-hidden="true"
+                fetchPriority="high"
                 style={{
                   width: '100%',
                   height: '100%',
                   objectFit: 'cover',
-                  objectPosition: 'center',
+                  objectPosition: '30% center', // Recorta el lado derecho en celulares
                   display: 'block',
                 }}
                 onError={(e) => { e.currentTarget.src = heroDesktop; }}
@@ -177,29 +178,32 @@ function PublicCatalog() {
               <span className="hero-badge">📦 Envíos al instante + Regalo</span>
               <h1 className="hero-fullbleed-title">Elevá tu ritual<br/>de cada mañana.</h1>
               <p className="hero-fullbleed-subtitle">Mates, bombillas y accesorios premium. Seleccionados con criterio para conectarte con la verdadera tradición en cada cebada.</p>
-              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginTop: '1.5rem' }}>
-                <button className="hero-fullbleed-cta" onClick={scrollToCatalog}>
-                  Explorar Catálogo ↓
+              <div className="hero-buttons-container" style={{ display: 'flex', gap: '0.75rem', flexWrap: 'nowrap', marginTop: '1.5rem', width: '100%' }}>
+                <button className="hero-fullbleed-cta" onClick={scrollToCatalog} style={{ flex: 1, padding: '0.9rem 1rem', whiteSpace: 'nowrap', textAlign: 'center' }}>
+                  Catálogo ↓
                 </button>
                 <a
                   href="/combo"
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
+                    justifyContent: 'center',
                     gap: '0.4rem',
                     background: 'rgba(255,255,255,0.15)',
                     backdropFilter: 'blur(8px)',
                     color: 'white',
                     border: '1px solid rgba(255,255,255,0.35)',
                     borderRadius: '8px',
-                    padding: '0.7rem 1.2rem',
+                    padding: '0.9rem 1.2rem',
                     fontWeight: 700,
                     fontSize: '0.9rem',
                     textDecoration: 'none',
                     transition: 'background 0.2s',
+                    flex: 1,
+                    whiteSpace: 'nowrap'
                   }}
                 >
-                  ✨ Armá tu Combo
+                  ✨ Combos
                 </a>
               </div>
             </div>
