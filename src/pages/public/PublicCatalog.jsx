@@ -12,9 +12,10 @@ import { useLocation } from 'react-router-dom';
 function PublicCatalog() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  // Dynamic hero images from admin settings
-  const [heroDesktop, setHeroDesktop] = useState('/hero-bg.png');
-  const [heroMobile, setHeroMobile] = useState('/hero-bg-mobile.png');
+  // Dynamic hero — start null to avoid flash while fetching from Supabase
+  const [heroDesktop, setHeroDesktop] = useState(null);
+  const [heroMobile, setHeroMobile] = useState(null);
+  const [heroReady, setHeroReady] = useState(false);
 
   const { cartCount, setIsCartOpen, addToCart } = useCart();
   
@@ -41,7 +42,7 @@ function PublicCatalog() {
 
   useEffect(() => {
     fetchPublicProducts();
-    // Fetch hero images from site_settings
+    // Fetch hero images from site_settings — only show hero once resolved
     supabase
       .from('site_settings')
       .select('key, value')
@@ -53,6 +54,10 @@ function PublicCatalog() {
             if (row.key === 'hero_mobile_url' && row.value) setHeroMobile(row.value);
           });
         }
+        // Fallback to static files if nothing loaded
+        setHeroDesktop(prev => prev || '/hero-bg.png');
+        setHeroMobile(prev => prev || '/hero-bg-mobile.png');
+        setHeroReady(true);
       });
   }, []);
 
@@ -140,7 +145,15 @@ function PublicCatalog() {
       {/* Full-bleed Hero — only on main catalog view */}
       {currentCategory === 'All' && !searchTerm && isLaunched && (
         <>
-          <section className="hero-fullbleed fade-in" style={{ position: 'relative', overflow: 'hidden' }}>
+          <section
+            className="hero-fullbleed"
+            style={{
+              position: 'relative',
+              overflow: 'hidden',
+              opacity: heroReady ? 1 : 0,
+              transition: 'opacity 0.4s ease',
+            }}
+          >
             {/* Responsive background via <picture> — URLs loaded from admin settings */}
             <picture style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
               <source media="(min-width: 768px)" srcSet={heroDesktop} />
