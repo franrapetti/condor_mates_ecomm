@@ -229,7 +229,7 @@ function ProductDetail() {
         <div className="product-detail-layout" style={{ opacity: isVariantSwitching ? 0.45 : 1, transition: 'opacity 0.2s ease' }}>
           <div className="product-gallery">
             <div className="main-image-container" onClick={() => setIsZoomOpen(true)} style={{cursor: 'zoom-in'}}>
-              <img src={getImgUrl(activeImage, { w: 1000, q: 85 })} alt={product.name} className="main-image" decoding="async" />
+              <img src={getImgUrl(activeImage, { w: 800, q: 75 })} alt={product.name} className="main-image" fetchPriority="high" />
               {gallery.length > 1 && (
                 <>
                   <button
@@ -258,7 +258,7 @@ function ProductDetail() {
                 {gallery.map((img, idx) => (
                   <img 
                     key={idx} 
-                    src={getImgUrl(img, { w: 200, q: 80 })} 
+                    src={getImgUrl(img, { w: 150, q: 60 })} 
                     alt={`Vista ${idx + 1}`} 
                     className={`thumbnail ${activeImageIdx === idx ? 'active' : ''}`}
                     onClick={() => { setActiveImage(img); setActiveImageIdx(idx); }}
@@ -438,7 +438,7 @@ function ProductDetail() {
                 <p className="bundle-desc">Agregá estos accesorios ideales y llevate la experiencia completa.</p>
                 <div className="bundle-items">
                   <div className="bundle-item main">
-                    <img src={getImgUrl(product.image_url, { w: 200, q: 80 })} alt="Mate" />
+                    <img src={getImgUrl(product.image_url, { w: 150, q: 60 })} alt="Mate" />
                     <span>Tu Mate</span>
                   </div>
                   
@@ -446,7 +446,7 @@ function ProductDetail() {
                     <React.Fragment key={item.id}>
                       <span className="bundle-plus">+</span>
                       <div className="bundle-item addon">
-                        <img src={getImgUrl(item.image_url, { w: 200, q: 80 })} alt={item.name} />
+                        <img src={getImgUrl(item.image_url, { w: 150, q: 60 })} alt={item.name} />
                         <div className="bundle-addon-info">
                           <strong>{item.name}</strong>
                           <span>${(item.promo_price || item.price).toLocaleString()}</span>
