@@ -1,0 +1,251 @@
+/* ── ManualSales Page ── */
+.ms-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* ── KPI Row ── */
+.ms-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .ms-kpi-row { grid-template-columns: 1fr 1fr; }
+}
+
+.ms-kpi-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s;
+}
+
+.ms-kpi-card:hover {
+  transform: translateY(-2px);
+}
+
+.ms-kpi-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-light);
+}
+
+.ms-kpi-value {
+  font-size: 2rem;
+  font-weight: 900;
+  color: var(--text-dark);
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.ms-kpi-value.green { color: var(--accent); }
+.ms-kpi-value.red { color: #d97706; }
+
+/* ── Debt Panel ── */
+.ms-debt-panel {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.ms-debt-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  background: #fef3c7;
+  border-bottom: 1px solid #fde68a;
+}
+
+.ms-debt-title {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #92400e;
+}
+
+.ms-debt-total {
+  font-size: 1rem;
+  font-weight: 900;
+  color: #92400e;
+}
+
+.ms-debt-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.ms-debt-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #fde68a;
+  gap: 1rem;
+}
+
+.ms-debt-item:last-child { border-bottom: none; }
+
+.ms-debt-name {
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: var(--text-dark);
+  margin: 0;
+}
+
+.ms-debt-info {
+  font-size: 0.8rem;
+  color: var(--text-light);
+  margin: 0.2rem 0 0;
+}
+
+.ms-whatsapp-link {
+  display: inline-block;
+  font-size: 0.75rem;
+  color: #16a34a;
+  font-weight: 700;
+  margin-top: 0.3rem;
+  text-decoration: none;
+}
+
+.ms-whatsapp-link:hover { text-decoration: underline; }
+
+.ms-debt-item-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.ms-debt-amount {
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: #d97706;
+}
+
+/* ── Form Card ── */
+.ms-form-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.75rem;
+  box-shadow: var(--shadow-sm);
+  animation: slideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.ms-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.ms-form-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+}
+
+/* ── Table Card ── */
+.ms-table-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.ms-table-filters {
+  display: flex;
+  gap: 0.5rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--background);
+}
+
+.ms-table-filters button {
+  padding: 0.35rem 0.85rem;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-family: var(--font-body);
+  color: var(--text-light);
+  transition: all 0.15s;
+}
+
+.ms-table-filters button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.ms-table-filters button.active {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+.ms-loading, .ms-empty {
+  padding: 3rem;
+  text-align: center;
+  color: var(--text-light);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.ms-debt-row {
+  background: rgba(245, 158, 11, 0.04);
+}
+
+.ms-row-actions {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.ms-small-btn {
+  padding: 0.3rem 0.7rem !important;
+  font-size: 0.75rem !important;
+}
+
+.ms-delete-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 0.2rem;
+  opacity: 0.5;
+  transition: opacity 0.15s;
+  border-radius: 4px;
+}
+
+.ms-delete-btn:hover { opacity: 1; }
+
+.ms-method-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: var(--background);
+  color: var(--text-light);
+  border: 1px solid var(--border);
+  padding: 3px 8px;
+  border-radius: 6px;
+}

@@ -7,10 +7,12 @@
   padding: 1rem 0;
 }
 
+/* The header-content becomes the positioning parent for the mega-menu */
 .header-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: relative; /* KEY: makes dropdown position relative to this container */
 }
 
 .header-logo {
@@ -72,73 +74,42 @@
 }
 
 .dropdown-parent {
-  position: relative;
+  position: static; /* Do NOT use relative here — inherits from .header-content */
 }
 
 .dropdown-menu {
   position: absolute;
-  top: 100%;
+  /* Anchor to the full header-content width */
+  top: calc(100% + 0.5rem);
   left: 50%;
   transform: translateX(-50%) translateY(10px);
   background-color: var(--surface);
   border-radius: 16px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 20px 40px -8px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0,0,0,0.04);
   padding: 2rem 2.5rem;
   opacity: 0;
   visibility: hidden;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.2s;
   pointer-events: none;
   z-index: 1000;
   
-  /* Horizontal Grid Layout */
   display: flex;
   flex-direction: row;
   gap: 3rem;
   width: max-content;
-  max-width: 95vw;
+  max-width: min(90vw, 900px);
   flex-wrap: wrap;
-  
-  /* Robust Centering */
-  margin-left: auto;
-  margin-right: auto;
 }
 
-/* Adjust position based on screen edge */
-@media (min-width: 901px) {
-  .dropdown-parent:hover .dropdown-menu {
-    opacity: 1;
-    visibility: visible;
-    transform: translateX(-50%) translateY(0);
-    pointer-events: auto;
-  }
-}
-
+/* Bridge gap so menu stays open on hover */
 .dropdown-menu::before {
   content: '';
   position: absolute;
-  top: -10px;
+  top: -16px;
   left: 0;
   right: 0;
-  height: 10px;
+  height: 16px;
   background: transparent;
-}
-
-.mobile-menu-btn {
-  display: none;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--text-dark);
-  padding: 0.25rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-@media (min-width: 769px) {
-  .mobile-menu-btn {
-    display: none;
-  }
 }
 
 .dropdown-parent:hover .dropdown-menu {

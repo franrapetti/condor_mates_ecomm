@@ -1,16 +1,17 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useCart } from '../context/CartContext';
-import { ShoppingBag, Package, ChevronLeft, Check, X, ArrowRight } from 'lucide-react';
+import { ShoppingBag, Package, ChevronLeft, Check, ArrowRight } from 'lucide-react';
 import './ComboBuilder.css';
 
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
 const CATEGORIES = [
-  { key: 'Mates',    label: 'Mates',     emoji: '🧉', max: 1 },
-  { key: 'Bombillas', label: 'Bombillas', emoji: '🪗', max: 1 },
-  { key: 'Termos',   label: 'Termos',    emoji: '♨️',  max: 1 },
-  { key: 'Yerbas',   label: 'Yerbas',    emoji: '🌿', max: 1 },
-  { key: 'Materas',  label: 'Materas',   emoji: '🧺', max: 1 },
+  { key: 'Mates',          label: 'Mates',     emoji: '🧉', max: 1 },
+  { key: 'Bombillas',      label: 'Bombillas', emoji: '🪗', max: 1 },
+  { key: 'Termos',         label: 'Termos',    emoji: '♨️',  max: 1 },
+  { key: 'Yerbas',         label: 'Yerbas',    emoji: '🌿', max: 1 },
+  // KEY FIX: DB stores category as 'Materas y Yerberas', not 'Materas'
+  { key: 'Materas y Yerberas', label: 'Materas', emoji: '🧺', max: 1 },
 ];
 
 const DISCOUNT_TIERS = [
@@ -25,19 +26,19 @@ function resolvePackaging(selected) {
   const cats = Object.keys(selected).filter(k => selected[k]);
   const has = (c) => cats.includes(c);
 
-  if (has('Materas')) {
+  if (has('Materas y Yerberas')) {
     return { options: [], disabled: true, reason: 'Las materas ya incluyen su packaging especial 🧺' };
   }
-  if (has('Mates') && !has('Bombillas') && !has('Yerbas') && !has('Termos') && !has('Materas')) {
+  if (has('Mates') && !has('Bombillas') && !has('Yerbas') && !has('Termos') && !has('Materas y Yerberas')) {
     return { options: ['Caja de Mate'], disabled: false };
   }
-  if (has('Mates') && has('Bombillas') && has('Yerbas') && !has('Termos') && !has('Materas')) {
+  if (has('Mates') && has('Bombillas') && has('Yerbas') && !has('Termos') && !has('Materas y Yerberas')) {
     return { options: ['Caja de Mate'], disabled: false };
   }
-  if (has('Bombillas') && !has('Mates') && !has('Yerbas') && !has('Termos') && !has('Materas')) {
+  if (has('Bombillas') && !has('Mates') && !has('Yerbas') && !has('Termos') && !has('Materas y Yerberas')) {
     return { options: ['Caja de Bombilla'], disabled: false };
   }
-  if (has('Yerbas') && has('Bombillas') && !has('Mates') && !has('Termos') && !has('Materas')) {
+  if (has('Yerbas') && has('Bombillas') && !has('Mates') && !has('Termos') && !has('Materas y Yerberas')) {
     return { options: ['Bolsa de Tela Personalizada'], disabled: false };
   }
   if (cats.length > 0) {
@@ -217,11 +218,26 @@ export default function ComboBuilder() {
     setSelections(prev => ({ ...prev, [cat]: prev[cat]?.id === product.id ? null : product }));
   };
 
+  // Animate picker area on category change
+  const [pickerKey, setPickerKey] = useState(null);
+  const handleSetCategory = (cat) => {
+    setPickerKey(cat); // force re-render for animation
+    setActiveCategory(cat);
+  };
+
   const currentPackaging = useMemo(() => {
     const catMap = {};
     CATEGORIES.forEach(c => catMap[c.key] = !!selections[c.key]);
     return resolvePackaging(catMap);
   }, [selections]);
+
+  const handleAddToCart = () => {
+    selectedItems.forEach(p => {
+      // Attach packaging note to each item  
+      addToCart({ ...p, packaging_note: packaging || null });
+    });
+    setIsCartOpen(true);
+  };
 
   return (
     <div className="min-h-screen bg-[#F4F0E8] py-10 px-4 sm:px-10">
@@ -250,7 +266,7 @@ export default function ComboBuilder() {
                        key={cat.key} 
                        cat={cat} 
                        selected={selections[cat.key]} 
-                       onClick={setActiveCategory} 
+                       onClick={handleSetCategory} 
                      />
                    ))}
                 </div>
@@ -296,7 +312,7 @@ export default function ComboBuilder() {
                        <button 
                          key={cat.key}
                          className={`sidebar-icon-btn ${activeCategory === cat.key ? 'active' : ''}`}
-                         onClick={() => setActiveCategory(cat.key)}
+                         onClick={() => handleSetCategory(cat.key)}
                          title={cat.label}
                        >
                          <span className="relative">
@@ -309,13 +325,14 @@ export default function ComboBuilder() {
                          </span>
                        </button>
                      ))}
-                  </aside>
+                   </aside>
 
-                  <div className="flex-1">
+                   <div className="flex-1">
                      <div className="flex items-center justify-between mb-6">
                         <div className="flex items-center gap-3">
                           <span className="text-2xl">{CATEGORIES.find(c => c.key === activeCategory)?.emoji}</span>
-                          <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tight">{activeCategory}</h2>
+                          {/* Show the user-friendly label, not the DB key */}
+                          <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tight">{CATEGORIES.find(c => c.key === activeCategory)?.label}</h2>
                         </div>
                         <button 
                           onClick={() => setActiveCategory(null)}
@@ -329,8 +346,14 @@ export default function ComboBuilder() {
                        <div className="picker-grid">
                           {[1,2,3,4,5,6].map(i => <div key={i} className="aspect-[4/5] bg-gray-100 rounded-2xl animate-pulse" />)}
                        </div>
+                     ) : products[activeCategory]?.length === 0 ? (
+                       <div className="combo-empty-state">
+                         <span className="text-4xl">{CATEGORIES.find(c => c.key === activeCategory)?.emoji}</span>
+                         <p className="font-bold text-gray-500 mt-3">Sin stock disponible</p>
+                         <p className="text-sm text-gray-400">Pronto vamos a reponer esta categoría. ¡Chequea otras!</p>
+                       </div>
                      ) : (
-                       <div className="picker-grid">
+                       <div key={pickerKey} className="picker-grid fade-in">
                           {products[activeCategory]?.map(p => (
                             <ProductCard 
                               key={p.id} 
@@ -341,7 +364,7 @@ export default function ComboBuilder() {
                           ))}
                        </div>
                      )}
-                  </div>
+                   </div>
                 </div>
               </section>
             </div>
@@ -354,10 +377,7 @@ export default function ComboBuilder() {
               subtotal={subtotal}
               finalPrice={finalPrice}
               itemCount={itemCount}
-              onAddToCart={() => {
-                selectedItems.forEach(p => addToCart(p));
-                setIsCartOpen(true);
-              }}
+              onAddToCart={handleAddToCart}
             />
           </aside>
 
@@ -373,10 +393,7 @@ export default function ComboBuilder() {
                  <p className="text-xl font-black text-gray-900">${finalPrice.toLocaleString()}</p>
               </div>
               <button 
-                onClick={() => {
-                  selectedItems.forEach(p => addToCart(p));
-                  setIsCartOpen(true);
-                }}
+                onClick={handleAddToCart}
                 className="bg-[var(--forest-dark)] text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 text-sm shadow-xl"
               >
                 Cargar Carrito <ShoppingBag size={18} />

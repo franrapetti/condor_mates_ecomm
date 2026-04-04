@@ -12,6 +12,9 @@ import { useLocation } from 'react-router-dom';
 function PublicCatalog() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  // Dynamic hero images from admin settings
+  const [heroDesktop, setHeroDesktop] = useState('/hero-bg.png');
+  const [heroMobile, setHeroMobile] = useState('/hero-bg-mobile.png');
 
   const { cartCount, setIsCartOpen, addToCart } = useCart();
   
@@ -38,6 +41,19 @@ function PublicCatalog() {
 
   useEffect(() => {
     fetchPublicProducts();
+    // Fetch hero images from site_settings
+    supabase
+      .from('site_settings')
+      .select('key, value')
+      .in('key', ['hero_bg_url', 'hero_mobile_url'])
+      .then(({ data }) => {
+        if (data) {
+          data.forEach(row => {
+            if (row.key === 'hero_bg_url' && row.value) setHeroDesktop(row.value);
+            if (row.key === 'hero_mobile_url' && row.value) setHeroMobile(row.value);
+          });
+        }
+      });
   }, []);
 
   // ...
@@ -125,11 +141,11 @@ function PublicCatalog() {
       {currentCategory === 'All' && !searchTerm && isLaunched && (
         <>
           <section className="hero-fullbleed fade-in" style={{ position: 'relative', overflow: 'hidden' }}>
-            {/* Responsive background via <picture> */}
+            {/* Responsive background via <picture> — URLs loaded from admin settings */}
             <picture style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
-              <source media="(min-width: 768px)" srcSet="/hero-bg.png" />
+              <source media="(min-width: 768px)" srcSet={heroDesktop} />
               <img
-                src="/hero-bg-mobile.png"
+                src={heroMobile}
                 alt=""
                 aria-hidden="true"
                 style={{
@@ -139,7 +155,7 @@ function PublicCatalog() {
                   objectPosition: 'center',
                   display: 'block',
                 }}
-                onError={(e) => { e.currentTarget.src = '/hero-bg.png'; }}
+                onError={(e) => { e.currentTarget.src = heroDesktop; }}
               />
             </picture>
             <div className="hero-fullbleed-overlay" />

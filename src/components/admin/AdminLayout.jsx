@@ -2,12 +2,14 @@ import React from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
-import { LayoutGrid, ShoppingBag, Moon, Sun, LogOut, ExternalLink } from 'lucide-react';
+import { LayoutGrid, ShoppingBag, Moon, Sun, LogOut, ExternalLink, ClipboardList, Settings } from 'lucide-react';
 import './AdminLayout.css';
 
 const NAV_LINKS = [
-  { to: '/admin',        end: true,  icon: <LayoutGrid size={18} />,  label: 'Catálogo'  },
-  { to: '/admin/orders', end: false, icon: <ShoppingBag size={18} />, label: 'Ventas'    },
+  { to: '/admin',               end: true,  icon: <LayoutGrid size={18} />,    label: 'Catálogo'      },
+  { to: '/admin/orders',        end: false, icon: <ShoppingBag size={18} />,   label: 'Ventas Web'   },
+  { to: '/admin/manual-sales',  end: false, icon: <ClipboardList size={18} />, label: 'Ventas Manual' },
+  { to: '/admin/settings',      end: false, icon: <Settings size={18} />,      label: 'Configuración' },
 ];
 
 const AdminLayout = () => {
