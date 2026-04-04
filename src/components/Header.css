@@ -11,7 +11,18 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  /* Do NOT set position:relative here — breaks dropdown centering */
+}
+
+/* Hamburger: hidden on desktop, shown on mobile */
+.mobile-menu-btn {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-dark);
+  padding: 0.25rem;
+  align-items: center;
+  justify-content: center;
 }
 
 .header-logo {
@@ -76,21 +87,20 @@
   position: static;
 }
 
-/* The nav itself becomes the centering anchor */
 .desktop-nav {
-  position: relative;
+  position: static; /* dropdown uses fixed positioning, no anchor needed */
 }
 
 .dropdown-menu {
-  position: absolute;
-  top: calc(100% + 0.75rem);
-  /* Center the dropdown relative to the nav element */
+  /* Fixed positioning = always centered to the viewport, regardless of trigger position */
+  position: fixed;
+  top: 74px; /* height of sticky header */
   left: 50%;
   transform: translateX(-50%) translateY(10px);
   background-color: var(--surface);
   border-radius: 16px;
-  box-shadow: 0 20px 40px -8px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0,0,0,0.04);
-  padding: 2rem 2.5rem;
+  box-shadow: 0 20px 40px -8px rgba(0, 0, 0, 0.14), 0 0 0 1px rgba(0,0,0,0.05);
+  padding: 1.75rem 2rem;
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1),
@@ -99,12 +109,12 @@
   pointer-events: none;
   z-index: 1000;
 
-  display: flex;
-  flex-direction: row;
-  gap: 3rem;
+  /* 4-column grid → 7 items = 2 rows */
+  display: grid;
+  grid-template-columns: repeat(4, minmax(110px, auto));
+  gap: 0.75rem 2rem;
   width: max-content;
-  max-width: min(90vw, 860px);
-  flex-wrap: wrap;
+  max-width: min(92vw, 800px);
 }
 
 /* Invisible hover bridge so the menu stays open */
@@ -240,9 +250,10 @@
 
 @media (max-width: 900px) {
   .dropdown-menu {
-    flex-direction: column;
-    gap: 1rem;
-    width: 250px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem 1.25rem;
+    width: 90vw;
+    max-width: 420px;
   }
   .dropdown-main-btn {
     background-color: transparent;
@@ -252,7 +263,7 @@
 
 @media (max-width: 768px) {
   .mobile-menu-btn {
-    display: block;
+    display: flex; /* Show hamburger only on mobile */
   }
   .desktop-nav {
     display: none;
@@ -273,5 +284,19 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 1.25rem;
+  }
+  .dropdown-menu {
+    /* On mobile, revert to relative inside the mobile nav */
+    position: static;
+    transform: none;
+    box-shadow: none;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    max-width: 100%;
+    grid-template-columns: 1fr;
+    padding: 0.5rem 0 0.5rem 1rem;
+    border-radius: 0;
+    background: transparent;
   }
 }
