@@ -31,29 +31,10 @@ const SUPABASE_STORAGE_PATTERN = /\/storage\/v1\/object\/public\//;
 export function getImgUrl(rawUrl, { w = 800, h = null, q = 70, resize = 'contain' } = {}) {
   if (!rawUrl) return '';
 
-  // Only transform URLs that contain the Supabase public storage endpoint
-  if (!rawUrl.includes('/storage/v1/object/public/')) {
-    return rawUrl;
-  }
-
-  // 1. Rewrite endpoint to Supabase Image Transformations engine
-  let transformedUrl = rawUrl.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/');
-  
-  // 2. Build parameters manually
-  const params = [];
-  const safeWidth = Math.min(w, 1600);
-  params.push(`width=${safeWidth}`);
-  
-  if (h) {
-    params.push(`height=${h}`);
-  }
-  
-  params.push(`quality=${q}`);
-  params.push(`resize=${resize}`);
-  params.push('format=webp');
-  
-  const separator = transformedUrl.includes('?') ? '&' : '?';
-  return `${transformedUrl}${separator}${params.join('&')}`;
+  // RETURN RAW URL ONLY.
+  // DO NOT use /render/image/public/ because it crashes this project.
+  // DO NOT append query parameters because it bypasses the CDN Cache causing 30s load times.
+  return rawUrl;
 }
 
 /**
