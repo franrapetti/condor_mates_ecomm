@@ -157,9 +157,9 @@ function PublicCatalog() {
           >
             {/* Responsive background via <picture> — URLs loaded from admin settings */}
             <picture style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
-              <source media="(min-width: 768px)" srcSet={getImgUrl(heroDesktop, { w: 1920, q: 75 })} />
+              <source media="(min-width: 768px)" srcSet={heroDesktop ? getImgUrl(heroDesktop, { w: 1600, q: 75 }) : ''} />
               <img
-                src={getImgUrl(heroMobile, { w: 800, q: 75 })}
+                src={heroMobile ? getImgUrl(heroMobile, { w: 1000, h: 1200, q: 75, resize: 'cover' }) : ''}
                 alt=""
                 aria-hidden="true"
                 style={{

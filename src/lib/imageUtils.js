@@ -28,28 +28,37 @@ const SUPABASE_STORAGE_PATTERN = /\/storage\/v1\/object\/public\//;
  * @param {'cover'|'contain'|'fill'} [opts.resize] - Resize mode (default 'cover').
  * @returns {string} - Optimized URL.
  */
-export function getImgUrl(rawUrl, { w = 800, q = 80, resize = 'contain' } = {}) {
+export function getImgUrl(rawUrl, { w = 800, h = null, q = 70, resize = 'contain' } = {}) {
   if (!rawUrl) return '';
 
   // Only transform Supabase storage URLs
   if (!SUPABASE_STORAGE_PATTERN.test(rawUrl)) return rawUrl;
 
   try {
-    // Supabase image resizer requires the path to be /render/image/public/ instead of /object/public/
+    // 1. Rewrite to the transformation endpoint
     const transformedUrl = rawUrl.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/');
     
     const url = new URL(transformedUrl);
-    if (w) url.searchParams.set('width', String(w));
-    if (q) url.searchParams.set('quality', String(q));
     
-    // Only set resize if we want something other than standard scaling
-    if (resize && resize !== 'contain') {
-      url.searchParams.set('resize', resize);
+    // 2. Cap width/height to avoid engine timeouts
+    const safeWidth = Math.min(w, 1600);
+    url.searchParams.set('width', String(safeWidth));
+    
+    if (h) {
+      url.searchParams.set('height', String(h));
     }
     
+    url.searchParams.set('quality', String(q));
+    
+    // 3. Always set resize mode explicitly to avoid CDN defaults
+    url.searchParams.set('resize', resize);
+    
+    // 4. Force WebP for smaller payloads
+    url.searchParams.set('format', 'webp');
+    
     return url.toString();
-  } catch {
-    // Fallback to raw URL if parsing fails
+  } catch (err) {
+    console.error('Error transforming image URL:', err);
     return rawUrl;
   }
 }
