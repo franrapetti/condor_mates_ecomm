@@ -203,15 +203,29 @@ function ProductDetail() {
 
   return (
     <>
-      {product && ( // Conditionally render Helmet when product data is available
+      {product && (
         <Helmet>
           <title>{product.name} | Cóndor Mates</title>
           <meta name="description" content={`Comprá ${product.name} al mejor precio. Envíos gratis a todo el país. Cóndor Mates 🦅`} />
-          <meta property="og:title" content={`${product.name} | Oferta Limitada`} />
-          <meta property="og:description" content={`Mira este ${product.name}. Stock disponible y envío rápido.`} />
-          <meta property="og:image" content={product.image_url} />
-          <meta property="og:url" content={window.location.href} />
+          
+          {/* Open Graph / Facebook */}
           <meta property="og:type" content="product" />
+          <meta property="og:url" content={window.location.href} />
+          <meta property="og:title" content={`${product.name} | Cóndor Mates`} />
+          <meta property="og:description" content={`💸 $${(product.promo_price || product.price).toLocaleString()} — Hecho con materiales premium. ¡Conseguí el tuyo!`} />
+          <meta property="og:image" content={product.image_url} />
+          <meta property="og:site_name" content="Cóndor Mates" />
+
+          {/* Twitter */}
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:title" content={`${product.name} | Cóndor Mates`} />
+          <meta name="twitter:description" content={`Mira este ${product.name}. Stock disponible y envío rápido.`} />
+          <meta name="twitter:image" content={product.image_url} />
+          
+          {/* Additional Product Meta */}
+          <meta property="product:price:amount" content={product.promo_price || product.price} />
+          <meta property="product:price:currency" content="ARS" />
+          <meta property="product:condition" content="new" />
         </Helmet>
       )}
       <Header 

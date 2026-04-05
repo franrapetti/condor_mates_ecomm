@@ -88,6 +88,16 @@ const Header = ({ cartCount, onCartClick, onNavClick, currentCategory }) => {
               <Link to="/favoritos" className="wishlist-header-btn" title="Mis Favoritos" style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                 <Heart size={20} strokeWidth={1.5} />
               </Link>
+              <a 
+                href="https://instagram.com/condormates" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="wishlist-header-btn" 
+                title="Instagram"
+                style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}
+              >
+                <Instagram size={20} strokeWidth={1.5} />
+              </a>
               <button className="cart-btn" onClick={onCartClick} style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                 <ShoppingBag size={20} strokeWidth={1.5} />
                 {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}

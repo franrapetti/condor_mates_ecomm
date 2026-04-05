@@ -132,6 +132,24 @@ function PublicCatalog() {
 
   return (
     <>
+      <Helmet>
+        <title>Cóndor Mates | Tu Ritual, Nuestra Pasión 🧉</title>
+        <meta name="description" content="Descubrí la mejor selección de mates imperiales, torpedos, termos y accesorios premium. Envíos gratis a toda Argentina. Armá tu combo con descuento." />
+        
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={window.location.origin} />
+        <meta property="og:title" content="Cóndor Mates | Tienda de Mates Premium" />
+        <meta property="og:description" content="Buscamos los mejores mates para tu ritual. Torpedos, Imperiales y más. ¡Armá tu combo y llevate un 20% OFF!" />
+        <meta property="og:image" content={heroDesktop || "/logo.png"} />
+        <meta property="og:site_name" content="Cóndor Mates" />
+
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Cóndor Mates | Tienda de Mates Premium" />
+        <meta name="twitter:description" content="Tu ritual, nuestra pasión. Envíos a todo el país." />
+        <meta name="twitter:image" content={heroDesktop || "/logo.png"} />
+      </Helmet>
       <Header 
         cartCount={cartCount} 
         onCartClick={() => setIsCartOpen(true)} 
