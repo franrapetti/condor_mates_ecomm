@@ -281,13 +281,14 @@
 }
 
 .handwriting-accent {
-  font-family: 'Dancing Script', cursive, sans-serif;
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-weight: 700;
   color: var(--accent-light);
   display: inline-block;
-  transform: rotate(-3deg);
   margin: 0 4px;
-  font-size: 1.15em;
-  font-weight: 700;
+  font-size: 1.05em;
+  letter-spacing: -0.01em;
 }
 
 .hero-fullbleed-subtitle {
