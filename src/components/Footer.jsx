@@ -1,5 +1,6 @@
 import React from 'react';
-import { Instagram, Send, MapPin, Package, Heart } from 'lucide-react';
+import { Send, MapPin, Package, Heart } from 'lucide-react';
+import InstagramIcon from './InstagramIcon';
 import './Footer.css';
 
 const Footer = () => {
@@ -16,7 +17,7 @@ const Footer = () => {
           </p>
           <div className="social-links">
             <a href="https://instagram.com/condormates" target="_blank" rel="noopener noreferrer" className="social-icon-btn" title="Instagram">
-              <Instagram size={20} />
+              <InstagramIcon size={20} />
             </a>
             <a href={`https://wa.me/${import.meta.env.VITE_WHATSAPP_NUMBER || '543572595756'}`} target="_blank" rel="noopener noreferrer" className="social-icon-btn" title="WhatsApp">
               <Send size={20} />

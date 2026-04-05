@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Moon, Sun, Heart, ShoppingBag, Menu, X } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useLaunchTimer } from '../hooks/useLaunchTimer';
+import InstagramIcon from './InstagramIcon';
 import './Header.css';
 
 const categoryTree = [
@@ -96,7 +97,7 @@ const Header = ({ cartCount, onCartClick, onNavClick, currentCategory }) => {
                 title="Instagram"
                 style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}
               >
-                <Instagram size={20} strokeWidth={1.5} />
+                <InstagramIcon size={20} strokeWidth={1.5} />
               </a>
               <button className="cart-btn" onClick={onCartClick} style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                 <ShoppingBag size={20} strokeWidth={1.5} />
