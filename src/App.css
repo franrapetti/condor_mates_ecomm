@@ -281,12 +281,12 @@
 }
 
 .handwriting-accent {
-  font-family: 'Caveat', cursive, sans-serif;
+  font-family: 'Dancing Script', cursive, sans-serif;
   color: var(--accent-light);
   display: inline-block;
-  transform: rotate(-2deg) translateY(2px);
+  transform: rotate(-3deg);
   margin: 0 4px;
-  font-size: 1.25em; /* Caveat usually feels smaller, so scale it up */
+  font-size: 1.15em;
   font-weight: 700;
 }
 
