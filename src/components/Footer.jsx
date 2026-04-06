@@ -16,7 +16,7 @@ const Footer = () => {
             Llevando la tradición del buen mate a cada rincón de Argentina con piezas seleccionadas por su calidad y mística.
           </p>
           <div className="social-links">
-            <a href="https://instagram.com/condormates" target="_blank" rel="noopener noreferrer" className="social-icon-btn" title="Instagram">
+            <a href="https://www.instagram.com/condor_mates" target="_blank" rel="noopener noreferrer" className="social-icon-btn" title="Instagram">
               <InstagramIcon size={20} />
             </a>
             <a href={`https://wa.me/${import.meta.env.VITE_WHATSAPP_NUMBER || '543572595756'}`} target="_blank" rel="noopener noreferrer" className="social-icon-btn" title="WhatsApp">
@@ -54,9 +54,9 @@ const Footer = () => {
           © {currentYear} Cóndor Mates. Todos los derechos reservados.
         </p>
         <p className="dev-by">
-          Desarrollado con 🔥 por{' '}
+          Hecho con ❤️ por{' '}
           <a 
-            href={`https://wa.me/543572595756?text=${encodeURIComponent("Hola Francisco, me gustó mucho la web de Cóndor Mates!")}`} 
+            href={`https://wa.me/543572403499?text=${encodeURIComponent("Hola Francisco, me gustó mucho la web de Cóndor Mates!")}`} 
             target="_blank" 
             rel="noopener noreferrer"
             className="dev-link"

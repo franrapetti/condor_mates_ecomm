@@ -90,7 +90,7 @@ const Header = ({ cartCount, onCartClick, onNavClick, currentCategory }) => {
                 <Heart size={20} strokeWidth={1.5} />
               </Link>
               <a 
-                href="https://instagram.com/condormates" 
+                href="https://www.instagram.com/condor_mates" 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="wishlist-header-btn" 
