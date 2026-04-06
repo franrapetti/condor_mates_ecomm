@@ -194,7 +194,7 @@ function PublicCatalog() {
             <div className="hero-fullbleed-overlay" />
             <div className="hero-fullbleed-content" style={{ position: 'relative', zIndex: 1 }}>
               <span className="hero-badge">📦 Envíos al instante + Regalo</span>
-              <h1 className="hero-fullbleed-title">El arte de <br /><span className="handwriting-accent">cebar.</span></h1>
+              <h1 className="hero-fullbleed-title">El arte de <span className="handwriting-accent">cebar.</span></h1>
               <p className="hero-fullbleed-subtitle">Mates, bombillas y accesorios premium. Seleccionados con criterio para conectarte con la verdadera tradición en cada cebada.</p>
               <div className="hero-buttons-container" style={{ display: 'flex', gap: '0.75rem', flexWrap: 'nowrap', marginTop: '1.5rem', width: '100%' }}>
                 <button className="hero-fullbleed-cta" onClick={scrollToCatalog} style={{ flex: 1, padding: '0.9rem 1rem', whiteSpace: 'nowrap', textAlign: 'center', fontWeight: 900 }}>
