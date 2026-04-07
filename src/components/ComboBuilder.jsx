@@ -18,9 +18,9 @@ const CATEGORIES = [
 
 const DISCOUNT_TIERS = [
   { min: 1, max: 1, pct: 0, label: 'Precio base', color: 'bg-bone-300' },
-  { min: 2, max: 2, pct: 10, label: '10% de descuento', color: 'bg-green-100' },
-  { min: 3, max: 3, pct: 15, label: '15% de descuento', color: 'bg-green-200' },
-  { min: 4, max: 99, pct: 20, label: '20% de descuento', color: 'bg-forest-700' },
+  { min: 2, max: 2, pct: 5, label: '5% de descuento', color: 'bg-green-100' },
+  { min: 3, max: 3, pct: 10, label: '10% de descuento', color: 'bg-green-200' },
+  { min: 4, max: 99, pct: 15, label: '15% de descuento', color: 'bg-forest-700' },
 ];
 
 // ─── PACKAGING ALGORITHM ──────────────────────────────────────────────────────
@@ -109,6 +109,7 @@ function ProductCard({ product, selected, onToggle }) {
       <div className="p-3 pointer-events-none">
         <p className="text-[0.8rem] font-bold text-gray-800 line-clamp-1">{product.name}</p>
         <p className="text-[0.85rem] font-black text-[var(--forest-dark)] mt-0.5">${(product.promo_price || product.price).toLocaleString()}</p>
+        <p className="text-[0.65rem] font-bold text-green-700 mt-0.5">${Math.round((product.promo_price || product.price) * 0.9).toLocaleString()} transf. (-10%)</p>
       </div>
       {isSelected && (
         <div className="absolute top-2 right-2 bg-[var(--forest-dark)] text-white w-5 h-5 rounded-full flex items-center justify-center pointer-events-none shadow-md">
@@ -164,7 +165,7 @@ function VisualBox({ selections, discount, subtotal, finalPrice, itemCount, onAd
             />
           </div>
           <p className="text-[0.6rem] font-bold text-gray-400 mt-2 text-center">
-            {itemCount < 2 ? 'Agregá 1 más para 10% OFF' : itemCount < 3 ? 'Agregá 1 más para 15% OFF' : itemCount < 4 ? 'Agregá 1 más para 20% OFF' : '¡Máximo descuento alcanzado!'}
+            {itemCount < 2 ? 'Agregá 1 más para 5% OFF' : itemCount < 3 ? 'Agregá 1 más para 10% OFF' : itemCount < 4 ? 'Agregá 1 más para 15% OFF' : '¡Máximo descuento alcanzado!'}
           </p>
         </div>
       )}
@@ -181,6 +182,11 @@ function VisualBox({ selections, discount, subtotal, finalPrice, itemCount, onAd
             <div className="flex justify-between items-end">
               <span className="text-sm font-black text-gray-900 uppercase tracking-tighter">Total Final</span>
               <span className="text-3xl font-black text-forest-800 leading-none">${finalPrice.toLocaleString()}</span>
+            </div>
+            
+            <div className="bg-green-50 border border-green-200 rounded-lg p-2.5 mt-3 flex justify-between items-center shadow-sm">
+              <span className="text-[0.7rem] font-black text-green-700 uppercase tracking-tight leading-tight">Por transferencia <br/><span className="font-bold opacity-80">(10% EXTRA OFF)</span></span>
+              <span className="text-xl font-black text-green-800">${Math.round(finalPrice * 0.9).toLocaleString()}</span>
             </div>
           </div>
 
@@ -454,6 +460,7 @@ export default function ComboBuilder() {
             <div>
               <p className="text-[0.65rem] font-bold text-gray-400 uppercase tracking-wider">{itemCount} PRODUCTOS</p>
               <p className="text-xl font-black text-gray-900">${finalPrice.toLocaleString()}</p>
+              <p className="text-[0.65rem] font-bold text-green-700">${Math.round(finalPrice * 0.9).toLocaleString()} transf.</p>
             </div>
             <button
               onClick={handleAddToCart}

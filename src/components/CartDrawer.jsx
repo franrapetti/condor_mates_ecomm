@@ -12,10 +12,30 @@ const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem
   const [preferenceId, setPreferenceId] = useState(null);
   const [isPaying, setIsPaying] = useState(false);
 
-  const total = cartItems.reduce((acc, item) => {
+  const [submitAction, setSubmitAction] = useState('mp');
+  const [promoCode, setPromoCode] = useState('');
+  const [appliedPromo, setAppliedPromo] = useState('');
+
+  let baseTotal = 0;
+  let discountedTotal = 0;
+
+  cartItems.forEach(item => {
     const itemPrice = item.promo_price || item.price;
-    return acc + (itemPrice * item.quantity);
-  }, 0);
+    const itemTotal = itemPrice * item.quantity;
+    baseTotal += itemTotal;
+    
+    // Condicional CONDOR10: aplica 10% SOLO si el item es imperial de alpaca
+    if (appliedPromo === 'CONDOR10' && 
+        item.name.toLowerCase().includes('imperial') && 
+        item.name.toLowerCase().includes('alpaca')) {
+      discountedTotal += Math.round(itemTotal * 0.9);
+    } else {
+      discountedTotal += itemTotal;
+    }
+  });
+
+  const total = appliedPromo ? discountedTotal : baseTotal;
+  const promoSaved = baseTotal - total;
 
   // Free shipping threshold (Protective margin threshold)
   const FREE_SHIPPING_THRESHOLD = 120000;
@@ -27,8 +47,6 @@ const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem
     setPreferenceId(null);
     onClose();
   };
-
-  const [submitAction, setSubmitAction] = useState('mp');
 
   const handleCheckoutSubmit = async (e) => {
     e.preventDefault();
@@ -239,9 +257,51 @@ const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem
             </div>
             
             <div className="cart-footer">
+              {/* Promo Code Engine */}
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '1rem' }}>
+                <input 
+                  type="text" 
+                  value={promoCode} 
+                  onChange={e => setPromoCode(e.target.value.toUpperCase())} 
+                  placeholder="Tengo un cupón de descuento" 
+                  style={{ flex: 1, padding: '12px', border: '1px solid var(--border)', borderRadius: '12px', fontSize: '0.9rem', backgroundColor: appliedPromo ? '#f9f9f9' : 'white', fontWeight: 600 }}
+                  disabled={appliedPromo !== ''}
+                />
+                {appliedPromo ? (
+                  <button 
+                    onClick={() => { setAppliedPromo(''); setPromoCode(''); }}
+                    style={{ padding: '0 16px', backgroundColor: '#fee2e2', color: '#b91c1c', borderRadius: '12px', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>
+                    Quitar
+                  </button>
+                ) : (
+                  <button 
+                    onClick={() => {
+                      if(promoCode.trim() === 'CONDOR10') {
+                        const hasAlpaca = cartItems.some(i => i.name.toLowerCase().includes('imperial') && i.name.toLowerCase().includes('alpaca'));
+                        if(hasAlpaca) {
+                          setAppliedPromo('CONDOR10');
+                        } else {
+                          alert('⚠️ El código CONDOR10 requiere agregar un "Imperial Virola de Alpaca" al carrito para hacer efecto.');
+                        }
+                      } else if (promoCode.trim() !== '') {
+                        alert('Cupón inválido o expirado.');
+                      }
+                    }}
+                    style={{ padding: '0 20px', backgroundColor: 'var(--text-dark)', color: 'white', borderRadius: '12px', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>
+                    Aplicar
+                  </button>
+                )}
+              </div>
+
               <div className="cart-total">
-                <span>Total</span>
-                <span className="total-price">${total.toLocaleString()}</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span style={{ fontWeight: 800 }}>Total Final</span>
+                  {appliedPromo && <span style={{ fontSize: '0.8rem', color: 'var(--accent)', fontWeight: 'bold', backgroundColor: 'var(--accent-light)', padding: '2px 6px', borderRadius: '4px', display: 'inline-block', width: 'fit-content' }}>Cupón Aplicado (-${promoSaved.toLocaleString()})</span>}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'center' }}>
+                  {appliedPromo && <span style={{ textDecoration: 'line-through', fontSize: '0.9rem', color: '#999', marginBottom: '-4px' }}>${baseTotal.toLocaleString()}</span>}
+                  <span className="total-price" style={{ color: appliedPromo ? 'var(--accent)' : 'inherit' }}>${total.toLocaleString()}</span>
+                </div>
               </div>
               <p className="shipping-notice">¡Envío con packaging de regalo incluido!</p>
               <button className="whatsapp-btn" onClick={() => setIsCheckout(true)}>
