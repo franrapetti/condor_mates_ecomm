@@ -159,6 +159,7 @@ const OrdersList = () => {
     const monthlyData = months.map(m => ({ name: m, ingresos: 0 }));
     const dailyData = days.map(d => ({ name: d, ordenes: 0 }));
     const hourlyData = Array.from({length: 24}, (_, i) => ({ name: `${i}:00`, volumen: 0 }));
+    const sourceDataMap = {};
 
     validOrders.forEach(order => {
       const date = new Date(order.created_at);
@@ -168,8 +169,16 @@ const OrdersList = () => {
       hourlyData[date.getHours()].volumen += 1;
     });
 
-    return { monthlyData, dailyData, hourlyData };
-  }, [validOrders]);
+    pageViews.forEach(v => {
+      const origin = (v.source && v.source !== 'null') ? v.source.toUpperCase() : 'DIRECTO';
+      if (!sourceDataMap[origin]) sourceDataMap[origin] = 0;
+      sourceDataMap[origin] += 1;
+    });
+
+    const sourceData = Object.keys(sourceDataMap).map(k => ({ name: k, visitas: sourceDataMap[k] })).sort((a,b) => b.visitas - a.visitas);
+
+    return { monthlyData, dailyData, hourlyData, sourceData };
+  }, [validOrders, pageViews]);
 
   return (
     <div className="orders-dashboard">
@@ -263,6 +272,21 @@ const OrdersList = () => {
                 <Tooltip formatter={(value) => [value, 'Ventas a esta hora']} />
                 <Area type="monotone" dataKey="volumen" stroke="#e65100" fill="#ffb74d" strokeWidth={2} />
               </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+        
+        <div className="chart-card">
+          <h3>🌍 Mapa de Origen (Tráfico de Visitas)</h3>
+          <div style={{ width: '100%', height: 250 }}>
+            <ResponsiveContainer>
+              <BarChart data={chartData.sourceData} layout="vertical" margin={{ top: 5, right: 30, left: 10, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#E5E7EB" />
+                <XAxis type="number" stroke="#6B7280" allowDecimals={false} />
+                <YAxis dataKey="name" type="category" stroke="#6B7280" width={100} tick={{fontSize: 10, fill: '#374151', fontWeight: 700}} />
+                <Tooltip formatter={(value) => [value, 'Sesiones']} cursor={{fill: 'rgba(16, 185, 129, 0.1)'}} />
+                <Bar dataKey="visitas" fill="#10b981" radius={[0, 6, 6, 0]} barSize={20} />
+              </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
