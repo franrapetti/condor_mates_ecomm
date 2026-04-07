@@ -56,7 +56,7 @@ const Footer = () => {
         <p className="dev-by">
           Hecho con ❤️ por{' '}
           <a 
-            href={`https://wa.me/543572403499?text=${encodeURIComponent("Hola Francisco, me gustó mucho la web de Cóndor Mates!")}`} 
+            href={`https://wa.me/543572595756?text=${encodeURIComponent("Hola Francisco, me gustó mucho la web de Cóndor Mates!")}`} 
             target="_blank" 
             rel="noopener noreferrer"
             className="dev-link"

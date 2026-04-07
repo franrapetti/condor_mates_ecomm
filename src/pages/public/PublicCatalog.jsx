@@ -235,6 +235,40 @@ function PublicCatalog() {
             <div className="trust-bar-item">🚚 Envíos por <strong>Andreani</strong></div>
             <div className="trust-bar-item">💳 Pagos seguros por <strong>Mercado Pago</strong></div>
           </div>
+
+          {/* Categories Preview Grid */}
+          <div className="container" style={{ marginTop: '3.5rem', marginBottom: '1.5rem' }}>
+            <h2 style={{ fontSize: '1.8rem', textAlign: 'center', marginBottom: '2.5rem', fontWeight: 800, color: 'var(--accent)' }}>Explorá nuestras colecciones</h2>
+            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '2.5rem' }}>
+              {Object.values(
+                products.reduce((acc, p) => {
+                  if (!acc[p.category] || p.price > acc[p.category].price) {
+                    acc[p.category] = p;
+                  }
+                  return acc;
+                }, {})
+              ).filter(p => !['Nosotros', 'Envios'].includes(p.category)).map((catProduct) => (
+                <div 
+                  key={catProduct.category} 
+                  onClick={() => {
+                      setCurrentCategory(catProduct.category);
+                      setTimeout(() => document.getElementById('catalog-section')?.scrollIntoView({ behavior: 'smooth' }), 100);
+                  }}
+                  className="group cursor-pointer text-center transition-all duration-300 hover:-translate-y-2"
+                  style={{ width: '140px' }}
+                >
+                  <div className="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden border-[4px] border-solid border-[#ddd5c0] bg-[#FFFDF7] shadow-sm group-hover:shadow-lg group-hover:border-[#234A2E] transition-all duration-300">
+                    <img 
+                      src={catProduct.image_url} 
+                      alt={catProduct.category} 
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                    />
+                  </div>
+                  <h3 className="text-[1.05rem] font-bold text-[#1a1208] group-hover:text-[#234A2E] transition-colors">{catProduct.category}</h3>
+                </div>
+              ))}
+            </div>
+          </div>
         </>
       )}
 
