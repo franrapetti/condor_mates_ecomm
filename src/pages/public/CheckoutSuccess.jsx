@@ -26,23 +26,18 @@ const CheckoutSuccess = () => {
       // Ignore parse errors
     }
 
-    // Clear cart after successful payment and Notify Admin
+    // Clear cart after successful payment
     if (status === 'approved') {
       clearCart();
       
-      // Send WhatsApp Notification (Once per session/payment)
-      const notifiedKey = `notified_${paymentId}`;
-      if (paymentId && !sessionStorage.getItem(notifiedKey)) {
-        notifyNewOrder({ paymentId, items: savedCart, total: savedTotal });
-        sessionStorage.setItem(notifiedKey, 'true');
-      }
-
       if (window.fbq && paymentId) {
         window.fbq('track', 'Purchase', { currency: 'ARS', transaction_id: paymentId });
       }
     }
   }, [status, paymentId, clearCart]);
 
+  const method = searchParams.get('method');
+  const isTransfer = method === 'transfer';
   const isApproved = status === 'approved';
 
   return (
@@ -53,10 +48,12 @@ const CheckoutSuccess = () => {
 
       <div className="success-card">
         <div className="success-icon">{isApproved ? '🧉' : '⏳'}</div>
-        <h1>{isApproved ? '¡Muchas gracias!' : 'Pago en proceso...'}</h1>
+        <h1>{isApproved ? '¡Muchas gracias por tu compra!' : 'Pago en proceso...'}</h1>
         <p>
           {isApproved
-            ? 'Tu pago fue confirmado y tu pedido ya está en nuestro sistema. ¡Vamos a prepararlo enseguida!'
+            ? isTransfer 
+              ? 'Tu pedido está reservado. Solo falta que confirmes la transferencia para coordinar el envío.'
+              : 'Tu pago fue confirmado y tu pedido está en nuestro sistema. ¡Vamos a prepararlo enseguida!'
             : 'Tu pago está siendo procesado. En breve recibirás la confirmación por email.'}
         </p>
 
@@ -83,7 +80,19 @@ const CheckoutSuccess = () => {
           </div>
         )}
 
-        {paymentId && (
+        {isTransfer && isApproved && (
+          <div className="transfer-details" style={{ backgroundColor: '#f2f8ea', border: '1px solid #cce5b5', padding: '1.5rem', borderRadius: '12px', margin: '1rem 0', textAlign: 'left' }}>
+            <h3 style={{ color: '#2b5434', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              🏦 Datos de Transferencia
+            </h3>
+            <p><strong>Alias:</strong> CONDOR.MATES</p>
+            <p><strong>CBU/CVU:</strong> 0000003100086202495818</p>
+            <p><strong>Titular:</strong> Cóndor Mates</p>
+            <p style={{ marginTop: '0.5rem', fontSize: '0.9rem', color: '#555' }}>Por favor transferí el monto exacto de <strong>${lastTotal.toLocaleString()}</strong> y enviá el comprobante por WhatsApp presionando el botón debajo.</p>
+          </div>
+        )}
+
+        {paymentId && !isTransfer && (
           <div className="order-details">
             <p className="order-number">N° de Operación: <strong>{paymentId}</strong></p>
             <p className="order-instructions">Guardá este número para cualquier consulta.</p>
@@ -93,12 +102,12 @@ const CheckoutSuccess = () => {
         <div className="success-actions">
           <Link to="/" className="btn-primary success-btn">🛍️ Seguir comprando</Link>
           <a
-            href={`https://wa.me/${import.meta.env.VITE_WHATSAPP_NUMBER || '543572595756'}?text=${encodeURIComponent('¡Hola! Acabo de hacer una compra por la web. Quería confirmar el pedido.')}`}
+            href={`https://wa.me/${import.meta.env.VITE_WHATSAPP_NUMBER || '543572595756'}?text=${encodeURIComponent(isTransfer ? `¡Hola! Acabo de hacer una reserva por transferencia. Mi N° de pedido es ${paymentId}. Aquí te envío el comprobante:` : '¡Hola! Acabo de hacer una compra por la web. Quería confirmar el pedido.')}`}
             className="success-whatsapp-btn"
             target="_blank"
             rel="noreferrer"
           >
-            💬 Consultar por WhatsApp
+            💬 {isTransfer ? 'Enviar Comprobante por WhatsApp' : 'Consultar por WhatsApp'}
           </a>
         </div>
       </div>

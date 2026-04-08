@@ -52,23 +52,35 @@ const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem
     e.preventDefault();
     
     if (submitAction === 'whatsapp') {
-      let message = `*¡Hola! Quiero hacer un pedido por la web*\n\n`;
-      message += `*Mis datos:*\n`;
-      message += `- Nombre: ${formData.name}\n`;
-      message += `- Email: ${formData.email}\n`;
-      message += `- Ciudad: ${formData.city}\n`;
-      if(formData.notes) message += `- Notas: ${formData.notes}\n`;
-      message += `\n*Mi pedido:*\n`;
-      
-      cartItems.forEach(item => {
-        message += `- ${item.quantity}x ${item.name} ($${item.price.toLocaleString()})\n`;
-      });
-      
-      message += `\n*Total estimado: $${total.toLocaleString()}*`;
-      
-      const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER || '543572595756';
-      const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
-      window.open(whatsappUrl, '_blank');
+      setIsPaying(true);
+      try {
+        sessionStorage.setItem('mate_last_cart', JSON.stringify(cartItems));
+        sessionStorage.setItem('mate_last_total', Math.round(total * 0.9).toString()); // 10% discount
+
+        const response = await fetch('/api/create_transfer_order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            items: cartItems,
+            customer: formData,
+            total: Math.round(total * 0.9), // 10% discount total
+            source: sessionStorage.getItem('mate_utm_source') || 'direct'
+          })
+        });
+        
+        const data = await response.json();
+        if (data.id) {
+          // Success! Redirect to checkout success with method=transfer
+          window.location.href = `/checkout/success?status=approved&payment_id=${data.id}&method=transfer`;
+        } else {
+          alert(data.error || 'Hubo un error al crear la orden de transferencia.');
+        }
+      } catch (error) {
+        console.error(error);
+        alert('Error de conexión.');
+      } finally {
+        setIsPaying(false);
+      }
       return;
     }
 
@@ -172,15 +184,11 @@ const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem
                   <button type="button" className="btn-back" onClick={() => setIsCheckout(false)}>← Volver al carrito</button>
                   
                   <button type="submit" onClick={() => setSubmitAction('mp')} className="whatsapp-btn mp-btn" disabled={isPaying} style={{backgroundColor: '#009ee3'}}>
-                    {isPaying ? 'Conectando Seguro...' : '💳 Pagar Seguro con Mercado Pago'}
+                    {isPaying ? 'Procesando...' : '💳 Pagar Seguro con Mercado Pago'}
                   </button>
                   <button type="submit" onClick={() => setSubmitAction('whatsapp')} className="whatsapp-btn " disabled={isPaying} style={{marginTop: '-0.5rem', backgroundColor: '#25D366', color: 'white', border: 'none'}}>
-                    💬 Acordar con Vendedor
+                    {isPaying ? 'Procesando...' : '🏦 Pagar con Transferencia (-10% OFF Extras)'}
                   </button>
-                  
-                  <div style={{ textAlign: 'center', fontSize: '0.85rem', color: '#25D366', fontWeight: 'bold', marginTop: '0.5rem', paddingBottom: '0.5rem' }}>
-                    Con transferencia pagás solo ${Math.round(total * 0.9).toLocaleString()} (-10% OFF Extra)
-                  </div>
                   
                   <div className="trust-badges-container">
                     <div className="trust-logos">
