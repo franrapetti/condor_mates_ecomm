@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { Link } from 'react-router-dom';
+import ProductHeatmap from '../../components/admin/ProductHeatmap';
 import './AdminProducts.css';
 
 const ProductsList = () => {
@@ -46,10 +47,6 @@ const ProductsList = () => {
     return <span style={{background:'#e6fced',color:'#008a3d',padding:'2px 8px',borderRadius:'10px',fontSize:'0.78rem',fontWeight:700}}>{stock} ud.</span>;
   };
 
-  const topClickedProducts = [...products]
-    .sort((a, b) => (b.click_count || 0) - (a.click_count || 0))
-    .slice(0, 3);
-
   return (
     <div className="admin-page">
       <div className="adm-page-header">
@@ -60,17 +57,7 @@ const ProductsList = () => {
         <Link to="/admin/products/new" className="btn-primary">+ Nuevo Producto</Link>
       </div>
 
-      <div className="top-clicked-widget">
-        <h3>🔥 Top Productos Más Visitados</h3>
-        <div className="top-clicked-grid">
-          {topClickedProducts.map(p => (
-            <div key={p.id} className="top-clicked-item">
-              <span className="top-clicked-name">{p.name}</span>
-              <span className="top-clicked-count">{p.click_count || 0} clics</span>
-            </div>
-          ))}
-        </div>
-      </div>
+      <ProductHeatmap products={products} />
 
       <div className="table-container">
         {loading ? (

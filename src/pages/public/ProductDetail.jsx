@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabaseClient';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
 import { useLaunchTimer } from '../../hooks/useLaunchTimer';
+import { logProductPageView } from '../../hooks/useAnalytics';
 import Header from '../../components/Header';
 import ProductCard from '../../components/ProductCard';
 import { ProductDetailSkeleton } from '../../components/ProductSkeleton';
@@ -75,13 +76,9 @@ function ProductDetail() {
       setActiveImage(data.image_url);
       setActiveImageIdx(0);
 
-      // ── Increment click_count ──
+      // ── Log product page view (links page_view row + increments visit_count) ──
       if (!silent) {
-        try {
-          await supabase.rpc('increment_click_count', { product_id: productId });
-        } catch (_) {
-          // silently ignore if RPC not set up yet
-        }
+        logProductPageView(productId);
       }
 
       // ── Fetch Reviews ──

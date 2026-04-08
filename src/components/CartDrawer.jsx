@@ -64,7 +64,7 @@ const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem
             items: cartItems,
             customer: formData,
             total: Math.round(total * 0.9), // 10% discount total
-            source: sessionStorage.getItem('mate_utm_source') || 'direct'
+            source: localStorage.getItem('mate_traffic_source') || 'direct'
           })
         });
         
@@ -99,7 +99,7 @@ const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem
           items: cartItems,
           customer: formData,
           total: total,
-          source: sessionStorage.getItem('mate_utm_source') || 'direct'
+          source: localStorage.getItem('mate_traffic_source') || 'direct'
         })
       });
       

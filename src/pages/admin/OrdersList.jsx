@@ -15,6 +15,8 @@ const OrdersList = () => {
   const [alerts, setAlerts] = useState([]);
   const [dismissedAlerts, setDismissedAlerts] = useState([]);
   const [search, setSearch] = useState('');
+  const [dateRange, setDateRange] = useState('30d'); // '7d' | '30d' | '90d' | 'all'
+  const [sourceFilter, setSourceFilter] = useState('all');
 
   useEffect(() => {
     fetchData();
@@ -151,34 +153,70 @@ const OrdersList = () => {
   const avgDurationSeconds = uniqueSessions > 0 ? Math.floor(totalDuration / uniqueSessions) : 0;
   const avgDurationFormatted = `${Math.floor(avgDurationSeconds / 60)}m ${avgDurationSeconds % 60}s`;
 
+  // ── Date range helper ──────────────────────────────────────────────────────
+  const getCutoff = () => {
+    if (dateRange === 'all') return null;
+    const days = dateRange === '7d' ? 7 : dateRange === '30d' ? 30 : 90;
+    return new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+  };
+
+  const filteredViews = useMemo(() => {
+    const cutoff = getCutoff();
+    return pageViews.filter(v => !cutoff || new Date(v.created_at) >= cutoff);
+  }, [pageViews, dateRange]);
+
   // Chart Data Preparation
   const chartData = useMemo(() => {
     const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
     const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-    
+
     const monthlyData = months.map(m => ({ name: m, ingresos: 0 }));
     const dailyData = days.map(d => ({ name: d, ordenes: 0 }));
-    const hourlyData = Array.from({length: 24}, (_, i) => ({ name: `${i}:00`, volumen: 0 }));
+    const hourlyData = Array.from({ length: 24 }, (_, i) => ({ name: `${i}:00`, volumen: 0 }));
+
+    // Source map — use filteredViews so date range applies
     const sourceDataMap = {};
+    filteredViews.forEach(v => {
+      const raw = v.source && v.source !== 'null' ? v.source.toLowerCase() : 'direct';
+      // Friendly labels
+      const labelMap = {
+        instagram: '📸 Instagram',
+        facebook:  '👥 Facebook',
+        whatsapp:  '💬 WhatsApp',
+        tiktok:    '🎵 TikTok',
+        google:    '🔍 Google',
+        direct:    '🌐 Directo',
+      };
+      const origin = labelMap[raw] || `🔗 ${raw.charAt(0).toUpperCase() + raw.slice(1)}`;
+      sourceDataMap[origin] = (sourceDataMap[origin] || 0) + 1;
+    });
+    const sourceData = Object.entries(sourceDataMap)
+      .map(([name, visitas]) => ({ name, visitas }))
+      .sort((a, b) => b.visitas - a.visitas);
+
+    // Monthly page views (all time, no date filter — historical)
+    const monthlyViewsMap = {};
+    pageViews.forEach(v => {
+      const d = new Date(v.created_at);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const label = `${months[d.getMonth()]} ${d.getFullYear()}`;
+      if (!monthlyViewsMap[key]) monthlyViewsMap[key] = { name: label, visitas: 0, sesiones: 0, _sessions: new Set() };
+      monthlyViewsMap[key].visitas += 1;
+      monthlyViewsMap[key]._sessions.add(v.session_id);
+    });
+    const monthlyViews = Object.entries(monthlyViewsMap)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([, v]) => ({ name: v.name, visitas: v.visitas, sesiones: v._sessions.size }));
 
     validOrders.forEach(order => {
       const date = new Date(order.created_at);
-      
       monthlyData[date.getMonth()].ingresos += order.total_price;
       dailyData[date.getDay()].ordenes += 1;
       hourlyData[date.getHours()].volumen += 1;
     });
 
-    pageViews.forEach(v => {
-      const origin = (v.source && v.source !== 'null') ? v.source.toUpperCase() : 'DIRECTO';
-      if (!sourceDataMap[origin]) sourceDataMap[origin] = 0;
-      sourceDataMap[origin] += 1;
-    });
-
-    const sourceData = Object.keys(sourceDataMap).map(k => ({ name: k, visitas: sourceDataMap[k] })).sort((a,b) => b.visitas - a.visitas);
-
-    return { monthlyData, dailyData, hourlyData, sourceData };
-  }, [validOrders, pageViews]);
+    return { monthlyData, dailyData, hourlyData, sourceData, monthlyViews };
+  }, [validOrders, filteredViews, pageViews]);
 
   return (
     <div className="orders-dashboard">
@@ -230,6 +268,41 @@ const OrdersList = () => {
         </div>
       </div>
 
+      {/* Analytics Section Header + Date Range Filter */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem', margin: '1.5rem 0 1rem' }}>
+        <h2 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-dark)' }}>📊 Analíticas de Tráfico</h2>
+        <div style={{ display: 'flex', gap: '0.4rem' }}>
+          {[['7d', '7 días'], ['30d', '30 días'], ['90d', '90 días'], ['all', 'Todo']].map(([val, label]) => (
+            <button
+              key={val}
+              onClick={() => setDateRange(val)}
+              style={{
+                padding: '0.35rem 0.75rem',
+                borderRadius: 20,
+                border: '1px solid var(--border)',
+                background: dateRange === val ? 'var(--accent)' : 'transparent',
+                color: dateRange === val ? 'white' : 'var(--text-dark)',
+                fontWeight: 700,
+                fontSize: '0.78rem',
+                cursor: 'pointer',
+              }}
+            >{label}</button>
+          ))}
+        </div>
+      </div>
+
+      {/* No analytics data empty state */}
+      {pageViews.length === 0 && (
+        <div style={{
+          background: '#fef9c3', border: '1px solid #fde68a',
+          borderRadius: 12, padding: '1rem 1.25rem', marginBottom: '1.5rem',
+          fontSize: '0.85rem', color: '#92400e',
+        }}>
+          <strong>⚠️ Sin datos de tráfico aún.</strong> Las visitas se empezarán a registrar automáticamente
+          cuando los usuarios naveguen el sitio. Asegurate de haber ejecutado <code>setup_analytics_v3.sql</code> en Supabase.
+        </div>
+      )}
+
       <div className="charts-grid">
         <div className="chart-card chart-full-width">
           <h3>📈 Crecimiento Mensual (Ingresos Brutos)</h3>
@@ -275,22 +348,67 @@ const OrdersList = () => {
             </ResponsiveContainer>
           </div>
         </div>
-        
+
+        {/* Source Origin Chart */}
         <div className="chart-card">
-          <h3>🌍 Mapa de Origen (Tráfico de Visitas)</h3>
-          <div style={{ width: '100%', height: 250 }}>
-            <ResponsiveContainer>
-              <BarChart data={chartData.sourceData} layout="vertical" margin={{ top: 5, right: 30, left: 10, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#E5E7EB" />
-                <XAxis type="number" stroke="#6B7280" allowDecimals={false} />
-                <YAxis dataKey="name" type="category" stroke="#6B7280" width={100} tick={{fontSize: 10, fill: '#374151', fontWeight: 700}} />
-                <Tooltip formatter={(value) => [value, 'Sesiones']} cursor={{fill: 'rgba(16, 185, 129, 0.1)'}} />
-                <Bar dataKey="visitas" fill="#10b981" radius={[0, 6, 6, 0]} barSize={20} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          <h3>🌐 Origen del Tráfico
+            <span style={{ fontSize: '0.72rem', fontWeight: 500, color: 'var(--text-light)', marginLeft: '0.5rem' }}>
+              ({dateRange === 'all' ? 'Historial completo' : `Últimos ${dateRange}`})
+            </span>
+          </h3>
+          {chartData.sourceData.length === 0 ? (
+            <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-light)', fontSize: '0.85rem' }}>
+              Sin datos en el período seleccionado.<br/>
+              <small>Probá con "Todo" o esperá a que entren visitas con UTM/ref en la URL.</small>
+            </div>
+          ) : (
+            <div style={{ width: '100%', height: Math.max(180, chartData.sourceData.length * 44) }}>
+              <ResponsiveContainer>
+                <BarChart data={chartData.sourceData} layout="vertical" margin={{ top: 4, right: 30, left: 8, bottom: 4 }}>
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} vertical={true} stroke="#E5E7EB" />
+                  <XAxis type="number" stroke="#6B7280" allowDecimals={false} />
+                  <YAxis dataKey="name" type="category" stroke="#6B7280" width={130} tick={{ fontSize: 11, fill: '#374151', fontWeight: 700 }} />
+                  <Tooltip formatter={(value) => [value, 'Sesiones de visita']} cursor={{ fill: 'rgba(16,185,129,0.08)' }} />
+                  <Bar dataKey="visitas" fill="#10b981" radius={[0, 6, 6, 0]} barSize={22} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Monthly Traffic Breakdown Table */}
+      {chartData.monthlyViews && chartData.monthlyViews.length > 0 && (
+        <div style={{
+          background: 'var(--surface)', border: '1px solid var(--border)',
+          borderRadius: 16, padding: '1.25rem', marginBottom: '2rem',
+          boxShadow: 'var(--shadow-sm)',
+        }}>
+          <h3 style={{ margin: '0 0 1rem', fontSize: '1rem', fontWeight: 800, color: 'var(--text-dark)' }}>
+            📅 Visitas Mensuales al Sitio
+          </h3>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+              <thead>
+                <tr style={{ borderBottom: '2px solid var(--border)' }}>
+                  {['Mes', 'Vistas Totales', 'Sesiones Únicas'].map(h => (
+                    <th key={h} style={{ padding: '0.5rem 0.75rem', textAlign: 'left', fontWeight: 800, color: 'var(--text-light)', fontSize: '0.75rem', textTransform: 'uppercase' }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {[...chartData.monthlyViews].reverse().map((row, i) => (
+                  <tr key={i} style={{ borderBottom: '1px solid var(--border)', background: i % 2 === 0 ? 'transparent' : 'var(--background)' }}>
+                    <td style={{ padding: '0.55rem 0.75rem', fontWeight: 700, color: 'var(--text-dark)' }}>{row.name}</td>
+                    <td style={{ padding: '0.55rem 0.75rem', color: 'var(--text-dark)' }}>{row.visitas.toLocaleString()}</td>
+                    <td style={{ padding: '0.55rem 0.75rem', color: '#10b981', fontWeight: 700 }}>{row.sesiones.toLocaleString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       <div className="orders-container">
         <div className="orders-filters">
