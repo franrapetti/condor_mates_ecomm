@@ -36,15 +36,38 @@ export default async function handler(req, res) {
             mp_payment_id: paymentId
           }).eq('id', orderId);
 
-          // Get the full order to send Automated Email
+          // Get the full order to send Automated Email + WhatsApp notification
           const { data: fullOrder } = await supabase.from('orders').select('*').eq('id', orderId).single();
+
+          // Reducir stock de productos (siempre, independiente del email)
+          if (fullOrder) {
+            for (const item of fullOrder.items) {
+              const { data: dbProduct } = await supabase.from('products').select('stock').eq('id', item.id).single();
+              if (dbProduct && dbProduct.stock !== null) {
+                await supabase.from('products').update({ stock: Math.max(0, dbProduct.stock - item.quantity) }).eq('id', item.id);
+              }
+            }
+          }
+
+          // Notificación WhatsApp vía CallMeBot (siempre, independiente del email)
+          if (fullOrder) {
+            const phone = process.env.VITE_CALLMEBOT_PHONE;
+            const apikey = process.env.VITE_CALLMEBOT_APIKEY;
+            if (phone && apikey) {
+              let itemSummary = fullOrder.items.map(item => `- ${item.name} x${item.quantity}`).join('\n');
+              const message = `🔔 *Pedido Pagado (Mercado Pago)* 🧉\n\n*N° Operación:* ${paymentId}\n*Cliente:* ${fullOrder.customer_name}\n*Ciudad:* ${fullOrder.customer_city}\n*Productos:*\n${itemSummary}\n\n*Total:* $${fullOrder.total_price.toLocaleString()}\n\n🚀 ¡Listo para despachar!`;
+              const url = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(message)}&apikey=${encodeURIComponent(apikey)}`;
+              try { await fetch(url); } catch (e) { console.error('CallMeBot error:', e); }
+            }
+          }
+
+          // Email de confirmación (opcional — solo si Resend está configurado y el cliente puso email)
           const resendKey = process.env.RESEND_API_KEY;
-          
           if (resendKey && fullOrder && fullOrder.customer_email) {
             const resend = new Resend(resendKey);
             try {
               await resend.emails.send({
-                from: 'Cóndor Mates <onboarding@resend.dev>', // Resend sandbox requirement to test
+                from: 'Cóndor Mates <onboarding@resend.dev>',
                 to: fullOrder.customer_email,
                 subject: '¡Pago Confirmado! Estamos preparando tu pedido 🧉',
                 html: `
@@ -63,31 +86,9 @@ export default async function handler(req, res) {
                   </div>
                 `
               });
-              console.log('Automated confirmation email sent to', fullOrder.customer_email);
+              console.log('Confirmation email sent to', fullOrder.customer_email);
             } catch (emailError) {
               console.error('Failed to send Resend email:', emailError);
-            }
-
-            // Reducir stock de productos
-            for (const item of fullOrder.items) {
-              const { data: dbProduct } = await supabase.from('products').select('stock').eq('id', item.id).single();
-              if (dbProduct && dbProduct.stock !== null) {
-                await supabase.from('products').update({ stock: Math.max(0, dbProduct.stock - item.quantity) }).eq('id', item.id);
-              }
-            }
-
-            // Notificación vía CallMeBot
-            const phone = process.env.VITE_CALLMEBOT_PHONE;
-            const apikey = process.env.VITE_CALLMEBOT_APIKEY;
-            if (phone && apikey) {
-              let itemSummary = fullOrder.items.map(item => `- ${item.name} x${item.quantity}`).join('\n');
-              const message = `🔔 *Pedido Pagado (Mercado Pago)* 🧉\n\n*N° Operación:* ${paymentId}\n*Cliente:* ${fullOrder.customer_name}\n*Productos:*\n${itemSummary}\n\n*Total:* $${fullOrder.total_price.toLocaleString()}\n\n🚀 ¡Listo para despachar!`;
-              const url = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(message)}&apikey=${encodeURIComponent(apikey)}`;
-              try {
-                await fetch(url);
-              } catch (e) {
-                console.error('CallMeBot notification error:', e);
-              }
             }
           }
         }
