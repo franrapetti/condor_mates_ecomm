@@ -99,12 +99,16 @@ export const useAnalytics = () => {
 export const logProductPageView = async (productId) => {
   if (!productId) return;
 
+  // URL params are always strings — cast to integer to match products.id BIGINT type
+  const numericId = Number(productId);
+  if (!Number.isFinite(numericId)) return; // guard against UUID-type products
+
   // 1. Attach product_id to the page_views row created by useAnalytics
   const viewId = localStorage.getItem('mate_last_view_id');
   if (viewId) {
     supabase
       .from('page_views')
-      .update({ product_id: productId })
+      .update({ product_id: numericId })
       .eq('id', viewId)
       .then(() => {})
       .catch(() => {});
@@ -112,8 +116,9 @@ export const logProductPageView = async (productId) => {
 
   // 2. Increment product visit counter
   try {
-    await supabase.rpc('increment_visit_count', { p_product_id: productId });
+    await supabase.rpc('increment_visit_count', { p_product_id: numericId });
   } catch (_) {
     // RPC may not exist yet — silently ignore
   }
 };
+
