@@ -55,18 +55,33 @@ export default async function handler(req, res) {
       }
     }
 
-    // Notificar al CallMeBot
+    // Notificar al CallMeBot (WhatsApp) con super logs para diagnóstico
     const phone = process.env.VITE_CALLMEBOT_PHONE;
     const apikey = process.env.VITE_CALLMEBOT_APIKEY;
+
+    console.log(`[Bot Debug] Intentando enviar WhatsApp a: ${phone ? phone.slice(0, 7) + '...' : 'MISSING'}`);
+    
     if (phone && apikey) {
-      let itemSummary = items.map(item => `- ${item.name} x${item.quantity}`).join('\n');
+      // Limpiar el número de teléfono (solo dejar números y el + inicial si existe)
+      const cleanPhone = phone.replace(/[^\d+]/g, '');
+      const itemSummary = items.map(item => `- ${item.name} x${item.quantity}`).join('\n');
       const message = `🔔 *Nuevo Pedido (Transferencia)* 🧉\n\n*N° Operación:* ${orderData.id.slice(0,8)}...\n*Nombre:* ${customer.name}\n*Productos:*\n${itemSummary}\n\n*Total:* $${total.toLocaleString()}\n\n🚀 ¡Esperando comprobante de pago!`;
-      const url = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(message)}&apikey=${encodeURIComponent(apikey)}`;
+      
+      const url = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(cleanPhone)}&text=${encodeURIComponent(message)}&apikey=${encodeURIComponent(apikey)}`;
+      
       try {
-        await fetch(url);
+        const botResponse = await fetch(url);
+        const botText = await botResponse.text();
+        console.log(`[CallMeBot Result] Status: ${botResponse.status}, Response: ${botText}`);
+        
+        if (!botResponse.ok) {
+          console.warn(`[CallMeBot Warning] El bot devolvió un error: ${botText}`);
+        }
       } catch (e) {
-        console.error('CallMeBot error', e);
+        console.error('[CallMeBot Fatal Error] Falló la petición fetch:', e.message);
       }
+    } else {
+      console.error('[Bot Error] Faltan variables de entorno: VITE_CALLMEBOT_PHONE o VITE_CALLMEBOT_APIKEY');
     }
 
     return res.status(200).json({ id: orderData.id });

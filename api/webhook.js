@@ -49,15 +49,33 @@ export default async function handler(req, res) {
             }
           }
 
-          // Notificación WhatsApp vía CallMeBot (siempre, independiente del email)
+          // Notificación WhatsApp vía CallMeBot (WhatsApp) con super logs para diagnóstico
           if (fullOrder) {
             const phone = process.env.VITE_CALLMEBOT_PHONE;
             const apikey = process.env.VITE_CALLMEBOT_APIKEY;
+
+            console.log(`[Bot Debug] Intentando enviar WhatsApp (Pago) a: ${phone ? phone.slice(0, 7) + '...' : 'MISSING'}`);
+            
             if (phone && apikey) {
+              const cleanPhone = phone.replace(/[^\d+]/g, '');
               let itemSummary = fullOrder.items.map(item => `- ${item.name} x${item.quantity}`).join('\n');
               const message = `🔔 *Pedido Pagado (Mercado Pago)* 🧉\n\n*N° Operación:* ${paymentId}\n*Cliente:* ${fullOrder.customer_name}\n*Ciudad:* ${fullOrder.customer_city}\n*Productos:*\n${itemSummary}\n\n*Total:* $${fullOrder.total_price.toLocaleString()}\n\n🚀 ¡Listo para despachar!`;
-              const url = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(message)}&apikey=${encodeURIComponent(apikey)}`;
-              try { await fetch(url); } catch (e) { console.error('CallMeBot error:', e); }
+              
+              const url = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(cleanPhone)}&text=${encodeURIComponent(message)}&apikey=${encodeURIComponent(apikey)}`;
+              
+              try {
+                const botResponse = await fetch(url);
+                const botText = await botResponse.text();
+                console.log(`[CallMeBot Result] Status: ${botResponse.status}, Response: ${botText}`);
+                
+                if (!botResponse.ok) {
+                  console.warn(`[CallMeBot Warning] El bot devolvió un error: ${botText}`);
+                }
+              } catch (e) {
+                console.error('[CallMeBot Fatal Error] Falló la petición fetch:', e.message);
+              }
+            } else {
+              console.error('[Bot Error] Faltan variables de entorno: VITE_CALLMEBOT_PHONE o VITE_CALLMEBOT_APIKEY');
             }
           }
 
