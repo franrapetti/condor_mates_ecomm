@@ -49,7 +49,7 @@ function App() {
                   <Route element={<PublicLayout />}>
                     <Route path="/" element={<PublicCatalog />} />
                     <Route path="/producto/:id" element={<ProductDetail />} />
-                    <Route path="/success" element={<CheckoutSuccess />} />
+                    <Route path="/checkout/success" element={<CheckoutSuccess />} />
                     <Route path="/favoritos" element={<Wishlist />} />
                     <Route path="/empresas" element={<CorporatePage />} />
                     <Route path="/combo" element={<ComboBuilder />} />
