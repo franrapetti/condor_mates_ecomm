@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { notifyNewOrder } from '../../lib/notifications';
+import { useCart } from '../../context/CartContext';
+import { Helmet } from 'react-helmet-async';
 
 const CheckoutSuccess = () => {
   const [searchParams] = useSearchParams();
