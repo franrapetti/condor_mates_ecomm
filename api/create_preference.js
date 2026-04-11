@@ -67,7 +67,7 @@ export default async function handler(req, res) {
         name: customer.name,
       },
       back_urls: {
-        success: `${req.headers.origin}/success`,
+        success: `${req.headers.origin}/checkout/success`,
         failure: `${req.headers.origin}/`,
         pending: `${req.headers.origin}/`,
       },

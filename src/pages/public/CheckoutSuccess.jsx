@@ -3,6 +3,7 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { notifyNewOrder } from '../../lib/notifications';
 import { useCart } from '../../context/CartContext';
 import { Helmet } from 'react-helmet-async';
+import './CheckoutSuccess.css';
 
 const CheckoutSuccess = () => {
   const [searchParams] = useSearchParams();
@@ -87,8 +88,8 @@ const CheckoutSuccess = () => {
             <h3 style={{ color: '#2b5434', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
               🏦 Datos de Transferencia
             </h3>
-            <p><strong>Alias:</strong> CONDOR.MATES</p>
-            <p><strong>CBU/CVU:</strong> 0000003100086202495818</p>
+            <p><strong>Alias:</strong> condormates</p>
+            <p><strong>CBU/CVU:</strong> 0000076500000011685113</p>
             <p><strong>Titular:</strong> Cóndor Mates</p>
             <p style={{ marginTop: '0.5rem', fontSize: '0.9rem', color: '#555' }}>Por favor transferí el monto exacto de <strong>${lastTotal.toLocaleString()}</strong> y enviá el comprobante por WhatsApp presionando el botón debajo.</p>
           </div>
