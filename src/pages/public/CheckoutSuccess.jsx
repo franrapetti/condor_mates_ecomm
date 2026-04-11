@@ -90,7 +90,7 @@ const CheckoutSuccess = () => {
             </h3>
             <p><strong>Alias:</strong> condormates</p>
             <p><strong>CBU/CVU:</strong> 0000076500000011685113</p>
-            <p><strong>Titular:</strong> Cóndor Mates</p>
+            <p><strong>Titular:</strong> Francisco Rapetti</p>
             <p style={{ marginTop: '0.5rem', fontSize: '0.9rem', color: '#555' }}>Por favor transferí el monto exacto de <strong>${lastTotal.toLocaleString()}</strong> y enviá el comprobante por WhatsApp presionando el botón debajo.</p>
           </div>
         )}

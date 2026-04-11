@@ -65,7 +65,7 @@ export default async function handler(req, res) {
       // Limpiar el número de teléfono (solo dejar números y el + inicial si existe)
       const cleanPhone = phone.replace(/[^\d+]/g, '');
       const itemSummary = items.map(item => `- ${item.name} x${item.quantity}`).join('\n');
-      const message = `🔔 *Nuevo Pedido (Transferencia)* 🧉\n\n*N° Operación:* ${orderData.id.slice(0,8)}...\n*Nombre:* ${customer.name}\n*Productos:*\n${itemSummary}\n\n*Total:* $${total.toLocaleString()}\n\n🚀 ¡Esperando comprobante de pago!`;
+      const message = `🔔 *Nuevo Pedido (Transferencia)* 🧉\n\n*N° Operación:* ${orderData.id.slice(0,8)}...\n*Nombre:* ${customer.name}\n*Productos:*\n${itemSummary}\n\n*Total:* $${total.toLocaleString('es-AR')}\n\n🚀 ¡Esperando comprobante de pago!`;
       
       const url = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(cleanPhone)}&text=${encodeURIComponent(message)}&apikey=${encodeURIComponent(apikey)}`;
       
