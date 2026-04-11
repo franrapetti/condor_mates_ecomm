@@ -59,7 +59,7 @@ export default async function handler(req, res) {
             if (phone && apikey) {
               const cleanPhone = phone.replace(/[^\d+]/g, '');
               let itemSummary = fullOrder.items.map(item => `- ${item.name} x${item.quantity}`).join('\n');
-              const message = `🔔 *Pedido Pagado (Mercado Pago)* 🧉\n\n*N° Operación:* ${paymentId}\n*Cliente:* ${fullOrder.customer_name}\n*Ciudad:* ${fullOrder.customer_city}\n*Productos:*\n${itemSummary}\n\n*Total:* $${fullOrder.total_price.toLocaleString('es-AR')}\n\n🚀 ¡Listo para despachar!`;
+              const message = `🔔 *Pedido Pagado (Mercado Pago)* 🧉\n\n*N° Operación:* ${paymentId}\n*Cliente:* ${fullOrder.customer_name}\n*Ciudad:* ${fullOrder.customer_city}\n*Productos:*\n${itemSummary}\n\n*Total:* $ ${fullOrder.total_price.toLocaleString('es-AR')}\n\n🚀 ¡Listo para despachar!`;
               
               const url = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(cleanPhone)}&text=${encodeURIComponent(message)}&apikey=${encodeURIComponent(apikey)}`;
               
