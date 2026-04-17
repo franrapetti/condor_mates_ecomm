@@ -315,18 +315,27 @@ function ProductDetail() {
             
             {isLaunched && (
               <>
+                {/* Transfer price — protagonista */}
+                <div className="transfer-price-hero">
+                  <span className="transfer-price-label">💸 Pagando con transferencia</span>
+                  <span className="transfer-price-amount">
+                    ${Math.round((product.promo_price || product.price) * 0.9).toLocaleString()}
+                  </span>
+                  <span className="transfer-price-badge">10% OFF</span>
+                </div>
+
+                {/* List price — secundario */}
                 {product.promo_price ? (
-                  <div className="product-price-block detail-price-block">
-                    <span className="product-price-promo detail-price-promo">${product.promo_price.toLocaleString()}</span>
+                  <div className="product-price-block detail-price-block" style={{ marginTop: '0.4rem' }}>
+                    <span className="list-price-label">Precio de lista:</span>
                     <span className="product-price-original">${product.price.toLocaleString()}</span>
                     <span className="discount-badge">{Math.round((1 - product.promo_price / product.price) * 100)}% OFF</span>
                   </div>
                 ) : (
-                  <p className="product-price-large">${product.price.toLocaleString()}</p>
+                  <p className="product-price-list-secondary">
+                    Precio de lista: <s>${product.price.toLocaleString()}</s>
+                  </p>
                 )}
-                <p className="transfer-price-detail">
-                  💸 <strong style={{color:'#e53935'}}>${Math.round((product.promo_price || product.price) * 0.9).toLocaleString()}</strong> con transferencia (10% OFF)
-                </p>
               </>
             )}
             
