@@ -178,12 +178,16 @@
 
 .product-price-list-secondary {
   font-size: 0.9rem;
-  color: var(--text-light);
+  color: var(--text-dark);
   margin: 0.1rem 0 0.75rem;
 }
 
-.product-price-list-secondary s {
-  color: var(--text-light);
+/* Detail page list price: black, no strikethrough */
+.detail-list-price {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  text-decoration: none;
 }
 
 .trust-badges {

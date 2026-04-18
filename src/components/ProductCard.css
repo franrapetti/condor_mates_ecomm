@@ -70,13 +70,13 @@
   color: var(--text-dark);
   margin-bottom: 0;
   margin-top: 0;
-  text-align: center;
+  text-align: left;
 }
 
 .product-price-block {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 0.2rem;
   flex-wrap: wrap;
   margin-bottom: 0;
@@ -108,7 +108,7 @@
 .transfer-price-container {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 0.3rem;
   flex-wrap: wrap;
   margin-top: 0.05rem;
@@ -116,10 +116,10 @@
   width: 100%;
 }
 
-.transfer-price-amount {
-  font-weight: 800;
-  font-size: 1.3rem;
-  color: #1b5e20;
+.product-card .transfer-price-amount {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #16a34a;
 }
 
 .transfer-price-text {
@@ -263,12 +263,12 @@
   }
 
   .transfer-price-text {
-    font-size: 0.70rem;
+    font-size: 0.65rem;
     line-height: 1;
   }
 
-  .transfer-price-amount {
-    font-size: 1.2rem;
+  .product-card .transfer-price-amount {
+    font-size: 0.85rem;
   }
 
   .add-to-cart-btn {

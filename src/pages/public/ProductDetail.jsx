@@ -328,12 +328,12 @@ function ProductDetail() {
                 {product.promo_price ? (
                   <div className="product-price-block detail-price-block" style={{ marginTop: '0.4rem' }}>
                     <span className="list-price-label">Precio de lista:</span>
-                    <span className="product-price-original">${product.price.toLocaleString()}</span>
+                    <span className="detail-list-price">${product.price.toLocaleString()}</span>
                     <span className="discount-badge">{Math.round((1 - product.promo_price / product.price) * 100)}% OFF</span>
                   </div>
                 ) : (
                   <p className="product-price-list-secondary">
-                    Precio de lista: <s>${product.price.toLocaleString()}</s>
+                    Precio de lista: ${product.price.toLocaleString()}
                   </p>
                 )}
               </>
