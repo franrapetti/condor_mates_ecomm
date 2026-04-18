@@ -240,8 +240,8 @@
   }
 
   .product-price {
-    font-size: 1.15rem;
-    margin-bottom: 0.4rem;
+    font-size: 0.88rem;
+    margin-bottom: 0.3rem;
   }
 
   .product-price-large {
@@ -249,7 +249,7 @@
   }
 
   .product-price-promo {
-    font-size: 1rem;
+    font-size: 0.88rem;
   }
 
   .product-price-original {
@@ -267,7 +267,7 @@
   }
 
   .product-card .transfer-price-amount {
-    font-size: 0.85rem;
+    font-size: 1.02rem;
   }
 
   .add-to-cart-btn {
