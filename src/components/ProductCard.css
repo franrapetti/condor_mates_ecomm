@@ -107,10 +107,9 @@
 
 .transfer-price-container {
   display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 0.3rem;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.05rem;
   margin-top: 0.05rem;
   margin-bottom: 0.4rem;
   width: 100%;
