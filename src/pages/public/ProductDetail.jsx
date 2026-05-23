@@ -5,6 +5,7 @@ import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
 import { useLaunchTimer } from '../../hooks/useLaunchTimer';
 import { logProductPageView } from '../../hooks/useAnalytics';
+import { trackPixelEvent, logAnalyticsEvent } from '../../lib/analytics';
 import Header from '../../components/Header';
 import ProductCard from '../../components/ProductCard';
 import { ProductDetailSkeleton } from '../../components/ProductSkeleton';
@@ -79,6 +80,24 @@ function ProductDetail() {
       // ── Log product page view (links page_view row + increments visit_count) ──
       if (!silent) {
         logProductPageView(productId);
+
+        // Meta Pixel: ViewContent — critical for dynamic product ads
+        trackPixelEvent('ViewContent', {
+          content_name: data.name,
+          content_category: data.category || '',
+          content_ids: [String(data.id)],
+          content_type: 'product',
+          value: data.promo_price || data.price,
+          currency: 'ARS',
+        });
+
+        // Funnel tracking
+        logAnalyticsEvent('view_product', {
+          product_id: data.id,
+          product_name: data.name,
+          category: data.category,
+          price: data.promo_price || data.price,
+        });
       }
 
       // ── Fetch Reviews ──

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useToast } from './ToastContext';
+import { trackPixelEvent, logAnalyticsEvent } from '../lib/analytics';
 
 const CartContext = createContext();
 
@@ -54,6 +55,23 @@ export const CartProvider = ({ children }) => {
     const currentQty = existing ? existing.quantity : 0;
     if (currentQty + quantity <= maxStock) {
       addToast(`¡${product.name} agregado al carrito!`, 'success');
+
+      // Meta Pixel: AddToCart event
+      trackPixelEvent('AddToCart', {
+        content_name: product.name,
+        content_ids: [String(product.combo_parent_id || product.id)],
+        content_type: 'product',
+        content_category: product.category || '',
+        value: product.promo_price || product.price,
+        currency: 'ARS',
+      });
+
+      // Funnel tracking
+      logAnalyticsEvent('add_to_cart', {
+        product_id: product.combo_parent_id || product.id,
+        product_name: product.name,
+        price: product.promo_price || product.price,
+      });
       if (product.category === 'Mates' && product.quick_add_upsell && allCrossSells.length > 0) {
         // Randomize 2 cross sells
         const shuffled = [...allCrossSells].sort(() => 0.5 - Math.random());
@@ -104,6 +122,23 @@ export const CartProvider = ({ children }) => {
       return [...prev, { ...product, quantity: 1 }];
     });
     addToast(`¡${product.name} agregado rápidamente!`, 'success');
+
+    // Meta Pixel: AddToCart event (quick add)
+    trackPixelEvent('AddToCart', {
+      content_name: product.name,
+      content_ids: [String(product.id)],
+      content_type: 'product',
+      content_category: product.category || '',
+      value: product.promo_price || product.price,
+      currency: 'ARS',
+    });
+
+    // Funnel tracking
+    logAnalyticsEvent('add_to_cart', {
+      product_id: product.id,
+      product_name: product.name,
+      price: product.promo_price || product.price,
+    });
   };
 
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);

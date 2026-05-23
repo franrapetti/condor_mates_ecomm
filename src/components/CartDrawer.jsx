@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { initMercadoPago, Wallet } from '@mercadopago/sdk-react';
 import { X, Trash2, ShoppingBag, ShieldCheck } from 'lucide-react';
+import { trackPixelEvent, logAnalyticsEvent } from '../lib/analytics';
 import './CartDrawer.css';
 
 // Initialize MP with public key (fallback to TEST if not found)
@@ -14,28 +15,20 @@ const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem
 
   const [submitAction, setSubmitAction] = useState('mp');
   const [promoCode, setPromoCode] = useState('');
-  const [appliedPromo, setAppliedPromo] = useState('');
+  const [appliedPromo, setAppliedPromo] = useState(null); // { code, discount_amount, discount_value, discount_type, ... }
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [promoError, setPromoError] = useState('');
 
   let baseTotal = 0;
-  let discountedTotal = 0;
 
   cartItems.forEach(item => {
     const itemPrice = item.promo_price || item.price;
-    const itemTotal = itemPrice * item.quantity;
-    baseTotal += itemTotal;
-    
-    // Condicional CONDOR10: aplica 10% SOLO si el item es imperial de alpaca
-    if (appliedPromo === 'CONDOR10' && 
-        item.name.toLowerCase().includes('imperial') && 
-        item.name.toLowerCase().includes('alpaca')) {
-      discountedTotal += Math.round(itemTotal * 0.9);
-    } else {
-      discountedTotal += itemTotal;
-    }
+    baseTotal += itemPrice * item.quantity;
   });
 
-  const total = appliedPromo ? discountedTotal : baseTotal;
-  const promoSaved = baseTotal - total;
+  const promoDiscount = appliedPromo ? appliedPromo.discount_amount : 0;
+  const total = baseTotal - promoDiscount;
+  const promoSaved = promoDiscount;
 
   // Free shipping threshold (Protective margin threshold)
   const FREE_SHIPPING_THRESHOLD = 120000;
@@ -265,46 +258,71 @@ const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem
             </div>
             
             <div className="cart-footer">
-              {/* Promo Code Engine */}
+              {/* Promo Code Engine — API-powered */}
               <div style={{ display: 'flex', gap: '8px', marginBottom: '1rem' }}>
                 <input 
                   type="text" 
                   value={promoCode} 
-                  onChange={e => setPromoCode(e.target.value.toUpperCase())} 
+                  onChange={e => { setPromoCode(e.target.value.toUpperCase()); setPromoError(''); }} 
                   placeholder="Tengo un cupón de descuento" 
-                  style={{ flex: 1, padding: '12px', border: '1px solid var(--border)', borderRadius: '12px', fontSize: '0.9rem', backgroundColor: appliedPromo ? '#f9f9f9' : 'white', fontWeight: 600 }}
-                  disabled={appliedPromo !== ''}
+                  style={{ flex: 1, padding: '12px', border: `1px solid ${promoError ? '#fca5a5' : 'var(--border)'}`, borderRadius: '12px', fontSize: '0.9rem', backgroundColor: appliedPromo ? '#f9f9f9' : 'white', fontWeight: 600 }}
+                  disabled={!!appliedPromo || promoLoading}
                 />
                 {appliedPromo ? (
                   <button 
-                    onClick={() => { setAppliedPromo(''); setPromoCode(''); }}
+                    onClick={() => { setAppliedPromo(null); setPromoCode(''); setPromoError(''); }}
                     style={{ padding: '0 16px', backgroundColor: '#fee2e2', color: '#b91c1c', borderRadius: '12px', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>
                     Quitar
                   </button>
                 ) : (
                   <button 
-                    onClick={() => {
-                      if(promoCode.trim() === 'CONDOR10') {
-                        const hasAlpaca = cartItems.some(i => i.name.toLowerCase().includes('imperial') && i.name.toLowerCase().includes('alpaca'));
-                        if(hasAlpaca) {
-                          setAppliedPromo('CONDOR10');
+                    disabled={promoLoading || !promoCode.trim()}
+                    onClick={async () => {
+                      if (!promoCode.trim()) return;
+                      setPromoLoading(true);
+                      setPromoError('');
+                      try {
+                        const response = await fetch('/api/validate_coupon', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            code: promoCode.trim(),
+                            cartTotal: baseTotal,
+                            items: cartItems.map(i => ({
+                              id: i.id,
+                              name: i.name,
+                              price: i.price,
+                              promo_price: i.promo_price || null,
+                              quantity: i.quantity,
+                              category: i.category || '',
+                            }))
+                          })
+                        });
+                        const data = await response.json();
+                        if (data.valid) {
+                          setAppliedPromo(data);
                         } else {
-                          alert('⚠️ El código CONDOR10 requiere agregar un "Imperial Virola de Alpaca" al carrito para hacer efecto.');
+                          setPromoError(data.error || 'Cupón inválido o expirado.');
                         }
-                      } else if (promoCode.trim() !== '') {
-                        alert('Cupón inválido o expirado.');
+                      } catch (err) {
+                        setPromoError('Error de conexión al validar cupón.');
+                      } finally {
+                        setPromoLoading(false);
                       }
                     }}
-                    style={{ padding: '0 20px', backgroundColor: 'var(--text-dark)', color: 'white', borderRadius: '12px', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>
-                    Aplicar
+                    style={{ padding: '0 20px', backgroundColor: 'var(--text-dark)', color: 'white', borderRadius: '12px', fontWeight: 'bold', border: 'none', cursor: promoLoading ? 'wait' : 'pointer', opacity: promoLoading ? 0.6 : 1 }}>
+                    {promoLoading ? '...' : 'Aplicar'}
                   </button>
                 )}
               </div>
+              {promoError && (
+                <p style={{ margin: '-0.5rem 0 0.75rem', fontSize: '0.82rem', color: '#dc2626', fontWeight: 600 }}>{promoError}</p>
+              )}
 
               <div className="cart-total">
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <span style={{ fontWeight: 800 }}>Total Final</span>
-                  {appliedPromo && <span style={{ fontSize: '0.8rem', color: 'var(--accent)', fontWeight: 'bold', backgroundColor: 'var(--accent-light)', padding: '2px 6px', borderRadius: '4px', display: 'inline-block', width: 'fit-content' }}>Cupón Aplicado (-${promoSaved.toLocaleString()})</span>}
+                  {appliedPromo && <span style={{ fontSize: '0.8rem', color: 'var(--accent)', fontWeight: 'bold', backgroundColor: 'var(--accent-light)', padding: '2px 6px', borderRadius: '4px', display: 'inline-block', width: 'fit-content' }}>Cupón {appliedPromo.code} (-${promoSaved.toLocaleString()})</span>}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'center' }}>
                   {appliedPromo && <span style={{ textDecoration: 'line-through', fontSize: '0.9rem', color: '#999', marginBottom: '-4px' }}>${baseTotal.toLocaleString()}</span>}
@@ -312,7 +330,25 @@ const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem
                 </div>
               </div>
               <p className="shipping-notice">¡Envío con packaging de regalo incluido!</p>
-              <button className="whatsapp-btn" onClick={() => setIsCheckout(true)}>
+              <button className="whatsapp-btn" onClick={() => {
+                setIsCheckout(true);
+
+                // Meta Pixel: InitiateCheckout
+                trackPixelEvent('InitiateCheckout', {
+                  value: total,
+                  currency: 'ARS',
+                  num_items: cartItems.reduce((acc, i) => acc + i.quantity, 0),
+                  content_ids: cartItems.map(i => String(i.combo_parent_id || i.id)),
+                  content_type: 'product',
+                });
+
+                // Funnel tracking
+                logAnalyticsEvent('initiate_checkout', {
+                  cart_total: total,
+                  item_count: cartItems.reduce((acc, i) => acc + i.quantity, 0),
+                  coupon: appliedPromo?.code || null,
+                });
+              }}>
                 Continuar Compra →
               </button>
             </div>

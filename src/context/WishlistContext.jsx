@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useToast } from './ToastContext';
+import { trackPixelEvent } from '../lib/analytics';
 
 const WishlistContext = createContext();
 
@@ -27,6 +28,16 @@ export const WishlistProvider = ({ children }) => {
     } else {
       addToast(`¡${product.name} guardado en favoritos! ❤️`, 'success');
       setWishlist(prev => [...prev, product]);
+
+      // Meta Pixel: AddToWishlist
+      trackPixelEvent('AddToWishlist', {
+        content_name: product.name,
+        content_ids: [String(product.id)],
+        content_type: 'product',
+        content_category: product.category || '',
+        value: product.promo_price || product.price,
+        currency: 'ARS',
+      });
     }
   };
 

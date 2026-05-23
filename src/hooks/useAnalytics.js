@@ -25,9 +25,25 @@ export function resolveSource(search) {
   const params = new URLSearchParams(search);
 
   let fresh = params.get('utm_source') || params.get('ref') || null;
-  if (!fresh && params.get('fbclid'))  fresh = 'facebook';
-  if (!fresh && params.get('ttclid'))  fresh = 'tiktok';
+  if (!fresh && params.get('fbclid'))    fresh = 'facebook';
+  if (!fresh && params.get('ttclid'))    fresh = 'tiktok';
   if (!fresh && params.get('wa_source')) fresh = 'whatsapp';
+  if (!fresh && params.get('gclid'))     fresh = 'google_ads';
+
+  // Fallback: detect organic traffic from document.referrer
+  if (!fresh && typeof document !== 'undefined' && document.referrer) {
+    try {
+      const ref = new URL(document.referrer).hostname.toLowerCase();
+      if (ref.includes('google.'))                                   fresh = 'google_organic';
+      else if (ref.includes('instagram.com') || ref.includes('l.instagram.com')) fresh = 'instagram_organic';
+      else if (ref.includes('facebook.com') || ref.includes('l.facebook.com'))   fresh = 'facebook_organic';
+      else if (ref.includes('t.co') || ref.includes('twitter.com') || ref.includes('x.com')) fresh = 'twitter_organic';
+      else if (ref.includes('tiktok.com'))                           fresh = 'tiktok_organic';
+      else if (ref.includes('pinterest.'))                           fresh = 'pinterest_organic';
+      else if (ref.includes('bing.com'))                             fresh = 'bing_organic';
+      else if (ref.includes('mercadolibre.com'))                     fresh = 'mercadolibre';
+    } catch (_) { /* invalid URL — ignore */ }
+  }
 
   if (fresh) {
     localStorage.setItem(SOURCE_KEY, fresh.toLowerCase());

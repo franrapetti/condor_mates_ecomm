@@ -13,6 +13,7 @@ import ProductForm from './pages/admin/ProductForm';
 import OrdersList from './pages/admin/OrdersList';
 import ManualSales from './pages/admin/ManualSales';
 import AdminSettings from './pages/admin/AdminSettings';
+import AdminLeads from './pages/admin/AdminLeads';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { CartProvider } from './context/CartContext';
@@ -65,6 +66,7 @@ function App() {
                     <Route path="orders" element={<OrdersList />} />
                     <Route path="manual-sales" element={<ManualSales />} />
                     <Route path="settings" element={<AdminSettings />} />
+                    <Route path="leads" element={<AdminLeads />} />
                     <Route path="products/new" element={<ProductForm />} />
                     <Route path="products/:id" element={<ProductForm />} />
                   </Route>

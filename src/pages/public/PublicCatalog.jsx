@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import Header from '../../components/Header';
 import ProductCard from '../../components/ProductCard';
@@ -9,6 +9,7 @@ import { useCart } from '../../context/CartContext';
 import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
 import { getImgUrl } from '../../lib/imageUtils';
+import { trackPixelEvent, logAnalyticsEvent } from '../../lib/analytics';
 
 function PublicCatalog() {
   const [products, setProducts] = useState([]);
@@ -29,6 +30,12 @@ function PublicCatalog() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState('newest'); // newest, price_asc, price_desc
   const { isLaunched } = useLaunchTimer();
+  const searchDebounceRef = useRef(null);
+  
+  // Track catalog view on mount
+  useEffect(() => {
+    logAnalyticsEvent('view_catalog');
+  }, []);
   
   // Theme Management now handled by ThemeContext
 
@@ -349,7 +356,22 @@ function PublicCatalog() {
                     placeholder="🔍 Buscar producto..." 
                     className="search-input"
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setSearchTerm(val);
+
+                      // Meta Pixel: Search event (debounced 800ms)
+                      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+                      if (val.trim().length >= 2) {
+                        searchDebounceRef.current = setTimeout(() => {
+                          trackPixelEvent('Search', {
+                            search_string: val.trim(),
+                            content_category: currentCategory !== 'All' ? currentCategory : undefined,
+                          });
+                          logAnalyticsEvent('search', { query: val.trim() });
+                        }, 800);
+                      }
+                    }}
                   />
                   <select 
                     className="sort-select" 

@@ -9,6 +9,7 @@ import './OrdersList.css';
 const OrdersList = () => {
   const [orders, setOrders] = useState([]);
   const [pageViews, setPageViews] = useState([]);
+  const [funnelData, setFunnelData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [filter, setFilter] = useState('all');
@@ -38,6 +39,29 @@ const OrdersList = () => {
         .from('page_views')
         .select('*');
       setPageViews(viewsData || []);
+
+      // Fetch funnel analytics events
+      try {
+        const { data: eventsData } = await supabase
+          .from('analytics_events')
+          .select('event_name, session_id');
+        if (eventsData) {
+          const funnelSteps = [
+            { key: 'view_catalog',       label: '1. Visitaron el Sitio',      emoji: '🌐' },
+            { key: 'view_product',       label: '2. Vieron un Producto',      emoji: '👁️' },
+            { key: 'add_to_cart',        label: '3. Añadieron al Carrito',    emoji: '🛒' },
+            { key: 'initiate_checkout',  label: '4. Iniciaron Checkout',      emoji: '💳' },
+            { key: 'purchase',           label: '5. Compra Exitosa',          emoji: '✅' },
+          ];
+          const funnelComputed = funnelSteps.map(step => {
+            const unique = new Set(eventsData.filter(e => e.event_name === step.key).map(e => e.session_id)).size;
+            return { ...step, sessions: unique };
+          });
+          setFunnelData(funnelComputed);
+        }
+      } catch (_) {
+        // analytics_events table may not exist yet — silently ignore
+      }
 
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -181,10 +205,19 @@ const OrdersList = () => {
       // Friendly labels
       const labelMap = {
         instagram: '📸 Instagram',
+        instagram_organic: '📸 Instagram (Org)',
         facebook:  '👥 Facebook',
+        facebook_organic: '👥 Facebook (Org)',
         whatsapp:  '💬 WhatsApp',
         tiktok:    '🎵 TikTok',
+        tiktok_organic: '🎵 TikTok (Org)',
         google:    '🔍 Google',
+        google_ads: '💰 Google Ads',
+        google_organic: '🔍 Google (Org)',
+        bing_organic: '🔍 Bing (Org)',
+        twitter_organic: '🐦 Twitter/X (Org)',
+        pinterest_organic: '📌 Pinterest (Org)',
+        mercadolibre: '🛒 MercadoLibre',
         direct:    '🌐 Directo',
       };
       const origin = labelMap[raw] || `🔗 ${raw.charAt(0).toUpperCase() + raw.slice(1)}`;
@@ -376,6 +409,62 @@ const OrdersList = () => {
           )}
         </div>
       </div>
+
+      {/* Sales Funnel Visualization */}
+      {funnelData.length > 0 && funnelData[0].sessions > 0 && (
+        <div style={{
+          background: 'var(--surface)', border: '1px solid var(--border)',
+          borderRadius: 16, padding: '1.25rem', marginBottom: '2rem',
+          boxShadow: 'var(--shadow-sm)',
+        }}>
+          <h3 style={{ margin: '0 0 1rem', fontSize: '1rem', fontWeight: 800, color: 'var(--text-dark)' }}>
+            🎯 Embudo de Conversión (Funnel de Ventas)
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {funnelData.map((step, idx) => {
+              const maxSessions = funnelData[0].sessions || 1;
+              const pct = ((step.sessions / maxSessions) * 100);
+              const prevSessions = idx > 0 ? funnelData[idx - 1].sessions : step.sessions;
+              const dropRate = prevSessions > 0 ? ((1 - step.sessions / prevSessions) * 100).toFixed(0) : 0;
+              const colors = ['#10b981', '#34d399', '#fbbf24', '#f97316', '#ef4444'];
+              return (
+                <div key={step.key} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <div style={{ minWidth: 190, fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-dark)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <span>{step.emoji}</span> {step.label}
+                  </div>
+                  <div style={{ flex: 1, height: 28, background: '#f3f4f6', borderRadius: 8, overflow: 'hidden', position: 'relative' }}>
+                    <div style={{
+                      height: '100%',
+                      width: `${Math.max(pct, 2)}%`,
+                      background: `linear-gradient(90deg, ${colors[idx]}, ${colors[Math.min(idx + 1, 4)]})`,
+                      borderRadius: 8,
+                      transition: 'width 0.8s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      paddingLeft: '0.5rem',
+                    }}>
+                      <span style={{ fontSize: '0.72rem', fontWeight: 800, color: 'white', textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>
+                        {step.sessions.toLocaleString()} sesiones
+                      </span>
+                    </div>
+                  </div>
+                  <div style={{ minWidth: 60, textAlign: 'right', fontSize: '0.75rem', fontWeight: 700, color: pct >= 50 ? '#10b981' : pct >= 20 ? '#f59e0b' : '#ef4444' }}>
+                    {pct.toFixed(1)}%
+                  </div>
+                  {idx > 0 && (
+                    <div style={{ minWidth: 60, textAlign: 'right', fontSize: '0.7rem', color: '#9ca3af' }}>
+                      ↓{dropRate}% caída
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <p style={{ marginTop: '0.75rem', fontSize: '0.75rem', color: 'var(--text-light)' }}>
+            💡 <strong>Tip:</strong> Si la caída entre “Añadieron al Carrito” e “Iniciaron Checkout” supera el 70%, considerá mejorar la experiencia del carrito o los costos de envío.
+          </p>
+        </div>
+      )}
 
       {/* Monthly Traffic Breakdown Table */}
       {chartData.monthlyViews && chartData.monthlyViews.length > 0 && (

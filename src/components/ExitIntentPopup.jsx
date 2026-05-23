@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import { trackPixelEvent, logAnalyticsEvent } from '../lib/analytics';
 import './ExitIntentPopup.css';
 
 const ExitIntentPopup = () => {
@@ -49,6 +50,15 @@ const ExitIntentPopup = () => {
       // but in UI we just pretend it succeeded so they get the discount anyway.
       
       setStatus('success');
+
+      // Meta Pixel: Lead event
+      trackPixelEvent('Lead', {
+        content_name: 'exit_intent_popup',
+        content_category: 'email_capture',
+      });
+
+      // Funnel tracking
+      logAnalyticsEvent('lead_captured', { source: 'exit_intent' });
     } catch (err) {
       console.error(err);
       setStatus('success'); // Fail silent, give them discount

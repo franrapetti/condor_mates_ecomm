@@ -3,6 +3,7 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { notifyNewOrder } from '../../lib/notifications';
 import { useCart } from '../../context/CartContext';
 import { Helmet } from 'react-helmet-async';
+import { trackPixelEvent, logAnalyticsEvent } from '../../lib/analytics';
 import './CheckoutSuccess.css';
 
 const CheckoutSuccess = () => {
@@ -33,9 +34,27 @@ const CheckoutSuccess = () => {
     if (status === 'approved') {
       clearCart();
       
-      if (window.fbq && paymentId) {
-        window.fbq('track', 'Purchase', { currency: 'ARS', transaction_id: paymentId });
-      }
+      // Meta Pixel: Purchase event with full e-commerce data
+      trackPixelEvent('Purchase', {
+        currency: 'ARS',
+        value: savedTotal,
+        transaction_id: paymentId || undefined,
+        content_type: 'product',
+        content_ids: savedCart.map(i => String(i.id)),
+        num_items: savedCart.reduce((acc, i) => acc + (i.quantity || 1), 0),
+        contents: savedCart.map(i => ({
+          id: String(i.id),
+          quantity: i.quantity || 1,
+          item_price: i.promo_price || i.price,
+        })),
+      });
+
+      // Funnel tracking
+      logAnalyticsEvent('purchase', {
+        payment_id: paymentId,
+        total: savedTotal,
+        item_count: savedCart.length,
+      });
     }
   }, [status, paymentId, clearCart]);
 

@@ -1,0 +1,124 @@
+.leads-stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.leads-stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.25rem;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+
+.leads-stat-card h4 {
+  margin: 0 0 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-light);
+}
+
+.leads-stat-card .stat-value {
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: var(--text-dark);
+  line-height: 1.2;
+}
+
+.leads-stat-card .stat-sub {
+  font-size: 0.75rem;
+  color: var(--text-light);
+  margin-top: 0.25rem;
+}
+
+.leads-export-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.25rem;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.leads-export-btn:hover {
+  opacity: 0.85;
+}
+
+.leads-export-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.leads-table-container {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.leads-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.leads-table thead th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-weight: 800;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-light);
+  border-bottom: 2px solid var(--border);
+  background: var(--background);
+}
+
+.leads-table tbody td {
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-dark);
+}
+
+.leads-table tbody tr:hover {
+  background: var(--background);
+}
+
+.leads-source-badge {
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: #e0f2fe;
+  color: #0369a1;
+  text-transform: capitalize;
+}
+
+.leads-empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--text-light);
+}
+
+.leads-empty-state .empty-icon {
+  font-size: 3rem;
+  margin-bottom: 0.75rem;
+}
+
+.leads-empty-state p {
+  font-size: 0.9rem;
+  margin: 0;
+}
