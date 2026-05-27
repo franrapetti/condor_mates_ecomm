@@ -43,3 +43,17 @@ export const trackPixelEvent = (eventName, params = {}) => {
     // Silently ignore
   }
 };
+
+// ─── TikTok Pixel Helper ─────────────────────────────────────────────────────
+// Wraps ttq calls so they are safe to call even if the pixel is not loaded.
+// TikTok standard events: https://ads.tiktok.com/help/article/standard-events-parameters
+
+export const trackTikTokEvent = (eventName, params = {}) => {
+  try {
+    if (typeof window !== 'undefined' && window.ttq) {
+      window.ttq.track(eventName, params);
+    }
+  } catch (_) {
+    // Silently ignore
+  }
+};

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useToast } from './ToastContext';
-import { trackPixelEvent, logAnalyticsEvent } from '../lib/analytics';
+import { trackPixelEvent, trackTikTokEvent, logAnalyticsEvent } from '../lib/analytics';
 
 const CartContext = createContext();
 
@@ -62,6 +62,15 @@ export const CartProvider = ({ children }) => {
         content_ids: [String(product.combo_parent_id || product.id)],
         content_type: 'product',
         content_category: product.category || '',
+        value: product.promo_price || product.price,
+        currency: 'ARS',
+      });
+
+      // TikTok Pixel: AddToCart event
+      trackTikTokEvent('AddToCart', {
+        content_id: String(product.combo_parent_id || product.id),
+        content_type: 'product',
+        content_name: product.name,
         value: product.promo_price || product.price,
         currency: 'ARS',
       });
@@ -129,6 +138,15 @@ export const CartProvider = ({ children }) => {
       content_ids: [String(product.id)],
       content_type: 'product',
       content_category: product.category || '',
+      value: product.promo_price || product.price,
+      currency: 'ARS',
+    });
+
+    // TikTok Pixel: AddToCart event (quick add)
+    trackTikTokEvent('AddToCart', {
+      content_id: String(product.id),
+      content_type: 'product',
+      content_name: product.name,
       value: product.promo_price || product.price,
       currency: 'ARS',
     });

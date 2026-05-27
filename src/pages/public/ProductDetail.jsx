@@ -5,7 +5,7 @@ import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
 import { useLaunchTimer } from '../../hooks/useLaunchTimer';
 import { logProductPageView } from '../../hooks/useAnalytics';
-import { trackPixelEvent, logAnalyticsEvent } from '../../lib/analytics';
+import { trackPixelEvent, trackTikTokEvent, logAnalyticsEvent } from '../../lib/analytics';
 import Header from '../../components/Header';
 import ProductCard from '../../components/ProductCard';
 import { ProductDetailSkeleton } from '../../components/ProductSkeleton';
@@ -87,6 +87,15 @@ function ProductDetail() {
           content_category: data.category || '',
           content_ids: [String(data.id)],
           content_type: 'product',
+          value: data.promo_price || data.price,
+          currency: 'ARS',
+        });
+
+        // TikTok Pixel: ViewContent
+        trackTikTokEvent('ViewContent', {
+          content_id: String(data.id),
+          content_type: 'product',
+          content_name: data.name,
           value: data.promo_price || data.price,
           currency: 'ARS',
         });

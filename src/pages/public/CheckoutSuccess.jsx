@@ -3,7 +3,7 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { notifyNewOrder } from '../../lib/notifications';
 import { useCart } from '../../context/CartContext';
 import { Helmet } from 'react-helmet-async';
-import { trackPixelEvent, logAnalyticsEvent } from '../../lib/analytics';
+import { trackPixelEvent, trackTikTokEvent, logAnalyticsEvent } from '../../lib/analytics';
 import './CheckoutSuccess.css';
 
 const CheckoutSuccess = () => {
@@ -46,6 +46,18 @@ const CheckoutSuccess = () => {
           id: String(i.id),
           quantity: i.quantity || 1,
           item_price: i.promo_price || i.price,
+        })),
+      });
+
+      // TikTok Pixel: CompletePayment (Purchase conversion for TikTok Ads)
+      trackTikTokEvent('CompletePayment', {
+        value: savedTotal,
+        currency: 'ARS',
+        contents: savedCart.map(i => ({
+          content_id: String(i.id),
+          content_name: i.name,
+          quantity: i.quantity || 1,
+          price: i.promo_price || i.price,
         })),
       });
 

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { initMercadoPago, Wallet } from '@mercadopago/sdk-react';
 import { X, Trash2, ShoppingBag, ShieldCheck } from 'lucide-react';
-import { trackPixelEvent, logAnalyticsEvent } from '../lib/analytics';
+import { trackPixelEvent, trackTikTokEvent, logAnalyticsEvent } from '../lib/analytics';
 import './CartDrawer.css';
 
 // Initialize MP with public key (fallback to TEST if not found)
@@ -340,6 +340,18 @@ const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem
                   num_items: cartItems.reduce((acc, i) => acc + i.quantity, 0),
                   content_ids: cartItems.map(i => String(i.combo_parent_id || i.id)),
                   content_type: 'product',
+                });
+
+                // TikTok Pixel: InitiateCheckout
+                trackTikTokEvent('InitiateCheckout', {
+                  value: total,
+                  currency: 'ARS',
+                  contents: cartItems.map(i => ({
+                    content_id: String(i.combo_parent_id || i.id),
+                    content_name: i.name,
+                    quantity: i.quantity,
+                    price: i.promo_price || i.price,
+                  })),
                 });
 
                 // Funnel tracking

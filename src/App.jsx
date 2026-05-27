@@ -22,6 +22,7 @@ import GlobalCart from './components/GlobalCart';
 import PublicLayout from './components/PublicLayout';
 import ExitIntentPopup from './components/ExitIntentPopup';
 import MetaPixel from './components/MetaPixel';
+import TikTokPixel from './components/TikTokPixel';
 import { WishlistProvider } from './context/WishlistContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { useAnalytics } from './hooks/useAnalytics';
@@ -43,6 +44,7 @@ function App() {
             <WishlistProvider>
               <Router>
                 <MetaPixel />
+                <TikTokPixel />
                 <AnalyticsWrapper />
                 <GlobalCart />
                 <ExitIntentPopup />
