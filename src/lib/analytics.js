@@ -51,7 +51,18 @@ export const trackPixelEvent = (eventName, params = {}) => {
 export const trackTikTokEvent = (eventName, params = {}) => {
   try {
     if (typeof window !== 'undefined' && window.ttq) {
-      window.ttq.track(eventName, params);
+      // Sanitize value — TikTok requires a plain number (no strings, NaN, symbols)
+      // Some events require value > 0, so fallback to 1
+      const clean = { ...params };
+      if ('value' in clean) clean.value = Number(clean.value) || 1;
+      if (Array.isArray(clean.contents)) {
+        clean.contents = clean.contents.map(c => ({
+          ...c,
+          price: Number(c.price) || 1,
+          quantity: Number(c.quantity) || 1,
+        }));
+      }
+      window.ttq.track(eventName, clean);
     }
   } catch (_) {
     // Silently ignore
