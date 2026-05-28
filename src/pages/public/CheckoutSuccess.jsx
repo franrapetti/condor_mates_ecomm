@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { notifyNewOrder } from '../../lib/notifications';
 import { useCart } from '../../context/CartContext';
@@ -14,6 +14,8 @@ const CheckoutSuccess = () => {
   
   const [lastCart, setLastCart] = useState([]);
   const [lastTotal, setLastTotal] = useState(0);
+
+  const hasTracked = useRef(false);
 
   useEffect(() => {
     // Recover cart snapshot from sessionStorage
@@ -31,7 +33,8 @@ const CheckoutSuccess = () => {
     }
 
     // Clear cart after successful payment
-    if (status === 'approved') {
+    if (status === 'approved' && !hasTracked.current) {
+      hasTracked.current = true;
       clearCart();
       
       // Meta Pixel: Purchase event with full e-commerce data
