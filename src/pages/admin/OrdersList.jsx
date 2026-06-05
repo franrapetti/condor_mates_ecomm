@@ -102,21 +102,21 @@ const OrdersList = () => {
       });
     }
 
-    const { data: lowStock } = await supabase.from('products').select('id, name, stock').lte('stock', 3).gt('stock', 0);
-    if (lowStock && lowStock.length > 0) {
-      newAlerts.push({
-        id: 'lowstock', type: 'caution', icon: '⚠️',
-        message: `Stock bajo: ${lowStock.map(p => `${p.name} (${p.stock} ud.)`).join(', ')}.`
-      });
-    }
+    // const { data: lowStock } = await supabase.from('products').select('id, name, stock').lte('stock', 3).gt('stock', 0);
+    // if (lowStock && lowStock.length > 0) {
+    //   newAlerts.push({
+    //     id: 'lowstock', type: 'caution', icon: '⚠️',
+    //     message: `Stock bajo: ${lowStock.map(p => `${p.name} (${p.stock} ud.)`).join(', ')}.`
+    //   });
+    // }
 
     const { data: noStock } = await supabase.from('products').select('id, name').eq('stock', 0);
-    if (noStock && noStock.length > 0) {
-      newAlerts.push({
-        id: 'nostock', type: 'danger', icon: '🚨',
-        message: `Sin stock: ${noStock.map(p => p.name).join(', ')}. Estos productos siguen visibles en la tienda.`
-      });
-    }
+    // if (noStock && noStock.length > 0) {
+    //   newAlerts.push({
+    //     id: 'nostock', type: 'danger', icon: '🚨',
+    //     message: `Sin stock: ${noStock.map(p => p.name).join(', ')}. Estos productos siguen visibles en la tienda.`
+    //   });
+    // }
 
     setAlerts(newAlerts);
   };
