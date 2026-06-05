@@ -78,8 +78,9 @@ function ProductDetail() {
       setActiveImageIdx(0);
 
       // ── Log product page view (links page_view row + increments visit_count) ──
+      // ✅ FIX: await ensures the tracking completes before re-renders can cancel it
       if (!silent) {
-        logProductPageView(productId);
+        await logProductPageView(productId);
 
         // Meta Pixel: ViewContent — critical for dynamic product ads
         trackPixelEvent('ViewContent', {

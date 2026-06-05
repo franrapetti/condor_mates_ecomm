@@ -7,15 +7,21 @@ import { Heart } from 'lucide-react';
 import { getImgUrl } from '../lib/imageUtils';
 import './ProductCard.css';
 
+const IS_DEV = import.meta.env.DEV;
+
 const ProductCard = ({ product, onAddToCart, noZoom }) => {
   const { toggleWishlist, isWishlisted } = useWishlist();
   const { isLaunched } = useLaunchTimer();
   const wishlisted = isWishlisted(product.id);
 
   const handleProductClick = () => {
-    try {
-      supabase.rpc('increment_click_count', { product_id: product.id }).catch(() => {});
-    } catch (_) {}
+    supabase.rpc('increment_click_count', { product_id: product.id })
+      .then(({ error }) => {
+        if (error && IS_DEV) console.warn('[Analytics] increment_click_count failed:', error.message);
+      })
+      .catch((err) => {
+        if (IS_DEV) console.warn('[Analytics] increment_click_count exception:', err);
+      });
   };
 
   return (

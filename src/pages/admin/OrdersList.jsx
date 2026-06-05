@@ -169,11 +169,11 @@ const OrdersList = () => {
   const totalSales = validOrders.length;
   const avgTicket = totalSales > 0 ? totalRevenue / totalSales : 0;
 
-  // Calculate Advanced KPIs
-  const uniqueSessions = new Set(pageViews.map(v => v.session_id)).size;
+  // Calculate Advanced KPIs — ✅ FIX: use filteredViews to respect date range filter
+  const uniqueSessions = new Set(filteredViews.map(v => v.session_id)).size;
   const conversionRate = uniqueSessions > 0 ? ((totalSales / uniqueSessions) * 100).toFixed(2) : 0;
   
-  const totalDuration = pageViews.reduce((acc, v) => acc + (v.duration_seconds || 0), 0);
+  const totalDuration = filteredViews.reduce((acc, v) => acc + (v.duration_seconds || 0), 0);
   const avgDurationSeconds = uniqueSessions > 0 ? Math.floor(totalDuration / uniqueSessions) : 0;
   const avgDurationFormatted = `${Math.floor(avgDurationSeconds / 60)}m ${avgDurationSeconds % 60}s`;
 

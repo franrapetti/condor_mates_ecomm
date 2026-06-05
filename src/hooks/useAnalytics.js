@@ -4,6 +4,8 @@ import { supabase } from '../lib/supabaseClient';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+const IS_DEV = import.meta.env.DEV;
+
 /** Persistent anonymous session ID — survives tab close (unlike sessionStorage) */
 function getOrCreateSession() {
   const KEY = 'mate_session_id';
@@ -52,6 +54,37 @@ export function resolveSource(search) {
   return localStorage.getItem(SOURCE_KEY) || 'direct';
 }
 
+// ─── View ID Promise Bridge ──────────────────────────────────────────────────
+// Solves the race condition: logProductPageView can `await` the view ID
+// instead of reading a stale value from localStorage.
+
+let _viewIdResolve = null;
+let _viewIdPromise = null;
+
+/** Resets the promise for each new page navigation */
+function resetViewIdBridge() {
+  _viewIdPromise = new Promise((resolve) => {
+    _viewIdResolve = resolve;
+  });
+}
+
+/**
+ * Returns a promise that resolves with the current page_view row ID
+ * once the INSERT from useAnalytics completes.
+ * Times out after 5 seconds to prevent infinite hangs.
+ */
+export function getViewIdPromise() {
+  if (!_viewIdPromise) {
+    // Edge case: called before useAnalytics mounted
+    return Promise.resolve(null);
+  }
+  // Race against a 5-second timeout so we never hang indefinitely
+  return Promise.race([
+    _viewIdPromise,
+    new Promise((resolve) => setTimeout(() => resolve(null), 5000)),
+  ]);
+}
+
 // ─── Hook ────────────────────────────────────────────────────────────────────
 
 export const useAnalytics = () => {
@@ -65,6 +98,10 @@ export const useAnalytics = () => {
 
     startRef.current  = Date.now();
     viewIdRef.current = null;
+
+    // Reset the bridge promise so logProductPageView waits for THIS page's ID
+    resetViewIdBridge();
+
     let alive = true;
 
     (async () => {
@@ -80,13 +117,24 @@ export const useAnalytics = () => {
           .select('id')
           .single();
 
-        if (!error && alive && data) {
-          viewIdRef.current = data.id;
-          // Store last view ID so logProductPageView can attach the product_id later
-          localStorage.setItem('mate_last_view_id', data.id);
+        if (error) {
+          if (IS_DEV) console.warn('[Analytics] page_view INSERT failed:', error.message);
+          _viewIdResolve?.(null);
+          return;
         }
-      } catch (_) {
-        // Silently ignore — ad blockers, offline, etc.
+
+        if (alive && data) {
+          viewIdRef.current = data.id;
+          // Also keep localStorage as a fallback for edge cases
+          localStorage.setItem('mate_last_view_id', data.id);
+          // ✅ Resolve the promise so logProductPageView can proceed
+          _viewIdResolve?.(data.id);
+        } else {
+          _viewIdResolve?.(null);
+        }
+      } catch (err) {
+        if (IS_DEV) console.warn('[Analytics] page_view INSERT exception:', err);
+        _viewIdResolve?.(null);
       }
     })();
 
@@ -94,12 +142,38 @@ export const useAnalytics = () => {
       alive = false;
       const duration = Math.floor((Date.now() - startRef.current) / 1000);
       if (viewIdRef.current && duration > 0) {
-        supabase
-          .from('page_views')
-          .update({ duration_seconds: duration })
-          .eq('id', viewIdRef.current)
-          .then(() => {})
-          .catch(() => {});
+        // ✅ Use sendBeacon for reliable delivery on page unload/navigation
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+        if (supabaseUrl && supabaseKey && navigator.sendBeacon) {
+          const url = `${supabaseUrl}/rest/v1/page_views?id=eq.${viewIdRef.current}`;
+          const blob = new Blob(
+            [JSON.stringify({ duration_seconds: duration })],
+            { type: 'application/json' }
+          );
+          // sendBeacon does not support custom headers natively,
+          // so we fall back to fetch with keepalive as the primary method
+          fetch(url, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': supabaseKey,
+              'Authorization': `Bearer ${supabaseKey}`,
+              'Prefer': 'return=minimal',
+            },
+            body: JSON.stringify({ duration_seconds: duration }),
+            keepalive: true, // ✅ Survives page unload
+          }).catch(() => {});
+        } else {
+          // Fallback for environments without sendBeacon
+          supabase
+            .from('page_views')
+            .update({ duration_seconds: duration })
+            .eq('id', viewIdRef.current)
+            .then(() => {})
+            .catch(() => {});
+        }
       }
     };
   }, [location.pathname, location.search]);
@@ -111,6 +185,9 @@ export const useAnalytics = () => {
  * Call this once a product page loads.
  * Links the current page_view row to the product (for per-product analytics)
  * and atomically increments visit_count on the product.
+ *
+ * ✅ FIX: Now awaits the view ID from the useAnalytics INSERT instead of
+ *    reading a potentially stale value from localStorage (race condition fix).
  */
 export const logProductPageView = async (productId) => {
   if (!productId) return;
@@ -119,22 +196,33 @@ export const logProductPageView = async (productId) => {
   const numericId = Number(productId);
   if (!Number.isFinite(numericId)) return; // guard against UUID-type products
 
-  // 1. Attach product_id to the page_views row created by useAnalytics
-  const viewId = localStorage.getItem('mate_last_view_id');
+  // 1. ✅ AWAIT the view ID from the current page's INSERT (race condition fix)
+  const viewId = await getViewIdPromise();
+
   if (viewId) {
-    supabase
-      .from('page_views')
-      .update({ product_id: numericId })
-      .eq('id', viewId)
-      .then(() => {})
-      .catch(() => {});
+    try {
+      const { error } = await supabase
+        .from('page_views')
+        .update({ product_id: numericId })
+        .eq('id', viewId);
+
+      if (error && IS_DEV) {
+        console.warn('[Analytics] page_view UPDATE product_id failed:', error.message);
+      }
+    } catch (err) {
+      if (IS_DEV) console.warn('[Analytics] page_view UPDATE exception:', err);
+    }
+  } else if (IS_DEV) {
+    console.warn('[Analytics] No view ID available — product_id not linked for product', numericId);
   }
 
   // 2. Increment product visit counter
   try {
-    await supabase.rpc('increment_visit_count', { p_product_id: numericId });
-  } catch (_) {
-    // RPC may not exist yet — silently ignore
+    const { error } = await supabase.rpc('increment_visit_count', { p_product_id: numericId });
+    if (error && IS_DEV) {
+      console.warn('[Analytics] increment_visit_count RPC failed:', error.message);
+    }
+  } catch (err) {
+    if (IS_DEV) console.warn('[Analytics] increment_visit_count RPC exception:', err);
   }
 };
-

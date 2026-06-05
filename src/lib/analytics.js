@@ -1,5 +1,7 @@
 import { supabase } from './supabaseClient';
 
+const IS_DEV = import.meta.env.DEV;
+
 // ─── Session Helper ───────────────────────────────────────────────────────────
 function getSessionId() {
   const KEY = 'mate_session_id';
@@ -16,17 +18,20 @@ function getSessionId() {
 // Events: 'view_catalog', 'view_product', 'add_to_cart', 'initiate_checkout',
 //         'purchase', 'search', 'lead_captured'
 //
-// Safe to call anywhere — silently ignores failures (ad blockers, offline, etc.)
+// Safe to call anywhere — logs failures in dev, silent in production.
 
 export const logAnalyticsEvent = async (eventName, metadata = {}) => {
   try {
-    await supabase.from('analytics_events').insert([{
+    const { error } = await supabase.from('analytics_events').insert([{
       session_id: getSessionId(),
       event_name: eventName,
       metadata,
     }]);
-  } catch (_) {
-    // Silently ignore — ad blockers, offline, table not created yet, etc.
+    if (error && IS_DEV) {
+      console.warn(`[Analytics] Event "${eventName}" INSERT failed:`, error.message);
+    }
+  } catch (err) {
+    if (IS_DEV) console.warn(`[Analytics] Event "${eventName}" exception:`, err);
   }
 };
 
