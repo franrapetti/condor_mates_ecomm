@@ -11,7 +11,6 @@ import AdminLayout from './components/admin/AdminLayout';
 import ProductsList from './pages/admin/ProductsList';
 import ProductForm from './pages/admin/ProductForm';
 import OrdersList from './pages/admin/OrdersList';
-import ManualSales from './pages/admin/ManualSales';
 import AdminSettings from './pages/admin/AdminSettings';
 import AdminLeads from './pages/admin/AdminLeads';
 import { AuthProvider } from './context/AuthContext';
@@ -66,7 +65,6 @@ function App() {
                   }>
                     <Route index element={<ProductsList />} />
                     <Route path="orders" element={<OrdersList />} />
-                    <Route path="manual-sales" element={<ManualSales />} />
                     <Route path="settings" element={<AdminSettings />} />
                     <Route path="leads" element={<AdminLeads />} />
                     <Route path="products/new" element={<ProductForm />} />

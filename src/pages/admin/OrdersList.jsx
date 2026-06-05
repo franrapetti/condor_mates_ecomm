@@ -6,18 +6,35 @@ import {
 } from 'recharts';
 import './OrdersList.css';
 
+const PAYMENT_METHODS = ['Efectivo', 'Transferencia', 'Mercado Pago', 'Débito', 'Otro'];
+const STATUS_OPTIONS = [
+  { value: 'paid', label: 'Pagado ✅' },
+  { value: 'debt', label: 'Me deben 💰' },
+];
+const EMPTY_FORM = {
+  customer_name: '', customer_phone: '', items: '',
+  total_amount: '', payment_method: 'Efectivo', status: 'paid', notes: ''
+};
+
 const OrdersList = () => {
   const [orders, setOrders] = useState([]);
+  const [manualSales, setManualSales] = useState([]);
   const [pageViews, setPageViews] = useState([]);
-  const [funnelData, setFunnelData] = useState([]);
+  const [allEvents, setAllEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  
+  // Manual form state
+  const [showManualForm, setShowManualForm] = useState(false);
+  const [manualForm, setManualForm] = useState(EMPTY_FORM);
+  const [savingManual, setSavingManual] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
+
   const [filter, setFilter] = useState('all');
   const [alerts, setAlerts] = useState([]);
   const [dismissedAlerts, setDismissedAlerts] = useState([]);
   const [search, setSearch] = useState('');
   const [dateRange, setDateRange] = useState('30d'); // '7d' | '30d' | '90d' | 'all'
-  const [sourceFilter, setSourceFilter] = useState('all');
 
   useEffect(() => {
     fetchData();
@@ -35,32 +52,30 @@ const OrdersList = () => {
       if (ordersError) throw ordersError;
       setOrders(ordersData || []);
 
+      const { data: manualData, error: manualError } = await supabase
+        .from('manual_sales')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (!manualError) setManualSales(manualData || []);
+
       const { data: viewsData } = await supabase
         .from('page_views')
-        .select('*');
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(5000);
       setPageViews(viewsData || []);
 
       // Fetch funnel analytics events
       try {
         const { data: eventsData } = await supabase
           .from('analytics_events')
-          .select('event_name, session_id');
-        if (eventsData) {
-          const funnelSteps = [
-            { key: 'view_catalog',       label: '1. Visitaron el Sitio',      emoji: '🌐' },
-            { key: 'view_product',       label: '2. Vieron un Producto',      emoji: '👁️' },
-            { key: 'add_to_cart',        label: '3. Añadieron al Carrito',    emoji: '🛒' },
-            { key: 'initiate_checkout',  label: '4. Iniciaron Checkout',      emoji: '💳' },
-            { key: 'purchase',           label: '5. Compra Exitosa',          emoji: '✅' },
-          ];
-          const funnelComputed = funnelSteps.map(step => {
-            const unique = new Set(eventsData.filter(e => e.event_name === step.key).map(e => e.session_id)).size;
-            return { ...step, sessions: unique };
-          });
-          setFunnelData(funnelComputed);
-        }
+          .select('event_name, session_id, created_at')
+          .order('created_at', { ascending: false })
+          .limit(5000);
+        if (eventsData) setAllEvents(eventsData);
       } catch (_) {
-        // analytics_events table may not exist yet — silently ignore
+        // silently ignore
       }
 
     } catch (error) {
@@ -72,8 +87,6 @@ const OrdersList = () => {
 
     // --- Fetch Alerts ---
     const newAlerts = [];
-
-    // Alert 1: Paid orders not shipped after 24h
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     const { data: pendingShip } = await supabase
       .from('orders')
@@ -83,41 +96,24 @@ const OrdersList = () => {
 
     if (pendingShip && pendingShip.length > 0) {
       newAlerts.push({
-        id: 'unshipped',
-        type: 'warning',
-        icon: '📦',
-        message: `Tenés ${pendingShip.length} orden${pendingShip.length > 1 ? 'es' : ''} pagada${pendingShip.length > 1 ? 's' : ''} sin enviar hace más de 24 horas.`,
+        id: 'unshipped', type: 'warning', icon: '📦',
+        message: `Tenés ${pendingShip.length} orden${pendingShip.length > 1 ? 'es' : ''} web pagada${pendingShip.length > 1 ? 's' : ''} sin enviar hace más de 24 horas.`,
         action: () => setFilter('paid')
       });
     }
 
-    // Alert 2: Products with low stock
-    const { data: lowStock } = await supabase
-      .from('products')
-      .select('id, name, stock')
-      .lte('stock', 3)
-      .gt('stock', 0);
-
+    const { data: lowStock } = await supabase.from('products').select('id, name, stock').lte('stock', 3).gt('stock', 0);
     if (lowStock && lowStock.length > 0) {
       newAlerts.push({
-        id: 'lowstock',
-        type: 'caution',
-        icon: '⚠️',
+        id: 'lowstock', type: 'caution', icon: '⚠️',
         message: `Stock bajo: ${lowStock.map(p => `${p.name} (${p.stock} ud.)`).join(', ')}.`
       });
     }
 
-    // Alert 3: Products completely out of stock
-    const { data: noStock } = await supabase
-      .from('products')
-      .select('id, name')
-      .eq('stock', 0);
-
+    const { data: noStock } = await supabase.from('products').select('id, name').eq('stock', 0);
     if (noStock && noStock.length > 0) {
       newAlerts.push({
-        id: 'nostock',
-        type: 'danger',
-        icon: '🚨',
+        id: 'nostock', type: 'danger', icon: '🚨',
         message: `Sin stock: ${noStock.map(p => p.name).join(', ')}. Estos productos siguen visibles en la tienda.`
       });
     }
@@ -125,25 +121,53 @@ const OrdersList = () => {
     setAlerts(newAlerts);
   };
 
+  // --- Web Orders Mutations ---
   const updateOrderStatus = async (id, newStatus) => {
     try {
-      const { error } = await supabase
-        .from('orders')
-        .update({ status: newStatus })
-        .eq('id', id);
-        
+      const { error } = await supabase.from('orders').update({ status: newStatus }).eq('id', id);
       if (error) throw error;
       
       setOrders(prev => prev.map(o => o.id === id ? { ...o, status: newStatus } : o));
-      if (selectedOrder?.id === id) {
-        setSelectedOrder({ ...selectedOrder, status: newStatus });
-      }
+      if (selectedOrder?.id === id) setSelectedOrder({ ...selectedOrder, status: newStatus });
     } catch (error) {
       alert('Error actualizando el estado de la orden');
     }
   };
 
-  const getStatusBadge = (status) => {
+  // --- Manual Sales Mutations ---
+  const handleManualSubmit = async (e) => {
+    e.preventDefault();
+    if (!manualForm.customer_name.trim() || !manualForm.items.trim() || !manualForm.total_amount) return;
+    setSavingManual(true);
+    const { error } = await supabase.from('manual_sales').insert([{
+      ...manualForm,
+      total_amount: Number(manualForm.total_amount),
+    }]);
+    if (!error) {
+      setManualForm(EMPTY_FORM);
+      setShowManualForm(false);
+      fetchData();
+    } else {
+      alert('Error al guardar: ' + error.message);
+    }
+    setSavingManual(false);
+  };
+
+  const handleDeleteManual = async (id) => {
+    const { error } = await supabase.from('manual_sales').delete().eq('id', id);
+    if (!error) {
+      setManualSales(prev => prev.filter(s => s.id !== id));
+      setDeleteConfirm(null);
+    }
+  };
+
+  const handleMarkManualPaid = async (id) => {
+    const { error } = await supabase.from('manual_sales').update({ status: 'paid' }).eq('id', id);
+    if (!error) setManualSales(prev => prev.map(s => s.id === id ? { ...s, status: 'paid' } : s));
+  };
+
+  const getStatusBadge = (status, isManual = false) => {
+    if (isManual && status === 'debt') return <span className="status-badge pending" style={{background:'#fef3c7', color:'#d97706'}}>Me Debe</span>;
     switch(status) {
       case 'paid': return <span className="status-badge paid">Pagado</span>;
       case 'pending': return <span className="status-badge pending">Pendiente</span>;
@@ -153,31 +177,60 @@ const OrdersList = () => {
     }
   };
 
-  const filteredOrders = orders.filter(o => {
-    const matchesFilter = filter === 'all' || o.status === filter;
+  const unifiedSales = useMemo(() => {
+    const web = orders.map(o => ({
+      id: o.id,
+      type: 'web',
+      created_at: o.created_at,
+      customer_name: o.customer_name,
+      customer_info: o.customer_email || o.customer_city,
+      items_desc: o.items?.map(i => `${i.quantity}x ${i.name}`).join(', ') || 'Sin items',
+      total: o.total_price || 0,
+      status: o.status,
+      payment_method: o.payment_method || (o.mp_payment_id ? 'Mercado Pago' : 'Transferencia'),
+      source: o.source,
+      original: o
+    }));
+
+    const manual = manualSales.map(m => ({
+      id: m.id,
+      type: 'manual',
+      created_at: m.created_at,
+      customer_name: m.customer_name,
+      customer_info: m.customer_phone ? `📞 ${m.customer_phone}` : '',
+      items_desc: m.items,
+      total: m.total_amount || 0,
+      status: m.status,
+      payment_method: m.payment_method,
+      source: 'manual',
+      original: m
+    }));
+
+    return [...web, ...manual].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  }, [orders, manualSales]);
+
+  const filteredSales = unifiedSales.filter(s => {
+    const matchesFilter = filter === 'all' || s.status === filter || (filter === 'web' && s.type === 'web') || (filter === 'manual' && s.type === 'manual');
     const searchLower = search.toLowerCase();
     const matchesSearch = !search || 
-      o.customer_name?.toLowerCase().includes(searchLower) ||
-      o.customer_city?.toLowerCase().includes(searchLower) ||
-      o.customer_email?.toLowerCase().includes(searchLower);
+      s.customer_name?.toLowerCase().includes(searchLower) ||
+      s.customer_info?.toLowerCase().includes(searchLower) ||
+      s.items_desc?.toLowerCase().includes(searchLower);
     return matchesFilter && matchesSearch;
   });
 
-  // Calculate Basic KPIs
-  const validOrders = orders.filter(o => o.status === 'paid' || o.status === 'shipped');
-  const totalRevenue = validOrders.reduce((acc, o) => acc + o.total_price, 0);
-  const totalSales = validOrders.length;
-  const avgTicket = totalSales > 0 ? totalRevenue / totalSales : 0;
-
-  // Calculate Advanced KPIs — ✅ FIX: use filteredViews to respect date range filter
-  const uniqueSessions = new Set(filteredViews.map(v => v.session_id)).size;
-  const conversionRate = uniqueSessions > 0 ? ((totalSales / uniqueSessions) * 100).toFixed(2) : 0;
+  // Calculate Basic KPIs (Unified)
+  const validWeb = orders.filter(o => o.status === 'paid' || o.status === 'shipped');
+  const validManual = manualSales.filter(s => s.status === 'paid');
   
-  const totalDuration = filteredViews.reduce((acc, v) => acc + (v.duration_seconds || 0), 0);
-  const avgDurationSeconds = uniqueSessions > 0 ? Math.floor(totalDuration / uniqueSessions) : 0;
-  const avgDurationFormatted = `${Math.floor(avgDurationSeconds / 60)}m ${avgDurationSeconds % 60}s`;
+  const totalRevenue = validWeb.reduce((acc, o) => acc + o.total_price, 0) + validManual.reduce((acc, m) => acc + m.total_amount, 0);
+  const totalSalesCount = validWeb.length + validManual.length;
+  const avgTicket = totalSalesCount > 0 ? totalRevenue / totalSalesCount : 0;
+  
+  const debtSales = manualSales.filter(s => s.status === 'debt');
+  const totalDebt = debtSales.reduce((acc, s) => acc + s.total_amount, 0);
 
-  // ── Date range helper ──────────────────────────────────────────────────────
+  // Calculate Advanced KPIs
   const getCutoff = () => {
     if (dateRange === 'all') return null;
     const days = dateRange === '7d' ? 7 : dateRange === '30d' ? 30 : 90;
@@ -189,7 +242,30 @@ const OrdersList = () => {
     return pageViews.filter(v => !cutoff || new Date(v.created_at) >= cutoff);
   }, [pageViews, dateRange]);
 
-  // Chart Data Preparation
+  const uniqueSessions = new Set(filteredViews.map(v => v.session_id)).size;
+  const conversionRate = uniqueSessions > 0 ? ((totalSalesCount / uniqueSessions) * 100).toFixed(2) : 0;
+  
+  const totalDuration = filteredViews.reduce((acc, v) => acc + (v.duration_seconds || 0), 0);
+  const avgDurationSeconds = uniqueSessions > 0 ? Math.floor(totalDuration / uniqueSessions) : 0;
+  const avgDurationFormatted = `${Math.floor(avgDurationSeconds / 60)}m ${avgDurationSeconds % 60}s`;
+
+  const funnelData = useMemo(() => {
+    const cutoff = getCutoff();
+    const filteredEvents = allEvents.filter(e => !cutoff || new Date(e.created_at) >= cutoff);
+    const funnelSteps = [
+      { key: 'view_catalog', label: '1. Visitaron el Sitio', emoji: '🌐' },
+      { key: 'view_product', label: '2. Vieron un Producto', emoji: '👁️' },
+      { key: 'add_to_cart', label: '3. Añadieron al Carrito', emoji: '🛒' },
+      { key: 'initiate_checkout', label: '4. Iniciaron Checkout', emoji: '💳' },
+      { key: 'purchase', label: '5. Compra Exitosa', emoji: '✅' },
+    ];
+    return funnelSteps.map(step => {
+      const unique = new Set(filteredEvents.filter(e => e.event_name === step.key).map(e => e.session_id)).size;
+      return { ...step, sessions: unique };
+    });
+  }, [allEvents, dateRange]);
+
+  // Chart Data Preparation (Unified)
   const chartData = useMemo(() => {
     const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
     const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
@@ -198,36 +274,18 @@ const OrdersList = () => {
     const dailyData = days.map(d => ({ name: d, ordenes: 0 }));
     const hourlyData = Array.from({ length: 24 }, (_, i) => ({ name: `${i}:00`, volumen: 0 }));
 
-    // Source map — use filteredViews so date range applies
     const sourceDataMap = {};
     filteredViews.forEach(v => {
       const raw = v.source && v.source !== 'null' ? v.source.toLowerCase() : 'direct';
-      // Friendly labels
       const labelMap = {
-        instagram: '📸 Instagram',
-        instagram_organic: '📸 Instagram (Org)',
-        facebook:  '👥 Facebook',
-        facebook_organic: '👥 Facebook (Org)',
-        whatsapp:  '💬 WhatsApp',
-        tiktok:    '🎵 TikTok',
-        tiktok_organic: '🎵 TikTok (Org)',
-        google:    '🔍 Google',
-        google_ads: '💰 Google Ads',
-        google_organic: '🔍 Google (Org)',
-        bing_organic: '🔍 Bing (Org)',
-        twitter_organic: '🐦 Twitter/X (Org)',
-        pinterest_organic: '📌 Pinterest (Org)',
-        mercadolibre: '🛒 MercadoLibre',
-        direct:    '🌐 Directo',
+        instagram: '📸 Instagram', facebook: '👥 Facebook', whatsapp: '💬 WhatsApp',
+        tiktok: '🎵 TikTok', google: '🔍 Google', direct: '🌐 Directo',
       };
       const origin = labelMap[raw] || `🔗 ${raw.charAt(0).toUpperCase() + raw.slice(1)}`;
       sourceDataMap[origin] = (sourceDataMap[origin] || 0) + 1;
     });
-    const sourceData = Object.entries(sourceDataMap)
-      .map(([name, visitas]) => ({ name, visitas }))
-      .sort((a, b) => b.visitas - a.visitas);
+    const sourceData = Object.entries(sourceDataMap).map(([name, visitas]) => ({ name, visitas })).sort((a, b) => b.visitas - a.visitas);
 
-    // Monthly page views (all time, no date filter — historical)
     const monthlyViewsMap = {};
     pageViews.forEach(v => {
       const d = new Date(v.created_at);
@@ -237,28 +295,57 @@ const OrdersList = () => {
       monthlyViewsMap[key].visitas += 1;
       monthlyViewsMap[key]._sessions.add(v.session_id);
     });
-    const monthlyViews = Object.entries(monthlyViewsMap)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([, v]) => ({ name: v.name, visitas: v.visitas, sesiones: v._sessions.size }));
+    const monthlyViews = Object.entries(monthlyViewsMap).sort(([a], [b]) => a.localeCompare(b)).map(([, v]) => ({ name: v.name, visitas: v.visitas, sesiones: v._sessions.size }));
 
-    validOrders.forEach(order => {
-      const date = new Date(order.created_at);
-      monthlyData[date.getMonth()].ingresos += order.total_price;
-      dailyData[date.getDay()].ordenes += 1;
-      hourlyData[date.getHours()].volumen += 1;
+    unifiedSales.forEach(sale => {
+      const isValid = (sale.type === 'web' && (sale.status === 'paid' || sale.status === 'shipped')) ||
+                      (sale.type === 'manual' && sale.status === 'paid');
+      if (isValid) {
+        const date = new Date(sale.created_at);
+        monthlyData[date.getMonth()].ingresos += sale.total;
+        dailyData[date.getDay()].ordenes += 1;
+        hourlyData[date.getHours()].volumen += 1;
+      }
     });
 
     return { monthlyData, dailyData, hourlyData, sourceData, monthlyViews };
-  }, [validOrders, filteredViews, pageViews]);
+  }, [unifiedSales, filteredViews, pageViews]);
 
   return (
     <div className="orders-dashboard">
-      <div className="dashboard-header">
+      <div className="dashboard-header" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem'}}>
         <h1>Centro de Comando Analítico 👁️‍🗨️</h1>
-        <button className="btn-secondary" onClick={fetchData} style={{padding: '0.5rem 1rem'}}>
-          ↻ Sincronizar Datos
-        </button>
+        <div style={{display: 'flex', gap: '0.5rem'}}>
+          <button className="btn-secondary" onClick={fetchData} style={{padding: '0.5rem 1rem'}}>
+            ↻ Sincronizar
+          </button>
+          <button className="btn-primary" onClick={() => setShowManualForm(!showManualForm)} style={{padding: '0.5rem 1rem', background: 'var(--text-dark)'}}>
+            {showManualForm ? '✕ Cancelar' : '+ Venta Manual'}
+          </button>
+        </div>
       </div>
+
+      {showManualForm && (
+        <div style={{background: 'var(--surface)', padding: '1.5rem', borderRadius: 12, marginBottom: '2rem', border: '1px solid var(--border)'}}>
+          <h3 style={{marginTop: 0}}>📝 Registrar Venta Manual</h3>
+          <form onSubmit={handleManualSubmit} style={{display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))'}}>
+            <input type="text" placeholder="Nombre del Cliente *" required value={manualForm.customer_name} onChange={e => setManualForm({...manualForm, customer_name: e.target.value})} className="orders-search-input" />
+            <input type="text" placeholder="Teléfono / WhatsApp" value={manualForm.customer_phone} onChange={e => setManualForm({...manualForm, customer_phone: e.target.value})} className="orders-search-input" />
+            <input type="text" placeholder="Productos (Ej: 1x Mate) *" required value={manualForm.items} onChange={e => setManualForm({...manualForm, items: e.target.value})} className="orders-search-input" style={{gridColumn: '1 / -1'}} />
+            <input type="number" placeholder="Monto Total *" required min="0" value={manualForm.total_amount} onChange={e => setManualForm({...manualForm, total_amount: e.target.value})} className="orders-search-input" />
+            <select value={manualForm.payment_method} onChange={e => setManualForm({...manualForm, payment_method: e.target.value})} className="orders-search-input">
+              {PAYMENT_METHODS.map(m => <option key={m} value={m}>{m}</option>)}
+            </select>
+            <select value={manualForm.status} onChange={e => setManualForm({...manualForm, status: e.target.value})} className="orders-search-input">
+              {STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+            <input type="text" placeholder="Notas opcionales" value={manualForm.notes} onChange={e => setManualForm({...manualForm, notes: e.target.value})} className="orders-search-input" style={{gridColumn: '1 / -1'}} />
+            <button type="submit" className="btn-primary" disabled={savingManual} style={{gridColumn: '1 / -1', maxWidth: 200}}>
+              {savingManual ? 'Guardando...' : '✓ Guardar Venta'}
+            </button>
+          </form>
+        </div>
+      )}
 
       {/* Proactive Alert Banners */}
       {alerts.filter(a => !dismissedAlerts.includes(a.id)).map(alert => (
@@ -267,12 +354,24 @@ const OrdersList = () => {
           <p className="admin-alert-msg">{alert.message}</p>
           <div className="admin-alert-actions">
             {alert.action && (
-              <button className="admin-alert-act-btn" onClick={alert.action}>Ver órdenes</button>
+              <button className="admin-alert-act-btn" onClick={alert.action}>Filtrar órdenes</button>
             )}
             <button className="admin-alert-dismiss" onClick={() => setDismissedAlerts(prev => [...prev, alert.id])}>×</button>
           </div>
         </div>
       ))}
+
+      {debtSales.length > 0 && (
+        <div className="admin-alert admin-alert--warning" style={{borderColor: '#fbbf24', background: '#fffbeb'}}>
+          <span className="admin-alert-icon">💰</span>
+          <p className="admin-alert-msg" style={{color: '#b45309'}}>
+            <strong>Atención:</strong> Tienes <strong>{debtSales.length}</strong> ventas manuales pendientes de cobro por un total de <strong>${totalDebt.toLocaleString()}</strong>.
+          </p>
+          <div className="admin-alert-actions">
+            <button className="admin-alert-act-btn" onClick={() => setFilter('debt')} style={{background: '#b45309', color: 'white'}}>Ver deudores</button>
+          </div>
+        </div>
+      )}
 
       <div className="kpi-grid">
         <div className="kpi-card">
@@ -281,7 +380,7 @@ const OrdersList = () => {
         </div>
         <div className="kpi-card">
           <h3>Ventas Concretadas</h3>
-          <p className="kpi-value">{totalSales}</p>
+          <p className="kpi-value">{totalSalesCount}</p>
         </div>
         <div className="kpi-card">
           <h3>Ticket Promedio</h3>
@@ -301,7 +400,6 @@ const OrdersList = () => {
         </div>
       </div>
 
-      {/* Analytics Section Header + Date Range Filter */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem', margin: '1.5rem 0 1rem' }}>
         <h2 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-dark)' }}>📊 Analíticas de Tráfico</h2>
         <div style={{ display: 'flex', gap: '0.4rem' }}>
@@ -310,31 +408,14 @@ const OrdersList = () => {
               key={val}
               onClick={() => setDateRange(val)}
               style={{
-                padding: '0.35rem 0.75rem',
-                borderRadius: 20,
-                border: '1px solid var(--border)',
+                padding: '0.35rem 0.75rem', borderRadius: 20, border: '1px solid var(--border)',
                 background: dateRange === val ? 'var(--accent)' : 'transparent',
-                color: dateRange === val ? 'white' : 'var(--text-dark)',
-                fontWeight: 700,
-                fontSize: '0.78rem',
-                cursor: 'pointer',
+                color: dateRange === val ? 'white' : 'var(--text-dark)', fontWeight: 700, fontSize: '0.78rem', cursor: 'pointer',
               }}
             >{label}</button>
           ))}
         </div>
       </div>
-
-      {/* No analytics data empty state */}
-      {pageViews.length === 0 && (
-        <div style={{
-          background: '#fef9c3', border: '1px solid #fde68a',
-          borderRadius: 12, padding: '1rem 1.25rem', marginBottom: '1.5rem',
-          fontSize: '0.85rem', color: '#92400e',
-        }}>
-          <strong>⚠️ Sin datos de tráfico aún.</strong> Las visitas se empezarán a registrar automáticamente
-          cuando los usuarios naveguen el sitio. Asegurate de haber ejecutado <code>setup_analytics_v3.sql</code> en Supabase.
-        </div>
-      )}
 
       <div className="charts-grid">
         <div className="chart-card chart-full-width">
@@ -351,7 +432,6 @@ const OrdersList = () => {
             </ResponsiveContainer>
           </div>
         </div>
-
         <div className="chart-card">
           <h3>📊 Órdenes por Día (Semanal)</h3>
           <div style={{ width: '100%', height: 250 }}>
@@ -366,9 +446,8 @@ const OrdersList = () => {
             </ResponsiveContainer>
           </div>
         </div>
-
         <div className="chart-card">
-          <h3>🔔 Mapa de Calor Horario (Volumen de Compras)</h3>
+          <h3>🔔 Mapa de Calor Horario (Volumen)</h3>
           <div style={{ width: '100%', height: 250 }}>
             <ResponsiveContainer>
               <AreaChart data={chartData.hourlyData}>
@@ -381,133 +460,19 @@ const OrdersList = () => {
             </ResponsiveContainer>
           </div>
         </div>
-
-        {/* Source Origin Chart */}
-        <div className="chart-card">
-          <h3>🌐 Origen del Tráfico
-            <span style={{ fontSize: '0.72rem', fontWeight: 500, color: 'var(--text-light)', marginLeft: '0.5rem' }}>
-              ({dateRange === 'all' ? 'Historial completo' : `Últimos ${dateRange}`})
-            </span>
-          </h3>
-          {chartData.sourceData.length === 0 ? (
-            <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-light)', fontSize: '0.85rem' }}>
-              Sin datos en el período seleccionado.<br/>
-              <small>Probá con "Todo" o esperá a que entren visitas con UTM/ref en la URL.</small>
-            </div>
-          ) : (
-            <div style={{ width: '100%', height: Math.max(180, chartData.sourceData.length * 44) }}>
-              <ResponsiveContainer>
-                <BarChart data={chartData.sourceData} layout="vertical" margin={{ top: 4, right: 30, left: 8, bottom: 4 }}>
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} vertical={true} stroke="#E5E7EB" />
-                  <XAxis type="number" stroke="#6B7280" allowDecimals={false} />
-                  <YAxis dataKey="name" type="category" stroke="#6B7280" width={130} tick={{ fontSize: 11, fill: '#374151', fontWeight: 700 }} />
-                  <Tooltip formatter={(value) => [value, 'Sesiones de visita']} cursor={{ fill: 'rgba(16,185,129,0.08)' }} />
-                  <Bar dataKey="visitas" fill="#10b981" radius={[0, 6, 6, 0]} barSize={22} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-        </div>
       </div>
 
-      {/* Sales Funnel Visualization */}
-      {funnelData.length > 0 && funnelData[0].sessions > 0 && (
-        <div style={{
-          background: 'var(--surface)', border: '1px solid var(--border)',
-          borderRadius: 16, padding: '1.25rem', marginBottom: '2rem',
-          boxShadow: 'var(--shadow-sm)',
-        }}>
-          <h3 style={{ margin: '0 0 1rem', fontSize: '1rem', fontWeight: 800, color: 'var(--text-dark)' }}>
-            🎯 Embudo de Conversión (Funnel de Ventas)
-          </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            {funnelData.map((step, idx) => {
-              const maxSessions = funnelData[0].sessions || 1;
-              const pct = ((step.sessions / maxSessions) * 100);
-              const prevSessions = idx > 0 ? funnelData[idx - 1].sessions : step.sessions;
-              const dropRate = prevSessions > 0 ? ((1 - step.sessions / prevSessions) * 100).toFixed(0) : 0;
-              const colors = ['#10b981', '#34d399', '#fbbf24', '#f97316', '#ef4444'];
-              return (
-                <div key={step.key} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <div style={{ minWidth: 190, fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-dark)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                    <span>{step.emoji}</span> {step.label}
-                  </div>
-                  <div style={{ flex: 1, height: 28, background: '#f3f4f6', borderRadius: 8, overflow: 'hidden', position: 'relative' }}>
-                    <div style={{
-                      height: '100%',
-                      width: `${Math.max(pct, 2)}%`,
-                      background: `linear-gradient(90deg, ${colors[idx]}, ${colors[Math.min(idx + 1, 4)]})`,
-                      borderRadius: 8,
-                      transition: 'width 0.8s ease',
-                      display: 'flex',
-                      alignItems: 'center',
-                      paddingLeft: '0.5rem',
-                    }}>
-                      <span style={{ fontSize: '0.72rem', fontWeight: 800, color: 'white', textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>
-                        {step.sessions.toLocaleString()} sesiones
-                      </span>
-                    </div>
-                  </div>
-                  <div style={{ minWidth: 60, textAlign: 'right', fontSize: '0.75rem', fontWeight: 700, color: pct >= 50 ? '#10b981' : pct >= 20 ? '#f59e0b' : '#ef4444' }}>
-                    {pct.toFixed(1)}%
-                  </div>
-                  {idx > 0 && (
-                    <div style={{ minWidth: 60, textAlign: 'right', fontSize: '0.7rem', color: '#9ca3af' }}>
-                      ↓{dropRate}% caída
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-          <p style={{ marginTop: '0.75rem', fontSize: '0.75rem', color: 'var(--text-light)' }}>
-            💡 <strong>Tip:</strong> Si la caída entre “Añadieron al Carrito” e “Iniciaron Checkout” supera el 70%, considerá mejorar la experiencia del carrito o los costos de envío.
-          </p>
-        </div>
-      )}
-
-      {/* Monthly Traffic Breakdown Table */}
-      {chartData.monthlyViews && chartData.monthlyViews.length > 0 && (
-        <div style={{
-          background: 'var(--surface)', border: '1px solid var(--border)',
-          borderRadius: 16, padding: '1.25rem', marginBottom: '2rem',
-          boxShadow: 'var(--shadow-sm)',
-        }}>
-          <h3 style={{ margin: '0 0 1rem', fontSize: '1rem', fontWeight: 800, color: 'var(--text-dark)' }}>
-            📅 Visitas Mensuales al Sitio
-          </h3>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
-              <thead>
-                <tr style={{ borderBottom: '2px solid var(--border)' }}>
-                  {['Mes', 'Vistas Totales', 'Sesiones Únicas'].map(h => (
-                    <th key={h} style={{ padding: '0.5rem 0.75rem', textAlign: 'left', fontWeight: 800, color: 'var(--text-light)', fontSize: '0.75rem', textTransform: 'uppercase' }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {[...chartData.monthlyViews].reverse().map((row, i) => (
-                  <tr key={i} style={{ borderBottom: '1px solid var(--border)', background: i % 2 === 0 ? 'transparent' : 'var(--background)' }}>
-                    <td style={{ padding: '0.55rem 0.75rem', fontWeight: 700, color: 'var(--text-dark)' }}>{row.name}</td>
-                    <td style={{ padding: '0.55rem 0.75rem', color: 'var(--text-dark)' }}>{row.visitas.toLocaleString()}</td>
-                    <td style={{ padding: '0.55rem 0.75rem', color: '#10b981', fontWeight: 700 }}>{row.sesiones.toLocaleString()}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
       <div className="orders-container">
-        <div className="orders-filters">
+        <div className="orders-filters" style={{marginBottom: '1rem'}}>
           <button className={filter === 'all' ? 'active' : ''} onClick={() => setFilter('all')}>Todas</button>
+          <button className={filter === 'web' ? 'active' : ''} onClick={() => setFilter('web')}>Web</button>
+          <button className={filter === 'manual' ? 'active' : ''} onClick={() => setFilter('manual')}>Manuales</button>
           <button className={filter === 'paid' ? 'active' : ''} onClick={() => setFilter('paid')}>Solo Pagadas</button>
-          <button className={filter === 'pending' ? 'active' : ''} onClick={() => setFilter('pending')}>Pendientes</button>
-          <button className={filter === 'shipped' ? 'active' : ''} onClick={() => setFilter('shipped')}>Enviadas</button>
+          <button className={filter === 'pending' ? 'active' : ''} onClick={() => setFilter('pending')}>Web Pendientes</button>
+          <button className={filter === 'debt' ? 'active' : ''} onClick={() => setFilter('debt')}>Deudores (Manual)</button>
           <input
             type="search"
-            placeholder="🔍 Buscar por nombre, ciudad o email..."
+            placeholder="🔍 Buscar por nombre, items o info..."
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="orders-search-input"
@@ -515,35 +480,73 @@ const OrdersList = () => {
         </div>
 
         {loading ? (
-          <p style={{padding: '2rem'}}>Cargando información logísitca...</p>
+          <p style={{padding: '2rem'}}>Cargando información...</p>
         ) : (
           <div className="table-responsive">
             <table className="orders-table">
               <thead>
                 <tr>
                   <th>Fecha</th>
+                  <th>Origen</th>
                   <th>Cliente</th>
-                  <th>Ciudad</th>
+                  <th>Items</th>
                   <th>Estado</th>
                   <th>Total</th>
                   <th>Acción</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredOrders.length === 0 && (
-                  <tr><td colSpan="6" style={{textAlign: 'center', padding: '2rem'}}>No hay órdenes registradas.</td></tr>
+                {filteredSales.length === 0 && (
+                  <tr><td colSpan="7" style={{textAlign: 'center', padding: '2rem'}}>No hay ventas registradas.</td></tr>
                 )}
-                {filteredOrders.map(order => (
-                  <tr key={order.id}>
-                    <td>{new Date(order.created_at).toLocaleDateString('es-AR', {day: '2-digit', month: 'short', hour: '2-digit', minute:'2-digit'})}</td>
-                    <td style={{fontWeight: 600}}>{order.customer_name}</td>
-                    <td>{order.customer_city}</td>
-                    <td>{getStatusBadge(order.status)}</td>
-                    <td style={{fontWeight: 600, color: 'var(--accent)'}}>${order.total_price?.toLocaleString()}</td>
+                {filteredSales.map(sale => (
+                  <tr key={sale.id} style={{background: sale.status === 'debt' ? '#fef3c7' : 'transparent'}}>
+                    <td>{new Date(sale.created_at).toLocaleDateString('es-AR', {day: '2-digit', month: 'short', hour: '2-digit', minute:'2-digit'})}</td>
                     <td>
-                      <button className="btn-view" onClick={() => setSelectedOrder(order)}>
-                        VER GUÍA
-                      </button>
+                      {sale.type === 'web' ? <span style={{background: '#dbeafe', color: '#1e40af', padding: '2px 6px', borderRadius: 4, fontSize: '0.75rem', fontWeight: 'bold'}}>🌐 Web</span> 
+                                           : <span style={{background: '#e5e7eb', color: '#374151', padding: '2px 6px', borderRadius: 4, fontSize: '0.75rem', fontWeight: 'bold'}}>📝 Manual</span>}
+                    </td>
+                    <td>
+                      <div style={{fontWeight: 600}}>{sale.customer_name}</div>
+                      {sale.customer_info && <div style={{fontSize: '0.75rem', color: '#6b7280'}}>{sale.customer_info}</div>}
+                    </td>
+                    <td style={{maxWidth: 200, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '0.85rem'}} title={sale.items_desc}>
+                      {sale.items_desc}
+                    </td>
+                    <td>{getStatusBadge(sale.status, sale.type === 'manual')}</td>
+                    <td style={{fontWeight: 600, color: sale.status === 'debt' ? '#d97706' : 'var(--accent)'}}>${sale.total.toLocaleString()}</td>
+                    <td>
+                      <div style={{display: 'flex', gap: '0.4rem', flexWrap: 'wrap'}}>
+                        {sale.type === 'web' && (
+                          <button className="btn-view" onClick={() => setSelectedOrder(sale.original)} style={{padding: '0.3rem 0.6rem'}}>VER</button>
+                        )}
+                        {sale.type === 'web' && sale.status === 'pending' && (
+                          <button onClick={() => updateOrderStatus(sale.id, 'paid')} style={{background: '#10b981', color: 'white', border: 'none', borderRadius: 4, padding: '0.3rem 0.6rem', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold'}}>
+                            Marcar Pagado
+                          </button>
+                        )}
+                        {sale.type === 'web' && sale.status !== 'canceled' && (
+                          <button onClick={() => updateOrderStatus(sale.id, 'canceled')} style={{background: '#ef4444', color: 'white', border: 'none', borderRadius: 4, padding: '0.3rem 0.6rem', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold'}}>
+                            Cancelar
+                          </button>
+                        )}
+
+                        {sale.type === 'manual' && sale.status === 'debt' && (
+                          <button onClick={() => handleMarkManualPaid(sale.id)} style={{background: '#10b981', color: 'white', border: 'none', borderRadius: 4, padding: '0.3rem 0.6rem', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold'}}>
+                            ✓ Pagó
+                          </button>
+                        )}
+                        {sale.type === 'manual' && (
+                          deleteConfirm === sale.id ? (
+                            <div style={{display: 'flex', gap: '0.2rem'}}>
+                              <button onClick={() => handleDeleteManual(sale.id)} style={{background: '#ef4444', color: 'white', border: 'none', borderRadius: 4, padding: '0.3rem 0.6rem', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold'}}>Sí</button>
+                              <button onClick={() => setDeleteConfirm(null)} style={{background: '#9ca3af', color: 'white', border: 'none', borderRadius: 4, padding: '0.3rem 0.6rem', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold'}}>No</button>
+                            </div>
+                          ) : (
+                            <button onClick={() => setDeleteConfirm(sale.id)} style={{background: 'transparent', color: '#ef4444', border: 'none', cursor: 'pointer', fontSize: '1rem', padding: '0.2rem 0.4rem'}}>🗑</button>
+                          )
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -557,7 +560,7 @@ const OrdersList = () => {
         <div className="order-modal-overlay" onClick={() => setSelectedOrder(null)}>
           <div className="order-modal-content" onClick={e => e.stopPropagation()}>
             <div className="order-modal-header">
-              <h2>Detalles de la Orden</h2>
+              <h2>Detalles de la Orden (Web)</h2>
               <button className="close-btn" onClick={() => setSelectedOrder(null)}>×</button>
             </div>
             
@@ -568,7 +571,6 @@ const OrdersList = () => {
                 <p><strong>Email:</strong> {selectedOrder.customer_email || 'No provisto'}</p>
                 <p><strong>Ciudad:</strong> {selectedOrder.customer_city}</p>
                 <p><strong>Notas:</strong> {selectedOrder.customer_notes || 'Ninguna'}</p>
-                <p><strong>Origen (Ads):</strong> <span style={{backgroundColor: '#e6fced', color: '#008a3d', padding: '2px 8px', borderRadius: '12px', fontSize: '0.85rem', fontWeight: 'bold', textTransform: 'uppercase'}}>{selectedOrder.source || 'Directo'}</span></p>
                 <p><strong>Mercado Pago ID:</strong> {selectedOrder.mp_payment_id || 'N/A'}</p>
                 <p style={{marginTop: '0.5rem'}}>Estado Actual: {getStatusBadge(selectedOrder.status)}</p>
               </div>
@@ -584,7 +586,7 @@ const OrdersList = () => {
                   ))}
                 </ul>
                 <div className="order-modal-total">
-                  Total Cobrado: ${selectedOrder.total_price?.toLocaleString()}
+                  Total: ${selectedOrder.total_price?.toLocaleString()}
                 </div>
               </div>
             </div>
@@ -594,17 +596,19 @@ const OrdersList = () => {
               <div style={{display: 'flex', gap: '0.5rem', flexWrap: 'wrap'}}>
                 {selectedOrder.status === 'paid' && (
                   <button className="btn-primary" onClick={() => updateOrderStatus(selectedOrder.id, 'shipped')}>
-                    📦 Imprimir Etiqueta y Marcar Enviado
+                    📦 Marcar Enviado
                   </button>
                 )}
                 {selectedOrder.status === 'pending' && (
-                  <button className="btn-secondary" onClick={() => updateOrderStatus(selectedOrder.id, 'paid')}>
-                    Marcar Pagado Manualmente (WhatsApp)
+                  <button className="btn-secondary" onClick={() => updateOrderStatus(selectedOrder.id, 'paid')} style={{background: '#10b981', color: 'white', borderColor: '#10b981'}}>
+                    Marcar Transferencia como Pagada
                   </button>
                 )}
-                <button className="btn-danger" onClick={() => updateOrderStatus(selectedOrder.id, 'canceled')} style={{backgroundColor: '#e53935', color: 'white', border: 'none', borderRadius: '6px', padding: '0.75rem 1rem', cursor: 'pointer', fontWeight: 600}}>
-                  Cancelar Orden (Reembolso)
-                </button>
+                {selectedOrder.status !== 'canceled' && (
+                  <button className="btn-danger" onClick={() => updateOrderStatus(selectedOrder.id, 'canceled')} style={{backgroundColor: '#e53935', color: 'white', border: 'none', borderRadius: '6px', padding: '0.75rem 1rem', cursor: 'pointer', fontWeight: 600}}>
+                    Cancelar Venta
+                  </button>
+                )}
               </div>
             </div>
           </div>
