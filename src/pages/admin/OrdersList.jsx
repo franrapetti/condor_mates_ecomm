@@ -170,7 +170,8 @@ const OrdersList = () => {
     if (isManual && status === 'debt') return <span className="status-badge pending" style={{background:'#fef3c7', color:'#d97706'}}>Me Debe</span>;
     switch(status) {
       case 'paid': return <span className="status-badge paid">Pagado</span>;
-      case 'pending': return <span className="status-badge pending">Pendiente</span>;
+      case 'pending':
+      case 'pending_transfer': return <span className="status-badge pending">Pendiente (Transf.)</span>;
       case 'shipped': return <span className="status-badge shipped">Enviado</span>;
       case 'canceled': return <span className="status-badge canceled">Cancelado</span>;
       default: return <span className="status-badge">{status}</span>;
@@ -210,7 +211,11 @@ const OrdersList = () => {
   }, [orders, manualSales]);
 
   const filteredSales = unifiedSales.filter(s => {
-    const matchesFilter = filter === 'all' || s.status === filter || (filter === 'web' && s.type === 'web') || (filter === 'manual' && s.type === 'manual');
+    const matchesFilter = filter === 'all' || 
+      (filter === 'pending' && (s.status === 'pending' || s.status === 'pending_transfer')) ||
+      (filter !== 'pending' && s.status === filter) || 
+      (filter === 'web' && s.type === 'web') || 
+      (filter === 'manual' && s.type === 'manual');
     const searchLower = search.toLowerCase();
     const matchesSearch = !search || 
       s.customer_name?.toLowerCase().includes(searchLower) ||
@@ -520,7 +525,7 @@ const OrdersList = () => {
                         {sale.type === 'web' && (
                           <button className="btn-view" onClick={() => setSelectedOrder(sale.original)} style={{padding: '0.3rem 0.6rem'}}>VER</button>
                         )}
-                        {sale.type === 'web' && sale.status === 'pending' && (
+                        {sale.type === 'web' && (sale.status === 'pending' || sale.status === 'pending_transfer') && (
                           <button onClick={() => updateOrderStatus(sale.id, 'paid')} style={{background: '#10b981', color: 'white', border: 'none', borderRadius: 4, padding: '0.3rem 0.6rem', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold'}}>
                             Marcar Pagado
                           </button>
@@ -599,7 +604,7 @@ const OrdersList = () => {
                     📦 Marcar Enviado
                   </button>
                 )}
-                {selectedOrder.status === 'pending' && (
+                {(selectedOrder.status === 'pending' || selectedOrder.status === 'pending_transfer') && (
                   <button className="btn-secondary" onClick={() => updateOrderStatus(selectedOrder.id, 'paid')} style={{background: '#10b981', color: 'white', borderColor: '#10b981'}}>
                     Marcar Transferencia como Pagada
                   </button>
