@@ -130,7 +130,8 @@ const OrdersList = () => {
       setOrders(prev => prev.map(o => o.id === id ? { ...o, status: newStatus } : o));
       if (selectedOrder?.id === id) setSelectedOrder({ ...selectedOrder, status: newStatus });
     } catch (error) {
-      alert('Error actualizando el estado de la orden');
+      console.error(error);
+      alert(`Error actualizando: ${error.message || JSON.stringify(error)}`);
     }
   };
 
