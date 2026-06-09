@@ -185,11 +185,30 @@
   letter-spacing: -0.3px;
 }
 
+.screenshot-card-price-container {
+  margin: 0 0 16px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.screenshot-card-price-original {
+  font-size: 14px;
+  color: #999;
+  text-decoration: line-through;
+  margin: 0 0 4px 0;
+}
+
+.screenshot-card-price-discount-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .screenshot-card-price {
   font-size: 26px;
   font-weight: 400;
   color: #333;
-  margin: 0 0 16px 0;
+  margin: 0;
   display: flex;
   align-items: baseline;
   gap: 4px;
@@ -199,6 +218,12 @@
   font-size: 16px;
   color: #888;
   font-weight: 500;
+}
+
+.screenshot-card-discount-badge {
+  font-size: 14px;
+  font-weight: 600;
+  color: #00a650; /* Verde estilo MercadoLibre */
 }
 
 .screenshot-card-meta {

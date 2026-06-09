@@ -159,10 +159,19 @@ const ScreenshotCatalog = () => {
                   
                   <div className="screenshot-card-right">
                     <h3 className="screenshot-card-name">{product.name}</h3>
-                    <p className="screenshot-card-price">
-                      <span className="screenshot-card-price-symbol">$</span>
-                      {product.price?.toLocaleString()}
-                    </p>
+                    
+                    <div className="screenshot-card-price-container">
+                      <p className="screenshot-card-price-original">
+                        $ {product.price?.toLocaleString()}
+                      </p>
+                      <div className="screenshot-card-price-discount-row">
+                        <p className="screenshot-card-price">
+                          <span className="screenshot-card-price-symbol">$</span>
+                          {Math.round(product.price * 0.9).toLocaleString()}
+                        </p>
+                        <span className="screenshot-card-discount-badge">10% OFF</span>
+                      </div>
+                    </div>
                     
                     <div className="screenshot-card-meta">
                       <span>Stock Disponible: {product.stock ?? 0}</span>
