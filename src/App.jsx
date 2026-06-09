@@ -14,6 +14,7 @@ import OrdersList from './pages/admin/OrdersList';
 import AdminSettings from './pages/admin/AdminSettings';
 import AdminLeads from './pages/admin/AdminLeads';
 import CsvExport from './pages/admin/CsvExport';
+import PrintCatalog from './pages/admin/PrintCatalog';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { CartProvider } from './context/CartContext';
@@ -69,6 +70,7 @@ function App() {
                     <Route path="settings" element={<AdminSettings />} />
                     <Route path="leads" element={<AdminLeads />} />
                     <Route path="export" element={<CsvExport />} />
+                    <Route path="print-catalog" element={<PrintCatalog />} />
                     <Route path="products/new" element={<ProductForm />} />
                     <Route path="products/:id" element={<ProductForm />} />
                   </Route>
