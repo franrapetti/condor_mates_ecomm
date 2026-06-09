@@ -1,4 +1,5 @@
 /* ScreenshotCatalog.css */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,600;1,700&display=swap');
 
 /* Global resets specifically for this view to hide Admin UI and set background */
 .screenshot-view-active .adm-sidebar,
@@ -221,9 +222,12 @@
 }
 
 .screenshot-card-discount-badge {
-  font-size: 14px;
-  font-weight: 600;
-  color: #00a650; /* Verde estilo MercadoLibre */
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-style: italic;
+  font-size: 16px;
+  font-weight: 700;
+  color: #b45309; /* Warm amber/brown tone instead of ML green */
+  letter-spacing: 0.2px;
 }
 
 .screenshot-card-meta {
