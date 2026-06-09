@@ -75,9 +75,8 @@ const CsvExport = () => {
     try {
       const { data, error } = await supabase
         .from('products')
-        .select('name, stock, image_url, category')
+        .select('name, price, image_url, category')
         .in('category', Array.from(selected))
-        .order('category', { ascending: true })
         .order('name', { ascending: true });
 
       if (error) throw error;
@@ -100,14 +99,14 @@ const CsvExport = () => {
     if (products.length === 0) return;
 
     // CSV header
-    const header = 'Nombre,Stock,URL_Imagen';
+    const header = 'Nombre,Precio,URL_Imagen';
 
     // CSV rows
     const rows = products.map((p) => {
       const nombre = escapeCsvField(p.name);
-      const stock = escapeCsvField(p.stock ?? 0);
+      const precio = escapeCsvField(p.price ?? 0);
       const url = escapeCsvField(ensureAbsoluteUrl(p.image_url));
-      return `${nombre},${stock},${url}`;
+      return `${nombre},${precio},${url}`;
     });
 
     // BOM + content for UTF-8 compatibility
@@ -146,7 +145,7 @@ const CsvExport = () => {
           Generá un archivo <strong>.csv</strong> listo para importar en{' '}
           <strong>Canva Bulk Create</strong>. Seleccioná las categorías que querés
           exportar y descargá el archivo con las columnas{' '}
-          <strong>Nombre</strong>, <strong>Stock</strong> y <strong>URL_Imagen</strong>.
+          <strong>Nombre</strong>, <strong>Precio</strong> y <strong>URL_Imagen</strong>.
         </div>
       </div>
 
@@ -244,7 +243,7 @@ const CsvExport = () => {
               <thead>
                 <tr>
                   <th>Nombre</th>
-                  <th>Stock</th>
+                  <th>Precio</th>
                   <th>URL_Imagen</th>
                 </tr>
               </thead>
@@ -262,7 +261,7 @@ const CsvExport = () => {
                         <span className="col-name">{p.name}</span>
                       </div>
                     </td>
-                    <td className="col-stock">{p.stock ?? 0}</td>
+                    <td className="col-stock">${p.price?.toLocaleString() ?? 0}</td>
                     <td className="col-url" title={ensureAbsoluteUrl(p.image_url)}>
                       {ensureAbsoluteUrl(p.image_url)}
                     </td>
