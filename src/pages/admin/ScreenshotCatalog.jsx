@@ -15,12 +15,12 @@ const ScreenshotCatalog = () => {
   const [loading, setLoading] = useState(true);
 
   // Agrega una clase al body para forzar la ocultación del layout en CSS globalmente
-  useEffect(() => {
+  /* useEffect(() => {
     document.body.classList.add('screenshot-view-active');
     return () => {
       document.body.classList.remove('screenshot-view-active');
     };
-  }, []);
+  }, []); */
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -35,7 +35,8 @@ const ScreenshotCatalog = () => {
         if (error) throw error;
 
         // Group by category
-        const grouped = data.reduce((acc, product) => {
+        const productList = data || [];
+        const grouped = productList.reduce((acc, product) => {
           const cat = product.category || 'Otros';
           if (!acc[cat]) acc[cat] = [];
           acc[cat].push(product);
@@ -69,6 +70,10 @@ const ScreenshotCatalog = () => {
 
   if (loading) {
     return <div style={{ padding: '2rem', textAlign: 'center', fontSize: '20px' }}>Cargando catálogo para capturas...</div>;
+  }
+
+  if (Object.keys(productsByCategory).length === 0) {
+    return <div style={{ padding: '2rem', textAlign: 'center', fontSize: '20px' }}>No hay productos activos para mostrar.</div>;
   }
 
   return (
