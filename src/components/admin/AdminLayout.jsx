@@ -10,7 +10,7 @@ const NAV_LINKS = [
   { to: '/admin/orders',   end: false, icon: <ShoppingBag size={18} />,   label: 'Ventas'        },
   { to: '/admin/leads',    end: false, icon: <Mail size={18} />,          label: 'Contactos'     },
   { to: '/admin/export',   end: false, icon: <Download size={18} />,      label: 'Exportar CSV'  },
-  { to: '/admin/print-catalog', end: false, icon: <Printer size={18} />,  label: 'Catálogo A4'   },
+  { to: '/admin/screenshots', end: false, icon: <Printer size={18} />,    label: 'Capturas ML'   },
   { to: '/admin/settings', end: false, icon: <Settings size={18} />,      label: 'Configuración' },
 ];
 
