@@ -2,13 +2,14 @@ import React from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
-import { LayoutGrid, ShoppingBag, Moon, Sun, LogOut, ExternalLink, ClipboardList, Settings, Mail } from 'lucide-react';
+import { LayoutGrid, ShoppingBag, Moon, Sun, LogOut, ExternalLink, ClipboardList, Settings, Mail, Download } from 'lucide-react';
 import './AdminLayout.css';
 
 const NAV_LINKS = [
   { to: '/admin',          end: true,  icon: <LayoutGrid size={18} />,    label: 'Catálogo'      },
   { to: '/admin/orders',   end: false, icon: <ShoppingBag size={18} />,   label: 'Ventas'        },
   { to: '/admin/leads',    end: false, icon: <Mail size={18} />,          label: 'Contactos'     },
+  { to: '/admin/export',   end: false, icon: <Download size={18} />,      label: 'Exportar CSV'  },
   { to: '/admin/settings', end: false, icon: <Settings size={18} />,      label: 'Configuración' },
 ];
 
