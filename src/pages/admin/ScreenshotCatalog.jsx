@@ -159,7 +159,10 @@ const ScreenshotCatalog = () => {
                   
                   <div className="screenshot-card-right">
                     <h3 className="screenshot-card-name">{product.name}</h3>
-                    <p className="screenshot-card-price">$ {product.price?.toLocaleString()}</p>
+                    <p className="screenshot-card-price">
+                      <span className="screenshot-card-price-symbol">$</span>
+                      {product.price?.toLocaleString()}
+                    </p>
                     
                     <div className="screenshot-card-meta">
                       <span>Stock Disponible: {product.stock ?? 0}</span>
