@@ -175,19 +175,27 @@ function ProductDetail() {
     fetchProduct(id, false);
   }, [id]);
 
-  const handleCalculateShipping = (e) => {
+  const handleCalculateShipping = async (e) => {
     e.preventDefault();
     if (!postalCode) return;
     
-    // Fake Andreani Logic
-    setTimeout(() => {
-      const code = parseInt(postalCode);
-      if (code >= 1000 && code < 2000) {
-        setShippingResult({ cost: 3500, days: '1 a 2' });
+    setShippingResult(null);
+    try {
+      const response = await fetch('/api/calculate_shipping', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ postalCode })
+      });
+      const data = await response.json();
+      if (data.options) {
+        setShippingResult(data.options);
       } else {
-        setShippingResult({ cost: 5500, days: '3 a 5' });
+        alert('Hubo un error al calcular el envío.');
       }
-    }, 600);
+    } catch (err) {
+      console.error(err);
+      alert('Error de conexión al calcular envío.');
+    }
   };
 
   const handleSubmitReview = async (e) => {
@@ -411,10 +419,10 @@ function ProductDetail() {
             </div>
             {isLaunched && <p className="secure-checkout-text">🔒 Pagos procesados encriptados via Mercado Pago</p>}
 
-            {/* Calculador Andreani */}
+            {/* Calculador Envío */}
             {isLaunched && (
               <div className="shipping-calculator">
-                <h4>📦 Calcular envío con Andreani</h4>
+                <h4>📦 Calcular opciones de envío</h4>
                 <form onSubmit={handleCalculateShipping} className="shipping-form">
                   <input 
                     type="number" 
@@ -426,10 +434,15 @@ function ProductDetail() {
                   <button type="submit">Calcular</button>
                 </form>
                 {shippingResult && (
-                  <div className="shipping-result fade-in">
-                    <p>Retiro en Sucursal Andreani: <strong>${(shippingResult.cost - 1000).toLocaleString()}</strong></p>
-                    <p>Envío a Domicilio: <strong>${shippingResult.cost.toLocaleString()}</strong></p>
-                    <small>Llega envuelto y protegido en {shippingResult.days} días hábiles.</small>
+                  <div className="shipping-result fade-in" style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
+                    {shippingResult.map(opt => (
+                      <div key={opt.id} style={{padding: '8px', backgroundColor: 'var(--surface)', borderRadius: '8px', border: '1px solid var(--border)'}}>
+                        <p style={{margin: 0, fontWeight: 'bold'}}>{opt.name}</p>
+                        <p style={{margin: 0, color: 'var(--text-light)', fontSize: '0.9rem'}}>
+                          {opt.cost === 0 ? 'Gratis' : `$${opt.cost.toLocaleString()}`}
+                        </p>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>

@@ -9,9 +9,11 @@ initMercadoPago(import.meta.env.VITE_MP_PUBLIC_KEY || 'TEST-PUBLIC-KEY', { local
 
 const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem }) => {
   const [isCheckout, setIsCheckout] = useState(false);
-  const [formData, setFormData] = useState({ name: '', email: '', city: '', notes: '' });
+  const [formData, setFormData] = useState({ name: '', email: '', postalCode: '', city: '', notes: '' });
   const [preferenceId, setPreferenceId] = useState(null);
   const [isPaying, setIsPaying] = useState(false);
+  const [shippingOptions, setShippingOptions] = useState([]);
+  const [selectedShipping, setSelectedShipping] = useState(null);
 
   const [submitAction, setSubmitAction] = useState('mp');
   const [promoCode, setPromoCode] = useState('');
@@ -32,13 +34,39 @@ const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem
 
   // Free shipping threshold (Protective margin threshold)
   const FREE_SHIPPING_THRESHOLD = 120000;
+  // Solo calculamos el porcentaje sobre el subtotal sin envío
   const progressPercent = Math.min((total / FREE_SHIPPING_THRESHOLD) * 100, 100);
   const remainingForFreeShipping = FREE_SHIPPING_THRESHOLD - total;
   
+  const finalTotal = total + (selectedShipping ? selectedShipping.cost : 0);
+
   const handleClose = () => {
     setIsCheckout(false);
     setPreferenceId(null);
     onClose();
+  };
+
+  const handlePostalCodeChange = async (e) => {
+    const cp = e.target.value;
+    setFormData({...formData, postalCode: cp});
+    
+    if (cp.length >= 4) {
+      try {
+        const response = await fetch('/api/calculate_shipping', {
+           method: 'POST',
+           headers: { 'Content-Type': 'application/json' },
+           body: JSON.stringify({ postalCode: cp })
+        });
+        const data = await response.json();
+        setShippingOptions(data.options || []);
+        if (data.options?.length > 0 && !selectedShipping) {
+          setSelectedShipping(data.options[0]);
+        }
+      } catch (err) {}
+    } else {
+      setShippingOptions([]);
+      setSelectedShipping(null);
+    }
   };
 
   const handleCheckoutSubmit = async (e) => {
@@ -48,7 +76,7 @@ const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem
       setIsPaying(true);
       try {
         sessionStorage.setItem('mate_last_cart', JSON.stringify(cartItems));
-        sessionStorage.setItem('mate_last_total', Math.round(total * 0.9).toString()); // 10% discount
+        sessionStorage.setItem('mate_last_total', Math.round(finalTotal * 0.9).toString()); // 10% discount
 
         const response = await fetch('/api/create_transfer_order', {
           method: 'POST',
@@ -56,7 +84,8 @@ const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem
           body: JSON.stringify({
             items: cartItems,
             customer: formData,
-            total: Math.round(total * 0.9), // 10% discount total
+            shippingMethod: selectedShipping,
+            total: Math.round(finalTotal * 0.9), // 10% discount total
             source: localStorage.getItem('mate_traffic_source') || 'direct'
           })
         });
@@ -83,7 +112,7 @@ const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem
       // Save cart snapshot to sessionStorage BEFORE redirecting to MP
       // so the success page can display what was purchased
       sessionStorage.setItem('mate_last_cart', JSON.stringify(cartItems));
-      sessionStorage.setItem('mate_last_total', total.toString());
+      sessionStorage.setItem('mate_last_total', finalTotal.toString());
 
       const response = await fetch('/api/create_preference', {
         method: 'POST',
@@ -91,7 +120,8 @@ const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem
         body: JSON.stringify({
           items: cartItems,
           customer: formData,
-          total: total,
+          shippingMethod: selectedShipping,
+          total: finalTotal,
           source: localStorage.getItem('mate_traffic_source') || 'direct'
         })
       });
@@ -160,17 +190,52 @@ const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem
                   <input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} placeholder="Ej: juan@email.com" />
                 </div>
                 <div className="form-group">
-                  <label>Ciudad de Envío</label>
+                  <label>Código Postal</label>
+                  <input required type="text" value={formData.postalCode} onChange={handlePostalCodeChange} placeholder="Ej: 5000" />
+                </div>
+                <div className="form-group">
+                  <label>Ciudad</label>
                   <input required type="text" value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} placeholder="Ej: Córdoba Capital" />
                 </div>
                 <div className="form-group">
                   <label>Notas Adicionales (Opcional)</label>
                   <textarea rows="3" value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} placeholder="Instrucciones para la entrega, etc." />
                 </div>
+
+                {shippingOptions.length > 0 && (
+                  <div className="shipping-options-container" style={{marginBottom: '1rem', padding: '1rem', backgroundColor: 'var(--surface)', borderRadius: '12px', border: '1px solid var(--border)'}}>
+                    <label style={{fontWeight: 'bold', marginBottom: '0.75rem', display: 'block', fontSize: '0.95rem'}}>Método de Envío</label>
+                    {shippingOptions.map(opt => (
+                      <label key={opt.id} style={{display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '0.5rem', cursor: 'pointer', padding: '8px', borderRadius: '8px', transition: 'background 0.2s', backgroundColor: selectedShipping?.id === opt.id ? 'var(--accent-light)' : 'transparent'}}>
+                        <input 
+                          type="radio" 
+                          name="shippingMethod" 
+                          value={opt.id}
+                          checked={selectedShipping?.id === opt.id}
+                          onChange={() => setSelectedShipping(opt)}
+                          style={{width: '18px', height: '18px', accentColor: 'var(--accent)'}}
+                          required
+                        />
+                        <span style={{flex: 1, fontSize: '0.9rem'}}>{opt.name}</span>
+                        <strong style={{fontSize: '0.9rem'}}>{opt.cost === 0 ? 'Gratis' : `$${opt.cost.toLocaleString()}`}</strong>
+                      </label>
+                    ))}
+                  </div>
+                )}
                 
                 <div className="cart-total checkout-total">
-                  <span>Total a pagar:</span>
+                  <span>Subtotal:</span>
                   <span className="total-price">${total.toLocaleString()}</span>
+                </div>
+                {selectedShipping && (
+                  <div className="cart-total checkout-total" style={{marginTop: '-0.5rem', borderTop: 'none', fontSize: '0.9rem', color: 'var(--text-light)'}}>
+                    <span>Envío ({selectedShipping.name}):</span>
+                    <span>{selectedShipping.cost === 0 ? 'Gratis' : `$${selectedShipping.cost.toLocaleString()}`}</span>
+                  </div>
+                )}
+                <div className="cart-total checkout-total" style={{paddingTop: '0.5rem'}}>
+                  <span>Total a pagar:</span>
+                  <span className="total-price" style={{color: 'var(--accent)'}}>${finalTotal.toLocaleString()}</span>
                 </div>
                 
                 <div className="checkout-actions">
@@ -205,7 +270,8 @@ const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem
                   <h4>Tus Datos</h4>
                   <p><strong>{formData.name}</strong></p>
                   <p>{formData.email}</p>
-                  <p>📍 {formData.city}</p>
+                  <p>📍 {formData.city} (CP: {formData.postalCode})</p>
+                  {selectedShipping && <p style={{marginTop: '0.5rem', color: 'var(--accent)'}}>🚚 {selectedShipping.name}</p>}
                   {formData.notes && <p className="summary-notes">🗒️ {formData.notes}</p>}
                 </div>
 
@@ -221,9 +287,15 @@ const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem
                       </li>
                     ))}
                   </ul>
+                  {selectedShipping && selectedShipping.cost > 0 && (
+                    <div className="summary-total" style={{borderTop: 'none', paddingTop: 0, paddingBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-light)'}}>
+                      <span>Costo de envío:</span>
+                      <span>${selectedShipping.cost.toLocaleString()}</span>
+                    </div>
+                  )}
                   <div className="summary-total">
                     <span>Total a pagar:</span>
-                    <span className="summary-total-price">${total.toLocaleString()}</span>
+                    <span className="summary-total-price">${finalTotal.toLocaleString()}</span>
                   </div>
                 </div>
 

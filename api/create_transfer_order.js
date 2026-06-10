@@ -6,7 +6,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { items, customer, total, source } = req.body;
+    const { items, customer, shippingMethod, total, source } = req.body;
 
     // Configurar Supabase Client
     const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
@@ -35,8 +35,8 @@ export default async function handler(req, res) {
     const { data: orderData, error: dbError } = await supabase.from('orders').insert([{
       customer_name: customer.name,
       customer_email: customer.email,
-      customer_city: customer.city,
-      customer_notes: customer.notes || '',
+      customer_city: `${customer.city} (CP: ${customer.postalCode})`,
+      customer_notes: `[Envío: ${shippingMethod ? shippingMethod.name : 'No especificado'}] ${customer.notes || ''}`,
       items: items,
       total_price: total,
       status: 'pending_transfer',
@@ -65,7 +65,8 @@ export default async function handler(req, res) {
       // Limpiar el número de teléfono (solo dejar números y el + inicial si existe)
       const cleanPhone = phone.replace(/[^\d+]/g, '');
       const itemSummary = items.map(item => `- ${item.name} x${item.quantity}`).join('\n');
-      const message = `🔔 *Nuevo Pedido (Transferencia)* 🧉\n\n*N° Operación:* ${orderData.id.slice(0,8)}...\n*Nombre:* ${customer.name}\n*Productos:*\n${itemSummary}\n\n*Total:* $ ${total.toLocaleString('es-AR')}\n\n🚀 ¡Esperando comprobante de pago!`;
+      const shippingText = shippingMethod ? `\n*Envío:* ${shippingMethod.name}` : '';
+      const message = `🔔 *Nuevo Pedido (Transferencia)* 🧉\n\n*N° Operación:* ${orderData.id.slice(0,8)}...\n*Nombre:* ${customer.name}${shippingText}\n*Productos:*\n${itemSummary}\n\n*Total:* $ ${total.toLocaleString('es-AR')}\n\n🚀 ¡Esperando comprobante de pago!`;
       
       const url = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(cleanPhone)}&text=${encodeURIComponent(message)}&apikey=${encodeURIComponent(apikey)}`;
       
