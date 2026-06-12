@@ -131,6 +131,11 @@ function PublicCatalog() {
     visibleProducts = [...priorities, ...others];
   }
 
+  // Push out-of-stock products to the end (all sort modes)
+  const inStock = visibleProducts.filter(p => p.stock !== 0);
+  const outOfStock = visibleProducts.filter(p => p.stock === 0);
+  visibleProducts = [...inStock, ...outOfStock];
+
   const crossSells = products.filter(p => p.category === 'Yerbas' || p.category === 'Bombillas').slice(0, 2);
 
   const scrollToCatalog = () => {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import {
   LineChart, Line, BarChart, Bar, AreaChart, Area,
@@ -12,8 +12,317 @@ const STATUS_OPTIONS = [
   { value: 'debt', label: 'Me deben 💰' },
 ];
 const EMPTY_FORM = {
-  customer_name: '', customer_phone: '', items: '',
-  total_amount: '', payment_method: 'Efectivo', status: 'paid', notes: ''
+  customer_name: '', customer_phone: '',
+  payment_method: 'Efectivo', status: 'paid', notes: ''
+};
+
+const generateTicket = (sale) => {
+  const logoUrl = window.location.origin + '/logo.png';
+  const date = new Date(sale.created_at);
+  const formattedDate = date.toLocaleDateString('es-AR', {
+    day: '2-digit', month: 'long', year: 'numeric'
+  });
+  const formattedTime = date.toLocaleTimeString('es-AR', {
+    hour: '2-digit', minute: '2-digit'
+  });
+  const orderId = String(sale.id).slice(0, 8).toUpperCase();
+
+  // Parse items
+  let itemsHtml = '';
+  if (sale.items && Array.isArray(sale.items)) {
+    // Web order — items is an array of {name, quantity, price}
+    itemsHtml = sale.items.map(item => `
+      <tr>
+        <td style="padding: 10px 0; border-bottom: 1px solid #f0ebe3; font-size: 14px; color: #3d3929;">
+          <span style="font-weight: 600;">${item.name}</span>
+        </td>
+        <td style="padding: 10px 0; border-bottom: 1px solid #f0ebe3; text-align: center; font-size: 14px; color: #6b6455;">
+          ${item.quantity}
+        </td>
+        <td style="padding: 10px 0; border-bottom: 1px solid #f0ebe3; text-align: right; font-size: 14px; font-weight: 600; color: #3d3929;">
+          $${(item.price * item.quantity).toLocaleString()}
+        </td>
+      </tr>
+    `).join('');
+  } else if (typeof sale.items_desc === 'string' || typeof sale.items === 'string') {
+    // Manual sale — items is a comma-separated string like "2x Mate Torpedo, 1x Bombilla"
+    const raw = sale.items_desc || sale.items || '';
+    const lines = raw.split(',').map(s => s.trim()).filter(Boolean);
+    itemsHtml = lines.map(line => `
+      <tr>
+        <td colspan="2" style="padding: 10px 0; border-bottom: 1px solid #f0ebe3; font-size: 14px; color: #3d3929; font-weight: 600;">
+          ${line}
+        </td>
+        <td style="padding: 10px 0; border-bottom: 1px solid #f0ebe3; text-align: right; font-size: 14px; color: #6b6455;">
+          —
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  const total = sale.total_price || sale.total_amount || sale.total || 0;
+  const customerName = sale.customer_name || 'Cliente';
+
+  const html = `
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Comprobante Cóndor Mates - ${orderId}</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: #f7f4ef;
+      display: flex;
+      justify-content: center;
+      padding: 40px 20px;
+      min-height: 100vh;
+    }
+    .ticket {
+      background: #fffdf8;
+      max-width: 420px;
+      width: 100%;
+      border-radius: 20px;
+      box-shadow: 0 8px 40px rgba(61, 57, 41, 0.1), 0 1px 3px rgba(61, 57, 41, 0.06);
+      overflow: hidden;
+      position: relative;
+    }
+    .ticket::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 6px;
+      background: linear-gradient(90deg, #234a2e, #3a7d44, #234a2e);
+    }
+    .ticket-header {
+      text-align: center;
+      padding: 36px 32px 24px;
+      border-bottom: 2px dashed #e8e2d6;
+    }
+    .ticket-header img {
+      height: 70px;
+      margin-bottom: 12px;
+      object-fit: contain;
+    }
+    .ticket-header .brand {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #234a2e;
+      margin-top: 4px;
+    }
+    .ticket-header .tagline {
+      font-size: 11px;
+      color: #9c9585;
+      margin-top: 4px;
+      font-style: italic;
+    }
+    .ticket-meta {
+      padding: 20px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #f0ebe3;
+    }
+    .ticket-meta .label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #9c9585;
+    }
+    .ticket-meta .value {
+      font-size: 13px;
+      font-weight: 600;
+      color: #3d3929;
+      margin-top: 2px;
+    }
+    .ticket-customer {
+      padding: 20px 32px;
+      border-bottom: 1px solid #f0ebe3;
+    }
+    .ticket-customer .label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #9c9585;
+      margin-bottom: 4px;
+    }
+    .ticket-customer .name {
+      font-size: 16px;
+      font-weight: 700;
+      color: #234a2e;
+    }
+    .ticket-items {
+      padding: 20px 32px;
+    }
+    .ticket-items .section-title {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #9c9585;
+      margin-bottom: 14px;
+    }
+    .ticket-items table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .ticket-items th {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #b5ad9e;
+      text-align: left;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #f0ebe3;
+    }
+    .ticket-items th:nth-child(2) { text-align: center; }
+    .ticket-items th:nth-child(3) { text-align: right; }
+    .ticket-total {
+      padding: 20px 32px 28px;
+      border-top: 2px dashed #e8e2d6;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .ticket-total .total-label {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #6b6455;
+    }
+    .ticket-total .total-value {
+      font-size: 28px;
+      font-weight: 800;
+      color: #234a2e;
+    }
+    .ticket-footer {
+      text-align: center;
+      padding: 20px 32px 28px;
+      background: linear-gradient(180deg, transparent, rgba(35, 74, 46, 0.03));
+    }
+    .ticket-footer .thanks {
+      font-size: 15px;
+      font-weight: 700;
+      color: #234a2e;
+      margin-bottom: 6px;
+    }
+    .ticket-footer .sub {
+      font-size: 11px;
+      color: #9c9585;
+      line-height: 1.5;
+    }
+    .ticket-footer .ig {
+      display: inline-block;
+      margin-top: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #234a2e;
+      text-decoration: none;
+      padding: 6px 14px;
+      border: 1.5px solid #234a2e;
+      border-radius: 20px;
+      transition: all 0.2s;
+    }
+    .no-print {
+      text-align: center;
+      margin-top: 24px;
+      max-width: 420px;
+      width: 100%;
+    }
+    .no-print button {
+      padding: 12px 32px;
+      border: none;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .no-print .btn-print {
+      background: #234a2e;
+      color: white;
+      margin-right: 8px;
+    }
+    .no-print .btn-print:hover { background: #1a3822; transform: translateY(-1px); }
+    .no-print .btn-close {
+      background: #f0ebe3;
+      color: #6b6455;
+    }
+    .no-print .btn-close:hover { background: #e8e2d6; }
+    @media print {
+      body { background: white; padding: 0; }
+      .ticket { box-shadow: none; border-radius: 0; max-width: 100%; }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div style="display: flex; flex-direction: column; align-items: center;">
+    <div class="ticket">
+      <div class="ticket-header">
+        <img src="${logoUrl}" alt="Cóndor Mates" />
+        <div class="brand">Cóndor Mates</div>
+        <div class="tagline">La tradición en tus manos</div>
+      </div>
+      <div class="ticket-meta">
+        <div>
+          <div class="label">Comprobante</div>
+          <div class="value">#${orderId}</div>
+        </div>
+        <div style="text-align: right;">
+          <div class="label">Fecha</div>
+          <div class="value">${formattedDate}</div>
+          <div class="value" style="font-size: 11px; color: #9c9585; font-weight: 500;">${formattedTime} hs</div>
+        </div>
+      </div>
+      <div class="ticket-customer">
+        <div class="label">Cliente</div>
+        <div class="name">${customerName}</div>
+      </div>
+      <div class="ticket-items">
+        <div class="section-title">Detalle del pedido</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>Cant.</th>
+              <th>Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itemsHtml}
+          </tbody>
+        </table>
+      </div>
+      <div class="ticket-total">
+        <span class="total-label">Total</span>
+        <span class="total-value">$${total.toLocaleString()}</span>
+      </div>
+      <div class="ticket-footer">
+        <div class="thanks">¡Gracias por tu compra! 🧉</div>
+        <div class="sub">Esperamos que disfrutes tu pedido.<br/>Cualquier consulta, escribinos.</div>
+        <a href="https://www.instagram.com/condor_mates" class="ig" target="_blank">@condor_mates</a>
+      </div>
+    </div>
+    <div class="no-print">
+      <button class="btn-print" onclick="window.print()">🖨 Imprimir / Guardar PDF</button>
+      <button class="btn-close" onclick="window.close()">Cerrar</button>
+    </div>
+  </div>
+</body>
+</html>`;
+
+  const ticketWindow = window.open('', '_blank', 'width=520,height=800');
+  ticketWindow.document.write(html);
+  ticketWindow.document.close();
 };
 
 const OrdersList = () => {
@@ -28,6 +337,15 @@ const OrdersList = () => {
   const [showManualForm, setShowManualForm] = useState(false);
   const [manualForm, setManualForm] = useState(EMPTY_FORM);
   const [savingManual, setSavingManual] = useState(false);
+
+  // Product autocomplete state
+  const [catalogProducts, setCatalogProducts] = useState([]);
+  const [manualLines, setManualLines] = useState([]); // [{product_id, name, price, quantity}]
+  const [productSearch, setProductSearch] = useState('');
+  const [manualTotalOverride, setManualTotalOverride] = useState(null);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const suggestionsRef = useRef(null);
+  const searchInputRef = useRef(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
 
   const [filter, setFilter] = useState('all');
@@ -58,6 +376,13 @@ const OrdersList = () => {
         .order('created_at', { ascending: false });
       
       if (!manualError) setManualSales(manualData || []);
+
+      // Fetch product catalog for autocomplete
+      const { data: prods } = await supabase
+        .from('products')
+        .select('id, name, price, promo_price, stock, image_url')
+        .order('name');
+      if (prods) setCatalogProducts(prods);
 
       const { data: viewsData } = await supabase
         .from('page_views')
@@ -135,17 +460,75 @@ const OrdersList = () => {
     }
   };
 
+  // --- Product Autocomplete Helpers ---
+  const suggestions = productSearch.length >= 2
+    ? catalogProducts.filter(p =>
+        p.name.toLowerCase().includes(productSearch.toLowerCase())
+      ).slice(0, 6)
+    : [];
+
+  const addProductLine = (product) => {
+    setManualLines(prev => {
+      const existing = prev.find(l => l.product_id === product.id);
+      if (existing) {
+        return prev.map(l => l.product_id === product.id ? { ...l, quantity: l.quantity + 1 } : l);
+      }
+      return [...prev, {
+        product_id: product.id,
+        name: product.name,
+        price: product.promo_price || product.price,
+        quantity: 1
+      }];
+    });
+    setProductSearch('');
+    setShowSuggestions(false);
+    setManualTotalOverride(null);
+  };
+
+  const removeProductLine = (productId) => {
+    setManualLines(prev => prev.filter(l => l.product_id !== productId));
+    setManualTotalOverride(null);
+  };
+
+  const updateLineQuantity = (productId, delta) => {
+    setManualLines(prev => prev.map(l => {
+      if (l.product_id !== productId) return l;
+      const newQty = Math.max(1, l.quantity + delta);
+      return { ...l, quantity: newQty };
+    }));
+    setManualTotalOverride(null);
+  };
+
+  const calculatedTotal = manualLines.reduce((sum, l) => sum + l.price * l.quantity, 0);
+  const effectiveTotal = manualTotalOverride !== null ? manualTotalOverride : calculatedTotal;
+
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (suggestionsRef.current && !suggestionsRef.current.contains(e.target) &&
+          searchInputRef.current && !searchInputRef.current.contains(e.target)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   // --- Manual Sales Mutations ---
   const handleManualSubmit = async (e) => {
     e.preventDefault();
-    if (!manualForm.customer_name.trim() || !manualForm.items.trim() || !manualForm.total_amount) return;
+    if (!manualForm.customer_name.trim() || manualLines.length === 0) return;
     setSavingManual(true);
+    const itemsString = manualLines.map(l => `${l.quantity}x ${l.name}`).join(', ');
     const { error } = await supabase.from('manual_sales').insert([{
       ...manualForm,
-      total_amount: Number(manualForm.total_amount),
+      items: itemsString,
+      total_amount: effectiveTotal,
     }]);
     if (!error) {
       setManualForm(EMPTY_FORM);
+      setManualLines([]);
+      setManualTotalOverride(null);
       setShowManualForm(false);
       fetchData();
     } else {
@@ -334,19 +717,129 @@ const OrdersList = () => {
       {showManualForm && (
         <div style={{background: 'var(--surface)', padding: '1.5rem', borderRadius: 12, marginBottom: '2rem', border: '1px solid var(--border)'}}>
           <h3 style={{marginTop: 0}}>📝 Registrar Venta Manual</h3>
-          <form onSubmit={handleManualSubmit} style={{display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))'}}>
-            <input type="text" placeholder="Nombre del Cliente *" required value={manualForm.customer_name} onChange={e => setManualForm({...manualForm, customer_name: e.target.value})} className="orders-search-input" />
-            <input type="text" placeholder="Teléfono / WhatsApp" value={manualForm.customer_phone} onChange={e => setManualForm({...manualForm, customer_phone: e.target.value})} className="orders-search-input" />
-            <input type="text" placeholder="Productos (Ej: 1x Mate) *" required value={manualForm.items} onChange={e => setManualForm({...manualForm, items: e.target.value})} className="orders-search-input" style={{gridColumn: '1 / -1'}} />
-            <input type="number" placeholder="Monto Total *" required min="0" value={manualForm.total_amount} onChange={e => setManualForm({...manualForm, total_amount: e.target.value})} className="orders-search-input" />
-            <select value={manualForm.payment_method} onChange={e => setManualForm({...manualForm, payment_method: e.target.value})} className="orders-search-input">
-              {PAYMENT_METHODS.map(m => <option key={m} value={m}>{m}</option>)}
-            </select>
-            <select value={manualForm.status} onChange={e => setManualForm({...manualForm, status: e.target.value})} className="orders-search-input">
-              {STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </select>
-            <input type="text" placeholder="Notas opcionales" value={manualForm.notes} onChange={e => setManualForm({...manualForm, notes: e.target.value})} className="orders-search-input" style={{gridColumn: '1 / -1'}} />
-            <button type="submit" className="btn-primary" disabled={savingManual} style={{gridColumn: '1 / -1', maxWidth: 200}}>
+          <form onSubmit={handleManualSubmit}>
+            {/* Row 1: Cliente + Teléfono */}
+            <div style={{display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', marginBottom: '1rem'}}>
+              <input type="text" placeholder="Nombre del Cliente *" required value={manualForm.customer_name} onChange={e => setManualForm({...manualForm, customer_name: e.target.value})} className="orders-search-input" style={{marginLeft: 0}} />
+              <input type="text" placeholder="Teléfono / WhatsApp" value={manualForm.customer_phone} onChange={e => setManualForm({...manualForm, customer_phone: e.target.value})} className="orders-search-input" style={{marginLeft: 0}} />
+            </div>
+
+            {/* Product Autocomplete */}
+            <div style={{marginBottom: '1rem'}}>
+              <label style={{fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-light)', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: '0.5rem'}}>Productos del pedido *</label>
+              <div style={{position: 'relative'}}>
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="🔍 Escribí el nombre del producto..."
+                  value={productSearch}
+                  onChange={e => { setProductSearch(e.target.value); setShowSuggestions(true); }}
+                  onFocus={() => productSearch.length >= 2 && setShowSuggestions(true)}
+                  className="orders-search-input"
+                  style={{marginLeft: 0, width: '100%', boxSizing: 'border-box'}}
+                />
+                {showSuggestions && suggestions.length > 0 && (
+                  <div ref={suggestionsRef} style={{
+                    position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 20,
+                    background: 'var(--surface)', border: '1px solid var(--border)',
+                    borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                    maxHeight: 240, overflowY: 'auto', marginTop: 4
+                  }}>
+                    {suggestions.map(p => (
+                      <div
+                        key={p.id}
+                        onClick={() => addProductLine(p)}
+                        style={{
+                          padding: '0.7rem 1rem', cursor: 'pointer',
+                          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                          borderBottom: '1px solid var(--border)',
+                          transition: 'background 0.1s',
+                          fontSize: '0.88rem',
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(35, 74, 46, 0.06)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                      >
+                        <span style={{fontWeight: 600, color: 'var(--text-dark)'}}>{p.name}</span>
+                        <span style={{
+                          fontWeight: 700,
+                          color: p.promo_price ? '#dc2626' : 'var(--accent)',
+                          fontSize: '0.85rem',
+                          whiteSpace: 'nowrap',
+                          marginLeft: '1rem',
+                        }}>
+                          ${(p.promo_price || p.price)?.toLocaleString()}
+                          {p.stock === 0 && <span style={{marginLeft: 6, fontSize: '0.7rem', background: '#fee2e2', color: '#dc2626', padding: '1px 6px', borderRadius: 4}}>Sin stock</span>}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Selected product lines */}
+              {manualLines.length > 0 && (
+                <div style={{marginTop: '0.75rem', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden'}}>
+                  {manualLines.map(line => (
+                    <div key={line.product_id} style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      padding: '0.65rem 1rem', borderBottom: '1px solid var(--border)',
+                      fontSize: '0.88rem', gap: '0.5rem',
+                    }}>
+                      <span style={{fontWeight: 600, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>{line.name}</span>
+                      <div style={{display: 'flex', alignItems: 'center', gap: '0.3rem', flexShrink: 0}}>
+                        <button type="button" onClick={() => updateLineQuantity(line.product_id, -1)}
+                          style={{width: 28, height: 28, borderRadius: 6, border: '1px solid var(--border)', background: 'var(--background)', cursor: 'pointer', fontWeight: 700, fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-dark)'}}
+                        >−</button>
+                        <span style={{minWidth: 24, textAlign: 'center', fontWeight: 700}}>{line.quantity}</span>
+                        <button type="button" onClick={() => updateLineQuantity(line.product_id, 1)}
+                          style={{width: 28, height: 28, borderRadius: 6, border: '1px solid var(--border)', background: 'var(--background)', cursor: 'pointer', fontWeight: 700, fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-dark)'}}
+                        >+</button>
+                      </div>
+                      <span style={{fontWeight: 700, color: 'var(--accent)', minWidth: 70, textAlign: 'right'}}>${(line.price * line.quantity).toLocaleString()}</span>
+                      <button type="button" onClick={() => removeProductLine(line.product_id)}
+                        style={{background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', fontSize: '1rem', padding: '0 0.2rem', flexShrink: 0}}
+                      >🗑</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Row 2: Payment, Status, Total */}
+            <div style={{display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', marginBottom: '1rem'}}>
+              <select value={manualForm.payment_method} onChange={e => setManualForm({...manualForm, payment_method: e.target.value})} className="orders-search-input" style={{marginLeft: 0}}>
+                {PAYMENT_METHODS.map(m => <option key={m} value={m}>{m}</option>)}
+              </select>
+              <select value={manualForm.status} onChange={e => setManualForm({...manualForm, status: e.target.value})} className="orders-search-input" style={{marginLeft: 0}}>
+                {STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+              </select>
+              <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
+                <span style={{fontWeight: 800, fontSize: '1.15rem', color: manualLines.length > 0 ? 'var(--accent)' : 'var(--text-light)', whiteSpace: 'nowrap'}}>
+                  💰 Total: ${effectiveTotal.toLocaleString()}
+                </span>
+                {manualTotalOverride !== null && (
+                  <button type="button" onClick={() => setManualTotalOverride(null)}
+                    style={{background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.75rem', color: '#6b7280', textDecoration: 'underline'}}
+                  >Resetear</button>
+                )}
+              </div>
+            </div>
+
+            {/* Override total + Notes */}
+            <div style={{display: 'grid', gap: '1rem', gridTemplateColumns: '160px 1fr', marginBottom: '1rem'}}>
+              <input
+                type="number"
+                placeholder="Override total"
+                min="0"
+                value={manualTotalOverride ?? ''}
+                onChange={e => setManualTotalOverride(e.target.value === '' ? null : Number(e.target.value))}
+                className="orders-search-input"
+                style={{marginLeft: 0, fontSize: '0.82rem'}}
+              />
+              <input type="text" placeholder="Notas opcionales" value={manualForm.notes} onChange={e => setManualForm({...manualForm, notes: e.target.value})} className="orders-search-input" style={{marginLeft: 0}} />
+            </div>
+
+            <button type="submit" className="btn-primary" disabled={savingManual || manualLines.length === 0} style={{maxWidth: 220}}>
               {savingManual ? 'Guardando...' : '✓ Guardar Venta'}
             </button>
           </form>
@@ -526,6 +1019,13 @@ const OrdersList = () => {
                         {sale.type === 'web' && (
                           <button className="btn-view" onClick={() => setSelectedOrder(sale.original)} style={{padding: '0.3rem 0.6rem'}}>VER</button>
                         )}
+                        <button
+                          onClick={() => generateTicket(sale.type === 'web' ? sale.original : sale.original)}
+                          title="Emitir Comprobante"
+                          style={{background: 'linear-gradient(135deg, #234a2e, #3a7d44)', color: 'white', border: 'none', borderRadius: 4, padding: '0.3rem 0.6rem', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold', transition: 'opacity 0.15s'}}
+                          onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
+                          onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+                        >🧾</button>
                         {sale.type === 'web' && (sale.status === 'pending' || sale.status === 'pending_transfer') && (
                           <button onClick={() => updateOrderStatus(sale.id, 'paid')} style={{background: '#10b981', color: 'white', border: 'none', borderRadius: 4, padding: '0.3rem 0.6rem', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold'}}>
                             Marcar Pagado
@@ -600,6 +1100,21 @@ const OrdersList = () => {
             <div className="order-modal-actions">
               <h3>Administrar Despacho</h3>
               <div style={{display: 'flex', gap: '0.5rem', flexWrap: 'wrap'}}>
+                <button
+                  onClick={() => generateTicket(selectedOrder)}
+                  style={{
+                    background: 'linear-gradient(135deg, #234a2e, #3a7d44)',
+                    color: 'white', border: 'none', borderRadius: '8px',
+                    padding: '0.75rem 1.2rem', cursor: 'pointer', fontWeight: 700,
+                    fontSize: '0.88rem', display: 'flex', alignItems: 'center', gap: '0.4rem',
+                    boxShadow: '0 2px 8px rgba(35,74,46,0.25)',
+                    transition: 'transform 0.15s, box-shadow 0.15s'
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 4px 14px rgba(35,74,46,0.35)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(35,74,46,0.25)'; }}
+                >
+                  🧾 Emitir Comprobante
+                </button>
                 {selectedOrder.status === 'paid' && (
                   <button className="btn-primary" onClick={() => updateOrderStatus(selectedOrder.id, 'shipped')}>
                     📦 Marcar Enviado
