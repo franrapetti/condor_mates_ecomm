@@ -712,10 +712,12 @@ const OrdersList = () => {
       (filter === 'web' && s.type === 'web') || 
       (filter === 'manual' && s.type === 'manual');
     const searchLower = search.toLowerCase();
+    const receiptId = String(s.id).slice(0, 8).toLowerCase();
     const matchesSearch = !search || 
       s.customer_name?.toLowerCase().includes(searchLower) ||
       s.customer_info?.toLowerCase().includes(searchLower) ||
-      s.items_desc?.toLowerCase().includes(searchLower);
+      s.items_desc?.toLowerCase().includes(searchLower) ||
+      receiptId.includes(searchLower);
     return matchesFilter && matchesSearch;
   });
 
