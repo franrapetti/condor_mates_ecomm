@@ -16,7 +16,10 @@ const EMPTY_FORM = {
   payment_method: 'Efectivo', status: 'paid', notes: ''
 };
 
-const generateTicket = (sale) => {
+const DISCOUNT_METHODS = ['Efectivo', 'Transferencia'];
+const DISCOUNT_PERCENT = 10;
+
+const generateTicket = (sale, discountInfo) => {
   const logoUrl = window.location.origin + '/logo.png';
   const date = new Date(sale.created_at);
   const formattedDate = date.toLocaleDateString('es-AR', {
@@ -62,6 +65,13 @@ const generateTicket = (sale) => {
 
   const total = sale.total_price || sale.total_amount || sale.total || 0;
   const customerName = sale.customer_name || 'Cliente';
+
+  // Discount display in ticket
+  const hasDiscount = discountInfo && discountInfo.applied;
+  const subtotalBeforeDiscount = hasDiscount ? discountInfo.subtotal : null;
+  const discountPercent = hasDiscount ? discountInfo.percent : 0;
+  const discountAmount = hasDiscount ? discountInfo.amount : 0;
+  const discountMethod = hasDiscount ? discountInfo.method : '';
 
   const html = `
 <!DOCTYPE html>
@@ -184,12 +194,56 @@ const generateTicket = (sale) => {
     }
     .ticket-items th:nth-child(2) { text-align: center; }
     .ticket-items th:nth-child(3) { text-align: right; }
-    .ticket-total {
-      padding: 20px 32px 28px;
+    .ticket-discount-area {
+      padding: 16px 32px;
       border-top: 2px dashed #e8e2d6;
+    }
+    .ticket-discount-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      padding: 4px 0;
+    }
+    .ticket-discount-row .dl {
+      font-size: 12px;
+      color: #9c9585;
+      font-weight: 500;
+    }
+    .ticket-discount-row .dv {
+      font-size: 13px;
+      color: #3d3929;
+      font-weight: 600;
+    }
+    .ticket-discount-row.discount .dl {
+      color: #234a2e;
+      font-weight: 600;
+    }
+    .ticket-discount-row.discount .dv {
+      color: #234a2e;
+      font-weight: 700;
+    }
+    .discount-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #234a2e, #3a7d44);
+      color: white;
+      font-size: 9px;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 10px;
+      letter-spacing: 0.5px;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+    .ticket-total {
+      padding: 16px 32px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .ticket-total.no-discount {
+      border-top: 2px dashed #e8e2d6;
+      padding-top: 20px;
+      padding-bottom: 28px;
     }
     .ticket-total .total-label {
       font-size: 13px;
@@ -302,10 +356,27 @@ const generateTicket = (sale) => {
           </tbody>
         </table>
       </div>
+      ${hasDiscount ? `
+      <div class="ticket-discount-area">
+        <div class="ticket-discount-row">
+          <span class="dl">Subtotal</span>
+          <span class="dv">$${subtotalBeforeDiscount.toLocaleString()}</span>
+        </div>
+        <div class="ticket-discount-row discount">
+          <span class="dl">Desc. ${discountPercent}% ${discountMethod} <span class="discount-badge">${discountPercent}% OFF</span></span>
+          <span class="dv">-$${discountAmount.toLocaleString()}</span>
+        </div>
+      </div>
       <div class="ticket-total">
+        <span class="total-label">Total final</span>
+        <span class="total-value">$${total.toLocaleString()}</span>
+      </div>
+      ` : `
+      <div class="ticket-total no-discount">
         <span class="total-label">Total</span>
         <span class="total-value">$${total.toLocaleString()}</span>
       </div>
+      `}
       <div class="ticket-footer">
         <div class="thanks">¡Gracias por tu compra! 🧉</div>
         <div class="sub">Esperamos que disfrutes tu pedido.<br/>Cualquier consulta, escribinos.</div>
@@ -500,7 +571,9 @@ const OrdersList = () => {
   };
 
   const calculatedTotal = manualLines.reduce((sum, l) => sum + l.price * l.quantity, 0);
-  const effectiveTotal = manualTotalOverride !== null ? manualTotalOverride : calculatedTotal;
+  const hasAutoDiscount = DISCOUNT_METHODS.includes(manualForm.payment_method) && manualTotalOverride === null;
+  const discountedTotal = hasAutoDiscount ? Math.round(calculatedTotal * (1 - DISCOUNT_PERCENT / 100)) : calculatedTotal;
+  const effectiveTotal = manualTotalOverride !== null ? manualTotalOverride : discountedTotal;
 
   // Close suggestions when clicking outside
   useEffect(() => {
@@ -813,14 +886,31 @@ const OrdersList = () => {
               <select value={manualForm.status} onChange={e => setManualForm({...manualForm, status: e.target.value})} className="orders-search-input" style={{marginLeft: 0}}>
                 {STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
-              <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
-                <span style={{fontWeight: 800, fontSize: '1.15rem', color: manualLines.length > 0 ? 'var(--accent)' : 'var(--text-light)', whiteSpace: 'nowrap'}}>
-                  💰 Total: ${effectiveTotal.toLocaleString()}
-                </span>
-                {manualTotalOverride !== null && (
-                  <button type="button" onClick={() => setManualTotalOverride(null)}
-                    style={{background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.75rem', color: '#6b7280', textDecoration: 'underline'}}
-                  >Resetear</button>
+              <div style={{display: 'flex', flexDirection: 'column', gap: '0.25rem'}}>
+                <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap'}}>
+                  <span style={{fontWeight: 800, fontSize: '1.15rem', color: manualLines.length > 0 ? 'var(--accent)' : 'var(--text-light)', whiteSpace: 'nowrap'}}>
+                    💰 Total: ${effectiveTotal.toLocaleString()}
+                  </span>
+                  {hasAutoDiscount && calculatedTotal > 0 && (
+                    <span style={{
+                      background: 'linear-gradient(135deg, #234a2e, #3a7d44)', color: 'white',
+                      fontSize: '0.7rem', fontWeight: 800, padding: '2px 8px',
+                      borderRadius: 10, letterSpacing: '0.03em', whiteSpace: 'nowrap'
+                    }}>
+                      {DISCOUNT_PERCENT}% OFF {manualForm.payment_method}
+                    </span>
+                  )}
+                  {manualTotalOverride !== null && (
+                    <button type="button" onClick={() => setManualTotalOverride(null)}
+                      style={{background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.75rem', color: '#6b7280', textDecoration: 'underline'}}
+                    >Resetear</button>
+                  )}
+                </div>
+                {hasAutoDiscount && calculatedTotal > 0 && (
+                  <span style={{fontSize: '0.75rem', color: '#6b7280'}}>
+                    Sin desc: <span style={{textDecoration: 'line-through'}}>${calculatedTotal.toLocaleString()}</span>
+                    {' '}→{' '}Ahorro: ${(calculatedTotal - effectiveTotal).toLocaleString()}
+                  </span>
                 )}
               </div>
             </div>
@@ -1020,7 +1110,19 @@ const OrdersList = () => {
                           <button className="btn-view" onClick={() => setSelectedOrder(sale.original)} style={{padding: '0.3rem 0.6rem'}}>VER</button>
                         )}
                         <button
-                          onClick={() => generateTicket(sale.type === 'web' ? sale.original : sale.original)}
+                          onClick={() => {
+                            const orig = sale.original;
+                            const pm = sale.payment_method;
+                            const isManualDiscount = sale.type === 'manual' && DISCOUNT_METHODS.includes(pm);
+                            const discountInfo = isManualDiscount ? {
+                              applied: true,
+                              subtotal: Math.round(sale.total / (1 - DISCOUNT_PERCENT / 100)),
+                              percent: DISCOUNT_PERCENT,
+                              amount: Math.round(sale.total / (1 - DISCOUNT_PERCENT / 100)) - sale.total,
+                              method: pm
+                            } : null;
+                            generateTicket(orig, discountInfo);
+                          }}
                           title="Emitir Comprobante"
                           style={{background: 'linear-gradient(135deg, #234a2e, #3a7d44)', color: 'white', border: 'none', borderRadius: 4, padding: '0.3rem 0.6rem', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold', transition: 'opacity 0.15s'}}
                           onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
@@ -1101,7 +1203,7 @@ const OrdersList = () => {
               <h3>Administrar Despacho</h3>
               <div style={{display: 'flex', gap: '0.5rem', flexWrap: 'wrap'}}>
                 <button
-                  onClick={() => generateTicket(selectedOrder)}
+                  onClick={() => generateTicket(selectedOrder, null)}
                   style={{
                     background: 'linear-gradient(135deg, #234a2e, #3a7d44)',
                     color: 'white', border: 'none', borderRadius: '8px',
