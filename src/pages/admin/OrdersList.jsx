@@ -624,13 +624,25 @@ const OrdersList = () => {
     if (!manualForm.customer_name.trim() || manualLines.length === 0) return;
     setSavingManual(true);
     const itemsString = manualLines.map(l => `${l.quantity}x ${l.name}`);
-    const itemsJson = JSON.stringify(manualLines.map(l => ({ name: l.name, quantity: l.quantity, price: l.price })));
+    const itemsJson = JSON.stringify(manualLines.map(l => ({ id: l.product_id, name: l.name, quantity: l.quantity, price: l.price })));
     const { error } = await supabase.from('manual_sales').insert([{
       ...manualForm,
       items: itemsJson,
       total_amount: effectiveTotal,
     }]);
     if (!error) {
+      // Descontar stock inmediatamente (el producto ya fue entregado)
+      for (const line of manualLines) {
+        if (line.product_id) {
+          const { data: dbProduct } = await supabase
+            .from('products').select('stock').eq('id', line.product_id).single();
+          if (dbProduct && dbProduct.stock !== null) {
+            await supabase.from('products')
+              .update({ stock: Math.max(0, dbProduct.stock - line.quantity) })
+              .eq('id', line.product_id);
+          }
+        }
+      }
       setManualForm(EMPTY_FORM);
       setManualLines([]);
       setManualTotalOverride(null);
@@ -643,10 +655,29 @@ const OrdersList = () => {
   };
 
   const handleDeleteManual = async (id) => {
+    // Restaurar stock antes de eliminar
+    const sale = manualSales.find(s => s.id === id);
+    if (sale && sale.status !== 'cancelled') {
+      try {
+        const items = JSON.parse(sale.items);
+        for (const item of items) {
+          if (item.id) {
+            const { data: dbProduct } = await supabase
+              .from('products').select('stock').eq('id', item.id).single();
+            if (dbProduct) {
+              await supabase.from('products')
+                .update({ stock: (dbProduct.stock || 0) + item.quantity })
+                .eq('id', item.id);
+            }
+          }
+        }
+      } catch (_) { /* items legacy sin product_id, ignorar */ }
+    }
     const { error } = await supabase.from('manual_sales').delete().eq('id', id);
     if (!error) {
       setManualSales(prev => prev.filter(s => s.id !== id));
       setDeleteConfirm(null);
+      fetchData();
     }
   };
 
@@ -655,8 +686,34 @@ const OrdersList = () => {
     if (!error) setManualSales(prev => prev.map(s => s.id === id ? { ...s, status: 'paid' } : s));
   };
 
+  const handleCancelManual = async (id) => {
+    const sale = manualSales.find(s => s.id === id);
+    if (!sale || sale.status === 'cancelled') return;
+    // Restaurar stock
+    try {
+      const items = JSON.parse(sale.items);
+      for (const item of items) {
+        if (item.id) {
+          const { data: dbProduct } = await supabase
+            .from('products').select('stock').eq('id', item.id).single();
+          if (dbProduct) {
+            await supabase.from('products')
+              .update({ stock: (dbProduct.stock || 0) + item.quantity })
+              .eq('id', item.id);
+          }
+        }
+      }
+    } catch (_) { /* items legacy sin product_id */ }
+    const { error } = await supabase.from('manual_sales').update({ status: 'cancelled' }).eq('id', id);
+    if (!error) {
+      setManualSales(prev => prev.map(s => s.id === id ? { ...s, status: 'cancelled' } : s));
+      fetchData();
+    }
+  };
+
   const getStatusBadge = (status, isManual = false) => {
     if (isManual && status === 'debt') return <span className="status-badge pending" style={{background:'#fef3c7', color:'#d97706'}}>Me Debe</span>;
+    if (isManual && status === 'cancelled') return <span className="status-badge canceled">Cancelado</span>;
     switch(status) {
       case 'paid': return <span className="status-badge paid">Pagado</span>;
       case 'pending':
@@ -879,9 +936,12 @@ const OrdersList = () => {
                           fontSize: '0.85rem',
                           whiteSpace: 'nowrap',
                           marginLeft: '1rem',
+                          display: 'flex', alignItems: 'center', gap: 4
                         }}>
                           ${(p.promo_price || p.price)?.toLocaleString()}
                           {p.stock === 0 && <span style={{marginLeft: 6, fontSize: '0.7rem', background: '#fee2e2', color: '#dc2626', padding: '1px 6px', borderRadius: 4}}>Sin stock</span>}
+                          {p.stock > 0 && p.stock <= 5 && <span style={{marginLeft: 6, fontSize: '0.7rem', background: '#fef3c7', color: '#d97706', padding: '1px 6px', borderRadius: 4}}>⚠️ {p.stock} disp.</span>}
+                          {p.stock > 5 && <span style={{marginLeft: 6, fontSize: '0.7rem', background: '#dcfce7', color: '#16a34a', padding: '1px 6px', borderRadius: 4}}>{p.stock} disp.</span>}
                         </span>
                       </div>
                     ))}
@@ -1182,6 +1242,11 @@ const OrdersList = () => {
                         {sale.type === 'manual' && sale.status === 'debt' && (
                           <button onClick={() => handleMarkManualPaid(sale.id)} style={{background: '#10b981', color: 'white', border: 'none', borderRadius: 4, padding: '0.3rem 0.6rem', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold'}}>
                             ✓ Pagó
+                          </button>
+                        )}
+                        {sale.type === 'manual' && sale.status !== 'cancelled' && (
+                          <button onClick={() => handleCancelManual(sale.id)} style={{background: '#ef4444', color: 'white', border: 'none', borderRadius: 4, padding: '0.3rem 0.6rem', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold'}}>
+                            ✕ Cancelar
                           </button>
                         )}
                         {sale.type === 'manual' && (
