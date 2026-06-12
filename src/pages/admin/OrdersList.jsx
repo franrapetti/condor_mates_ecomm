@@ -312,8 +312,30 @@ const generateTicket = (sale, discountInfo) => {
     }
     .no-print .btn-close:hover { background: #e8e2d6; }
     @media print {
-      body { background: white; padding: 0; }
-      .ticket { box-shadow: none; border-radius: 0; max-width: 100%; }
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+      }
+      body { background: #f7f4ef !important; padding: 20px; }
+      .ticket {
+        box-shadow: none;
+        max-width: 100%;
+        border-radius: 20px;
+        background: #fffdf8 !important;
+      }
+      .ticket::before {
+        background: linear-gradient(90deg, #234a2e, #3a7d44, #234a2e) !important;
+        height: 6px !important;
+        display: block !important;
+      }
+      .ticket-footer {
+        background: linear-gradient(180deg, transparent, rgba(35, 74, 46, 0.03)) !important;
+      }
+      .discount-badge {
+        background: linear-gradient(135deg, #234a2e, #3a7d44) !important;
+        color: white !important;
+      }
       .no-print { display: none !important; }
     }
   </style>
