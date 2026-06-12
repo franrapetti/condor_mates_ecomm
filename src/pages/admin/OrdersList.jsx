@@ -355,7 +355,7 @@ const generateTicket = (sale, discountInfo) => {
       <div class="ticket-header">
         <img src="${logoUrl}" alt="Cóndor Mates" />
         <div class="brand">Cóndor Mates</div>
-        <div class="tagline">La tradición en tus manos</div>
+        <div class="tagline">El arte de cebar</div>
       </div>
       <div class="ticket-meta">
         <div>
