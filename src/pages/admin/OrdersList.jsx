@@ -32,9 +32,18 @@ const generateTicket = (sale, discountInfo) => {
 
   // Parse items
   let itemsHtml = '';
-  if (sale.items && Array.isArray(sale.items)) {
-    // Web order — items is an array of {name, quantity, price}
-    itemsHtml = sale.items.map(item => `
+  let parsedItems = sale.items;
+  // Try to parse JSON string (manual sales store items as JSON string)
+  if (typeof parsedItems === 'string') {
+    try {
+      const parsed = JSON.parse(parsedItems);
+      if (Array.isArray(parsed)) parsedItems = parsed;
+    } catch (_) { /* not JSON, keep as string */ }
+  }
+
+  if (parsedItems && Array.isArray(parsedItems)) {
+    // Structured items — array of {name, quantity, price}
+    itemsHtml = parsedItems.map(item => `
       <tr>
         <td style="padding: 10px 0; border-bottom: 1px solid #f0ebe3; font-size: 14px; color: #3d3929;">
           <span style="font-weight: 600;">${item.name}</span>
@@ -47,9 +56,9 @@ const generateTicket = (sale, discountInfo) => {
         </td>
       </tr>
     `).join('');
-  } else if (typeof sale.items_desc === 'string' || typeof sale.items === 'string') {
-    // Manual sale — items is a comma-separated string like "2x Mate Torpedo, 1x Bombilla"
-    const raw = sale.items_desc || sale.items || '';
+  } else if (typeof parsedItems === 'string') {
+    // Legacy fallback — plain comma-separated string
+    const raw = parsedItems || '';
     const lines = raw.split(',').map(s => s.trim()).filter(Boolean);
     itemsHtml = lines.map(line => `
       <tr>
@@ -614,10 +623,11 @@ const OrdersList = () => {
     e.preventDefault();
     if (!manualForm.customer_name.trim() || manualLines.length === 0) return;
     setSavingManual(true);
-    const itemsString = manualLines.map(l => `${l.quantity}x ${l.name}`).join(', ');
+    const itemsString = manualLines.map(l => `${l.quantity}x ${l.name}`);
+    const itemsJson = JSON.stringify(manualLines.map(l => ({ name: l.name, quantity: l.quantity, price: l.price })));
     const { error } = await supabase.from('manual_sales').insert([{
       ...manualForm,
-      items: itemsString,
+      items: itemsJson,
       total_amount: effectiveTotal,
     }]);
     if (!error) {
@@ -678,7 +688,13 @@ const OrdersList = () => {
       created_at: m.created_at,
       customer_name: m.customer_name,
       customer_info: m.customer_phone ? `📞 ${m.customer_phone}` : '',
-      items_desc: m.items,
+      items_desc: (() => {
+        try {
+          const parsed = JSON.parse(m.items);
+          if (Array.isArray(parsed)) return parsed.map(l => `${l.quantity}x ${l.name}`).join(', ');
+        } catch (_) {}
+        return m.items;
+      })(),
       total: m.total_amount || 0,
       status: m.status,
       payment_method: m.payment_method,
