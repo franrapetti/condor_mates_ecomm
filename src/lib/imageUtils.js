@@ -19,7 +19,7 @@
 const SUPABASE_STORAGE_PATTERN = /\/storage\/v1\/object\/public\//;
 
 /**
- * Returns an optimized Supabase image URL.
+ * Returns an optimized Cloudinary fetch URL, or fallback to original URL.
  *
  * @param {string} rawUrl  - The original Supabase public URL.
  * @param {object} opts
@@ -31,29 +31,33 @@ const SUPABASE_STORAGE_PATTERN = /\/storage\/v1\/object\/public\//;
 export function getImgUrl(rawUrl, { w = 800, h = null, q = 70, resize = 'contain' } = {}) {
   if (!rawUrl) return '';
 
-  // Only transform URLs that contain the Supabase public storage endpoint
-  if (!rawUrl.includes('/storage/v1/object/public/')) {
-    return rawUrl;
+  const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+
+  if (cloudName && rawUrl.startsWith('http')) {
+    const transforms = [];
+    const safeWidth = Math.min(w, 1600);
+    transforms.push(`w_${safeWidth}`);
+    
+    if (h) {
+      transforms.push(`h_${h}`);
+    }
+    
+    transforms.push(`q_${q}`);
+    transforms.push('f_auto'); // Automatically serves WebP/AVIF
+    
+    // Map resize modes to Cloudinary crop modes
+    let cropMode = 'c_fit'; 
+    if (resize === 'cover') cropMode = 'c_fill';
+    else if (resize === 'contain') cropMode = 'c_pad';
+    else if (resize === 'fill') cropMode = 'c_scale';
+    transforms.push(cropMode);
+
+    // Using encodeURIComponent ensures query params in the original URL are preserved
+    return `https://res.cloudinary.com/${cloudName}/image/fetch/${transforms.join(',')}/${encodeURIComponent(rawUrl)}`;
   }
 
-  // Rewrite endpoint to Supabase Image Transformations engine
-  let transformedUrl = rawUrl.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/');
-  
-  const params = [];
-  const safeWidth = Math.min(w, 1600);
-  params.push(`width=${safeWidth}`);
-  
-  if (h) {
-    params.push(`height=${h}`);
-  }
-  
-  // Supabase automatically serves WebP/AVIF based on browser Accept headers. 
-  // explicitly sending `format=webp` throws an HTTP 400 Error.
-  params.push(`quality=${q}`);
-  params.push(`resize=${resize}`);
-  
-  const separator = transformedUrl.includes('?') ? '&' : '?';
-  return `${transformedUrl}${separator}${params.join('&')}`;
+  // Fallback to original raw URL (no Supabase transformation charges)
+  return rawUrl;
 }
 
 /**
