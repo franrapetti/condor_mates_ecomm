@@ -769,12 +769,23 @@ const OrdersList = () => {
   const handleShareImage = async () => {
     if (!ticketRef.current) return;
     try {
-      const canvas = await html2canvas(ticketRef.current, {
+      // Usamos un clon en el body para evitar que el scroll del modal recorte la imagen en html2canvas
+      const clone = ticketRef.current.cloneNode(true);
+      clone.style.position = 'absolute';
+      clone.style.top = '-9999px';
+      clone.style.left = '-9999px';
+      clone.style.margin = '0';
+      document.body.appendChild(clone);
+
+      const canvas = await html2canvas(clone, {
         scale: 2,
         useCORS: true,
         backgroundColor: '#fffdf8',
         logging: false,
       });
+      
+      document.body.removeChild(clone);
+
       const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
       if (!blob) return;
       
@@ -885,9 +896,9 @@ const OrdersList = () => {
   // Today Sales
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const todaySales = unifiedSales.filter(s => new Date(s.created_at) >= today);
+  const todaySales = unifiedSales.filter(s => new Date(s.created_at) >= today && s.status !== 'canceled' && s.status !== 'cancelled');
   const todaySalesCount = todaySales.length;
-  const todayRevenue = todaySales.reduce((acc, s) => acc + (s.total_price || s.total_amount || 0), 0);
+  const todayRevenue = todaySales.reduce((acc, s) => acc + (s.total || 0), 0);
 
   // Calculate Advanced KPIs
   const getCutoff = () => {
