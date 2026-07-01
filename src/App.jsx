@@ -5,6 +5,7 @@ import CheckoutSuccess from './pages/public/CheckoutSuccess';
 import NotFound from './pages/public/NotFound';
 import Wishlist from './pages/public/Wishlist';
 import CorporatePage from './pages/public/CorporatePage';
+import Returns from './pages/public/Returns';
 import ComboBuilder from './components/ComboBuilder';
 import Login from './pages/admin/Login';
 import AdminLayout from './components/admin/AdminLayout';
@@ -57,6 +58,7 @@ function App() {
                     <Route path="/favoritos" element={<Wishlist />} />
                     <Route path="/empresas" element={<CorporatePage />} />
                     <Route path="/combo" element={<ComboBuilder />} />
+                    <Route path="/devoluciones" element={<Returns />} />
                   </Route>
                   <Route path="/admin/login" element={<Login />} />
                   

@@ -32,6 +32,7 @@ const Footer = () => {
           <a href="/combo" className="footer-link">Armá tu Combo</a>
           <a href="/favoritos" className="footer-link">Mis Favoritos</a>
           <a href="/empresas" className="footer-link">Ventas Corporativas</a>
+          <a href="/devoluciones" className="footer-link">Devoluciones y Garantía</a>
         </div>
 
         {/* Contact/Info */}
