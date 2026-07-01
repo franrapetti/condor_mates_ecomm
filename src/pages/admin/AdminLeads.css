@@ -122,3 +122,34 @@
   font-size: 0.9rem;
   margin: 0;
 }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .leads-stats-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+  .leads-stat-card {
+    padding: 1rem;
+  }
+  .leads-stat-card .stat-value {
+    font-size: 1.4rem;
+  }
+  .leads-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .leads-table {
+    min-width: 500px;
+  }
+  .leads-export-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .leads-stats-row {
+    grid-template-columns: 1fr;
+  }
+}

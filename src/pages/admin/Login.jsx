@@ -7,17 +7,27 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const { login } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const { login, user } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user) {
+      navigate('/admin/orders');
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    setLoading(true);
     try {
-      setError('');
       await login(email, password);
-      navigate('/admin');
+      navigate('/admin/orders');
     } catch (err) {
-      setError('Credenciales incorrectas. Intentá de nuevo.');
+      setError('Credenciales inválidas o error de conexión.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -31,31 +41,37 @@ const Login = () => {
           </div>
           <p className="admin-login-subtitle">Ingresá para gestionar tu tienda</p>
         </div>
-
+        
         {error && <div className="error-message">{error}</div>}
-
+        
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label>Email</label>
+            <label htmlFor="email">Email</label>
             <input
+              id="email"
               type="email"
               value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder="admin@condormates.com"
+              onChange={(e) => setEmail(e.target.value)}
               required
+              disabled={loading}
+              placeholder="tu@email.com"
             />
           </div>
           <div className="form-group">
-            <label>Contraseña</label>
+            <label htmlFor="password">Contraseña</label>
             <input
+              id="password"
               type="password"
               value={password}
-              onChange={e => setPassword(e.target.value)}
-              placeholder="••••••••"
+              onChange={(e) => setPassword(e.target.value)}
               required
+              disabled={loading}
+              placeholder="••••••••"
             />
           </div>
-          <button type="submit" className="login-btn">Entrar al panel</button>
+          <button type="submit" className="login-btn" disabled={loading}>
+            {loading ? 'Ingresando...' : 'Entrar al panel'}
+          </button>
         </form>
       </div>
     </div>

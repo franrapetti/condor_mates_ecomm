@@ -348,3 +348,29 @@
 .dark-theme .csv-select-all:hover {
   background: rgba(46, 166, 85, 0.08);
 }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .csv-export-page {
+    max-width: 100%;
+  }
+  .csv-preview-card {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .csv-preview-table {
+    min-width: 600px;
+  }
+  .csv-info-banner {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .csv-action-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .csv-action-bar .btn-primary {
+    width: 100%;
+    justify-content: center;
+  }
+}

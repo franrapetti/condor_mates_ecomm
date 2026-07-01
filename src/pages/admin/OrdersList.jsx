@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import {
   LineChart, Line, BarChart, Bar, AreaChart, Area,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
+import html2canvas from 'html2canvas';
 import './OrdersList.css';
 
 const PAYMENT_METHODS = ['Efectivo', 'Transferencia', 'Mercado Pago', 'Débito', 'Otro'];
@@ -450,6 +451,10 @@ const OrdersList = () => {
   const searchInputRef = useRef(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
 
+  // Ticket modal state
+  const [ticketModal, setTicketModal] = useState(null); // { sale, discountInfo }
+  const [ticketCopied, setTicketCopied] = useState(false);
+  const ticketRef = useRef(null);
   const [filter, setFilter] = useState('all');
   const [alerts, setAlerts] = useState([]);
   const [dismissedAlerts, setDismissedAlerts] = useState([]);
@@ -513,49 +518,39 @@ const OrdersList = () => {
     }
 
     // --- Fetch Alerts ---
-    const newAlerts = [];
-    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-    const { data: pendingShip } = await supabase
-      .from('orders')
-      .select('id, customer_name, created_at')
-      .eq('status', 'paid')
-      .lt('created_at', oneDayAgo);
+    try {
+      const newAlerts = [];
+      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const { data: pendingShip } = await supabase
+        .from('orders')
+        .select('id, customer_name, created_at')
+        .eq('status', 'paid')
+        .lt('created_at', oneDayAgo);
 
-    if (pendingShip && pendingShip.length > 0) {
-      newAlerts.push({
-        id: 'unshipped', type: 'warning', icon: '📦',
-        message: `Tenés ${pendingShip.length} orden${pendingShip.length > 1 ? 'es' : ''} web pagada${pendingShip.length > 1 ? 's' : ''} sin enviar hace más de 24 horas.`,
-        action: () => setFilter('paid')
-      });
+      if (pendingShip && pendingShip.length > 0) {
+        newAlerts.push({
+          id: 'unshipped', type: 'warning', icon: '📦',
+          message: `Tenés ${pendingShip.length} orden${pendingShip.length > 1 ? 'es' : ''} web pagada${pendingShip.length > 1 ? 's' : ''} sin enviar hace más de 24 horas.`,
+          action: () => setFilter('paid')
+        });
+      }
+      setAlerts(newAlerts);
+    } catch (err) {
+      console.error('Error fetching alerts', err);
     }
-
-    // const { data: lowStock } = await supabase.from('products').select('id, name, stock').lte('stock', 3).gt('stock', 0);
-    // if (lowStock && lowStock.length > 0) {
-    //   newAlerts.push({
-    //     id: 'lowstock', type: 'caution', icon: '⚠️',
-    //     message: `Stock bajo: ${lowStock.map(p => `${p.name} (${p.stock} ud.)`).join(', ')}.`
-    //   });
-    // }
-
-    const { data: noStock } = await supabase.from('products').select('id, name').eq('stock', 0);
-    // if (noStock && noStock.length > 0) {
-    //   newAlerts.push({
-    //     id: 'nostock', type: 'danger', icon: '🚨',
-    //     message: `Sin stock: ${noStock.map(p => p.name).join(', ')}. Estos productos siguen visibles en la tienda.`
-    //   });
-    // }
-
-    setAlerts(newAlerts);
   };
 
   // --- Web Orders Mutations ---
-  const updateOrderStatus = async (id, newStatus) => {
+  const updateOrderStatus = async (id, status) => {
+    if (status === 'canceled') {
+      if (!window.confirm('¿Estás seguro de que querés cancelar esta orden web? Esta acción no se puede deshacer.')) return;
+    }
     try {
-      const { error } = await supabase.from('orders').update({ status: newStatus }).eq('id', id);
+      const { error } = await supabase.from('orders').update({ status }).eq('id', id);
       if (error) throw error;
       
-      setOrders(prev => prev.map(o => o.id === id ? { ...o, status: newStatus } : o));
-      if (selectedOrder?.id === id) setSelectedOrder({ ...selectedOrder, status: newStatus });
+      setOrders(prev => prev.map(o => o.id === id ? { ...o, status: status } : o));
+      if (selectedOrder?.id === id) setSelectedOrder({ ...selectedOrder, status: status });
     } catch (error) {
       console.error(error);
       alert(`Error actualizando: ${error.message || JSON.stringify(error)}`);
@@ -687,6 +682,7 @@ const OrdersList = () => {
   };
 
   const handleCancelManual = async (id) => {
+    if (!window.confirm('¿Estás seguro de que querés cancelar esta venta manual? Se restaurará el stock de los productos y se marcará como cancelada.')) return;
     const sale = manualSales.find(s => s.id === id);
     if (!sale || sale.status === 'cancelled') return;
     // Restaurar stock
@@ -709,6 +705,103 @@ const OrdersList = () => {
       setManualSales(prev => prev.map(s => s.id === id ? { ...s, status: 'cancelled' } : s));
       fetchData();
     }
+  };
+
+  // ── Ticket Modal & Sharing Helpers ──
+  const openTicketModal = (sale, discountInfo = null) => {
+    setTicketModal({ sale, discountInfo });
+    setTicketCopied(false);
+  };
+
+  const getTicketTextSummary = (sale, discountInfo) => {
+    const orderId = String(sale.id).slice(0, 8).toUpperCase();
+    const date = new Date(sale.created_at);
+    const formattedDate = date.toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' });
+    const customerName = sale.customer_name || 'Cliente';
+    const total = sale.total_price || sale.total_amount || sale.total || 0;
+
+    let itemsList = '';
+    let parsedItems = sale.items;
+    if (typeof parsedItems === 'string') {
+      try { parsedItems = JSON.parse(parsedItems); } catch (_) {}
+    }
+    if (Array.isArray(parsedItems)) {
+      itemsList = parsedItems.map(i => `  • ${i.quantity}x ${i.name} — $${(i.price * i.quantity).toLocaleString()}`).join('\n');
+    } else if (typeof parsedItems === 'string') {
+      itemsList = parsedItems.split(',').map(s => `  • ${s.trim()}`).join('\n');
+    }
+
+    let discountText = '';
+    if (discountInfo?.applied) {
+      discountText = `\nSubtotal: $${discountInfo.subtotal.toLocaleString()}\nDesc. ${discountInfo.percent}% ${discountInfo.method}: -$${discountInfo.amount.toLocaleString()}`;
+    }
+
+    return `🧉 *CÓNDOR MATES*\nComprobante #${orderId}\n\n👤 *Cliente:* ${customerName}\n📅 *Fecha:* ${formattedDate}\n\n📦 *Pedido:*\n${itemsList}\n${discountText}\n💰 *Total: $${total.toLocaleString()}*\n\n¡Gracias por tu compra! 🧉\n🌐 condormates.com.ar\n📸 @condor_mates`;
+  };
+
+  const handleShareWhatsApp = () => {
+    if (!ticketModal) return;
+    const text = getTicketTextSummary(ticketModal.sale, ticketModal.discountInfo);
+    const encoded = encodeURIComponent(text);
+    window.open(`https://wa.me/?text=${encoded}`, '_blank');
+  };
+
+  const handleCopyTicket = async () => {
+    if (!ticketModal) return;
+    const text = getTicketTextSummary(ticketModal.sale, ticketModal.discountInfo);
+    try {
+      await navigator.clipboard.writeText(text);
+      setTicketCopied(true);
+      if (navigator.vibrate) navigator.vibrate(50);
+      setTimeout(() => setTicketCopied(false), 2500);
+    } catch (_) {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      setTicketCopied(true);
+      setTimeout(() => setTicketCopied(false), 2500);
+    }
+  };
+
+  const handleShareImage = async () => {
+    if (!ticketRef.current) return;
+    try {
+      const canvas = await html2canvas(ticketRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#fffdf8',
+        logging: false,
+      });
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+      if (!blob) return;
+      
+      if (navigator.share && navigator.canShare) {
+        const file = new File([blob], 'comprobante-condor-mates.png', { type: 'image/png' });
+        const shareData = { files: [file], title: 'Comprobante Cóndor Mates' };
+        if (navigator.canShare(shareData)) {
+          await navigator.share(shareData);
+          if (navigator.vibrate) navigator.vibrate(50);
+          return;
+        }
+      }
+      
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `comprobante-${String(ticketModal.sale.id).slice(0, 8)}.png`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Error generating image:', err);
+    }
+  };
+
+  const handlePrintTicket = () => {
+    if (!ticketModal) return;
+    generateTicket(ticketModal.sale, ticketModal.discountInfo);
   };
 
   const getStatusBadge = (status, isManual = false) => {
@@ -788,6 +881,13 @@ const OrdersList = () => {
   
   const debtSales = manualSales.filter(s => s.status === 'debt');
   const totalDebt = debtSales.reduce((acc, s) => acc + s.total_amount, 0);
+
+  // Today Sales
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todaySales = unifiedSales.filter(s => new Date(s.created_at) >= today);
+  const todaySalesCount = todaySales.length;
+  const todayRevenue = todaySales.reduce((acc, s) => acc + (s.total_price || s.total_amount || 0), 0);
 
   // Calculate Advanced KPIs
   const getCutoff = () => {
@@ -1063,8 +1163,12 @@ const OrdersList = () => {
       )}
 
       <div className="kpi-grid">
+        <div className="kpi-card" style={{background: 'linear-gradient(135deg, rgba(46, 166, 85, 0.1), rgba(46, 166, 85, 0.02))', borderColor: 'rgba(46, 166, 85, 0.2)'}}>
+          <h3 style={{color: 'var(--accent)'}}>Ventas Hoy</h3>
+          <p className="kpi-value" style={{color: 'var(--accent)'}}>{todaySalesCount} <span style={{fontSize: '1rem', fontWeight: 600, opacity: 0.8}}>(${todayRevenue.toLocaleString()})</span></p>
+        </div>
         <div className="kpi-card">
-          <h3>Ingresos Brutos</h3>
+          <h3>Ingresos Totales</h3>
           <p className="kpi-value">${totalRevenue.toLocaleString()}</p>
         </div>
         <div className="kpi-card">
@@ -1153,19 +1257,33 @@ const OrdersList = () => {
 
       <div className="orders-container">
         <div className="orders-filters" style={{marginBottom: '1rem'}}>
+          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+            <input
+              type="search"
+              placeholder="🔍 Buscar por nombre, items o info..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="orders-search-input"
+              style={{ flex: 1 }}
+            />
+            <button 
+              onClick={() => {
+                setLoading(true);
+                fetchData();
+              }}
+              title="Actualizar datos"
+              className="btn-secondary"
+              style={{ padding: '0.5rem 0.75rem' }}
+            >
+              🔄
+            </button>
+          </div>
           <button className={filter === 'all' ? 'active' : ''} onClick={() => setFilter('all')}>Todas</button>
           <button className={filter === 'web' ? 'active' : ''} onClick={() => setFilter('web')}>Web</button>
           <button className={filter === 'manual' ? 'active' : ''} onClick={() => setFilter('manual')}>Manuales</button>
           <button className={filter === 'paid' ? 'active' : ''} onClick={() => setFilter('paid')}>Solo Pagadas</button>
           <button className={filter === 'pending' ? 'active' : ''} onClick={() => setFilter('pending')}>Web Pendientes</button>
           <button className={filter === 'debt' ? 'active' : ''} onClick={() => setFilter('debt')}>Deudores (Manual)</button>
-          <input
-            type="search"
-            placeholder="🔍 Buscar por nombre, items o info..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="orders-search-input"
-          />
         </div>
 
         {loading ? (
@@ -1190,21 +1308,21 @@ const OrdersList = () => {
                 )}
                 {filteredSales.map(sale => (
                   <tr key={sale.id} style={{background: sale.status === 'debt' ? '#fef3c7' : 'transparent'}}>
-                    <td>{new Date(sale.created_at).toLocaleDateString('es-AR', {day: '2-digit', month: 'short', hour: '2-digit', minute:'2-digit'})}</td>
-                    <td>
+                    <td data-label="Fecha">{new Date(sale.created_at).toLocaleDateString('es-AR', {day: '2-digit', month: 'short', hour: '2-digit', minute:'2-digit'})}</td>
+                    <td data-label="Origen">
                       {sale.type === 'web' ? <span style={{background: '#dbeafe', color: '#1e40af', padding: '2px 6px', borderRadius: 4, fontSize: '0.75rem', fontWeight: 'bold'}}>🌐 Web</span> 
                                            : <span style={{background: '#e5e7eb', color: '#374151', padding: '2px 6px', borderRadius: 4, fontSize: '0.75rem', fontWeight: 'bold'}}>📝 Manual</span>}
                     </td>
-                    <td>
+                    <td data-label="Cliente">
                       <div style={{fontWeight: 600}}>{sale.customer_name}</div>
                       {sale.customer_info && <div style={{fontSize: '0.75rem', color: '#6b7280'}}>{sale.customer_info}</div>}
                     </td>
-                    <td style={{maxWidth: 200, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '0.85rem'}} title={sale.items_desc}>
+                    <td data-label="Items" className="orders-td-items" style={{maxWidth: 200, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '0.85rem'}} title={sale.items_desc}>
                       {sale.items_desc}
                     </td>
-                    <td>{getStatusBadge(sale.status, sale.type === 'manual')}</td>
-                    <td style={{fontWeight: 600, color: sale.status === 'debt' ? '#d97706' : 'var(--accent)'}}>${sale.total.toLocaleString()}</td>
-                    <td>
+                    <td data-label="Estado">{getStatusBadge(sale.status, sale.type === 'manual')}</td>
+                    <td data-label="Total" style={{fontWeight: 600, color: sale.status === 'debt' ? '#d97706' : 'var(--accent)'}}>${sale.total.toLocaleString()}</td>
+                    <td data-label="Acción">
                       <div style={{display: 'flex', gap: '0.4rem', flexWrap: 'wrap'}}>
                         {sale.type === 'web' && (
                           <button className="btn-view" onClick={() => setSelectedOrder(sale.original)} style={{padding: '0.3rem 0.6rem'}}>VER</button>
@@ -1213,15 +1331,27 @@ const OrdersList = () => {
                           onClick={() => {
                             const orig = sale.original;
                             const pm = sale.payment_method;
-                            const isManualDiscount = sale.type === 'manual' && DISCOUNT_METHODS.includes(pm);
+                            let calculatedSubtotal = 0;
+                            try {
+                              const items = typeof orig.items === 'string' ? JSON.parse(orig.items) : orig.items;
+                              if (Array.isArray(items)) {
+                                calculatedSubtotal = items.reduce((acc, i) => acc + ((i.price || 0) * (i.quantity || 1)), 0);
+                              }
+                            } catch (_) {}
+                            
+                            if (!calculatedSubtotal && sale.type === 'manual') {
+                              calculatedSubtotal = Math.round(sale.total / (1 - DISCOUNT_PERCENT / 100));
+                            }
+
+                            const isManualDiscount = sale.type === 'manual' && DISCOUNT_METHODS.includes(pm) && calculatedSubtotal > sale.total;
                             const discountInfo = isManualDiscount ? {
                               applied: true,
-                              subtotal: Math.round(sale.total / (1 - DISCOUNT_PERCENT / 100)),
+                              subtotal: calculatedSubtotal,
                               percent: DISCOUNT_PERCENT,
-                              amount: Math.round(sale.total / (1 - DISCOUNT_PERCENT / 100)) - sale.total,
+                              amount: calculatedSubtotal - sale.total,
                               method: pm
                             } : null;
-                            generateTicket(orig, discountInfo);
+                            openTicketModal(orig, discountInfo);
                           }}
                           title="Emitir Comprobante"
                           style={{background: 'linear-gradient(135deg, #234a2e, #3a7d44)', color: 'white', border: 'none', borderRadius: 4, padding: '0.3rem 0.6rem', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold', transition: 'opacity 0.15s'}}
@@ -1308,7 +1438,7 @@ const OrdersList = () => {
               <h3>Administrar Despacho</h3>
               <div style={{display: 'flex', gap: '0.5rem', flexWrap: 'wrap'}}>
                 <button
-                  onClick={() => generateTicket(selectedOrder, null)}
+                  onClick={() => openTicketModal(selectedOrder, null)}
                   style={{
                     background: 'linear-gradient(135deg, #234a2e, #3a7d44)',
                     color: 'white', border: 'none', borderRadius: '8px',
@@ -1337,6 +1467,158 @@ const OrdersList = () => {
                     Cancelar Venta
                   </button>
                 )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Ticket Modal */}
+      {ticketModal && (
+        <div className="order-modal-overlay" onClick={() => setTicketModal(null)}>
+          <div className="order-modal-content ticket-modal-content" onClick={e => e.stopPropagation()}>
+            <div className="order-modal-header">
+              <h2>Comprobante de Venta</h2>
+              <button className="close-btn" onClick={() => setTicketModal(null)}>×</button>
+            </div>
+            
+            <div className="order-modal-body" style={{ background: '#f7f4ef', display: 'flex', justifyContent: 'center' }}>
+              {/* Ticket Render Area for html2canvas */}
+              <div 
+                ref={ticketRef}
+                style={{
+                  background: '#fffdf8',
+                  maxWidth: '100%',
+                  width: '380px',
+                  borderRadius: '20px',
+                  boxShadow: '0 8px 40px rgba(61, 57, 41, 0.1)',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  margin: '1rem 0'
+                }}
+              >
+                <div style={{
+                  position: 'absolute', top: 0, left: 0, right: 0, height: '6px',
+                  background: 'linear-gradient(90deg, #234a2e, #3a7d44, #234a2e)'
+                }} />
+                
+                <div style={{ textAlign: 'center', padding: '36px 32px 24px', borderBottom: '2px dashed #e8e2d6' }}>
+                  <img src="/logo.png" alt="Cóndor Mates" style={{ height: '70px', marginBottom: '12px', objectFit: 'contain' }} />
+                  <div style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '3px', textTransform: 'uppercase', color: '#234a2e' }}>Cóndor Mates</div>
+                  <div style={{ fontSize: '11px', color: '#9c9585', fontStyle: 'italic', marginTop: '4px' }}>El arte de cebar</div>
+                </div>
+
+                <div style={{ padding: '20px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f0ebe3' }}>
+                  <div>
+                    <div style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: '#9c9585' }}>Comprobante</div>
+                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#3d3929', marginTop: '2px' }}>#{String(ticketModal.sale.id).slice(0, 8).toUpperCase()}</div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: '#9c9585' }}>Fecha</div>
+                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#3d3929', marginTop: '2px' }}>
+                      {new Date(ticketModal.sale.created_at).toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ padding: '20px 32px', borderBottom: '1px solid #f0ebe3' }}>
+                  <div style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: '#9c9585', marginBottom: '4px' }}>Cliente</div>
+                  <div style={{ fontSize: '16px', fontWeight: 700, color: '#234a2e' }}>{ticketModal.sale.customer_name || 'Cliente'}</div>
+                </div>
+
+                <div style={{ padding: '20px 32px' }}>
+                  <div style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: '#9c9585', marginBottom: '14px' }}>Detalle del pedido</div>
+                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                      <tr>
+                        <th style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', color: '#b5ad9e', textAlign: 'left', paddingBottom: '8px', borderBottom: '2px solid #f0ebe3' }}>Producto</th>
+                        <th style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', color: '#b5ad9e', textAlign: 'center', paddingBottom: '8px', borderBottom: '2px solid #f0ebe3' }}>Cant.</th>
+                        <th style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', color: '#b5ad9e', textAlign: 'right', paddingBottom: '8px', borderBottom: '2px solid #f0ebe3' }}>Subtotal</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(() => {
+                        let parsedItems = ticketModal.sale.items;
+                        if (typeof parsedItems === 'string') {
+                          try { parsedItems = JSON.parse(parsedItems); } catch (_) {}
+                        }
+                        if (Array.isArray(parsedItems)) {
+                          return parsedItems.map((item, idx) => (
+                            <tr key={idx}>
+                              <td style={{ padding: '10px 0', borderBottom: '1px solid #f0ebe3', fontSize: '14px', color: '#3d3929', fontWeight: 600 }}>{item.name}</td>
+                              <td style={{ padding: '10px 0', borderBottom: '1px solid #f0ebe3', textAlign: 'center', fontSize: '14px', color: '#6b6455' }}>{item.quantity}</td>
+                              <td style={{ padding: '10px 0', borderBottom: '1px solid #f0ebe3', textAlign: 'right', fontSize: '14px', fontWeight: 600, color: '#3d3929' }}>${((item.price || 0) * (item.quantity || 1)).toLocaleString()}</td>
+                            </tr>
+                          ));
+                        } else if (typeof parsedItems === 'string') {
+                          return parsedItems.split(',').map((line, idx) => (
+                            <tr key={idx}>
+                              <td colSpan="2" style={{ padding: '10px 0', borderBottom: '1px solid #f0ebe3', fontSize: '14px', color: '#3d3929', fontWeight: 600 }}>{line.trim()}</td>
+                              <td style={{ padding: '10px 0', borderBottom: '1px solid #f0ebe3', textAlign: 'right', fontSize: '14px', color: '#6b6455' }}>—</td>
+                            </tr>
+                          ));
+                        }
+                        return null;
+                      })()}
+                    </tbody>
+                  </table>
+                </div>
+
+                {ticketModal.discountInfo && ticketModal.discountInfo.applied ? (
+                  <>
+                    <div style={{ padding: '16px 32px', borderTop: '2px dashed #e8e2d6' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '12px', color: '#9c9585', fontWeight: 500 }}>
+                        <span>Subtotal</span>
+                        <span style={{ fontSize: '13px', color: '#3d3929', fontWeight: 600 }}>${ticketModal.discountInfo.subtotal.toLocaleString()}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', color: '#234a2e', fontWeight: 600 }}>
+                        <span style={{ fontSize: '12px' }}>
+                          Desc. {ticketModal.discountInfo.percent}% {ticketModal.discountInfo.method}
+                          <span style={{ display: 'inline-block', background: 'linear-gradient(135deg, #234a2e, #3a7d44)', color: 'white', fontSize: '9px', fontWeight: 800, padding: '2px 8px', borderRadius: '10px', marginLeft: '6px' }}>
+                            {ticketModal.discountInfo.percent}% OFF
+                          </span>
+                        </span>
+                        <span style={{ fontSize: '13px', fontWeight: 700 }}>-${ticketModal.discountInfo.amount.toLocaleString()}</span>
+                      </div>
+                    </div>
+                    <div style={{ padding: '16px 32px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', color: '#6b6455' }}>Total final</span>
+                      <span style={{ fontSize: '28px', fontWeight: 800, color: '#234a2e' }}>${(ticketModal.sale.total_price || ticketModal.sale.total_amount || ticketModal.sale.total || 0).toLocaleString()}</span>
+                    </div>
+                  </>
+                ) : (
+                  <div style={{ padding: '20px 32px 28px', borderTop: '2px dashed #e8e2d6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', color: '#6b6455' }}>Total</span>
+                    <span style={{ fontSize: '28px', fontWeight: 800, color: '#234a2e' }}>${(ticketModal.sale.total_price || ticketModal.sale.total_amount || ticketModal.sale.total || 0).toLocaleString()}</span>
+                  </div>
+                )}
+
+                <div style={{ textAlign: 'center', padding: '20px 32px 28px', background: 'linear-gradient(180deg, transparent, rgba(35, 74, 46, 0.03))' }}>
+                  <div style={{ fontSize: '15px', fontWeight: 700, color: '#234a2e', marginBottom: '6px' }}>¡Gracias por tu compra! 🧉</div>
+                  <div style={{ fontSize: '11px', color: '#9c9585', lineHeight: 1.5 }}>Esperamos que disfrutes tu pedido.<br/>Cualquier consulta, escribinos.</div>
+                  <div style={{ display: 'inline-block', marginTop: '12px', fontSize: '12px', fontWeight: 600, color: '#234a2e', padding: '6px 14px', border: '1.5px solid #234a2e', borderRadius: '20px' }}>
+                    @condor_mates
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="order-modal-actions" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+                <button onClick={handleShareWhatsApp} style={{ flex: 1, minWidth: '140px', background: '#25D366', color: 'white', border: 'none', borderRadius: '8px', padding: '0.8rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                  💬 Enviar WhatsApp
+                </button>
+                <button onClick={handleShareImage} style={{ flex: 1, minWidth: '140px', background: 'var(--accent)', color: 'white', border: 'none', borderRadius: '8px', padding: '0.8rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                  📤 Compartir Imagen
+                </button>
+              </div>
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+                <button onClick={handleCopyTicket} style={{ flex: 1, minWidth: '140px', background: 'var(--surface)', color: 'var(--text-dark)', border: '1px solid var(--border)', borderRadius: '8px', padding: '0.8rem', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                  {ticketCopied ? '✅ Copiado' : '📋 Copiar Resumen'}
+                </button>
+                <button onClick={handlePrintTicket} style={{ flex: 1, minWidth: '140px', background: 'var(--surface)', color: 'var(--text-dark)', border: '1px solid var(--border)', borderRadius: '8px', padding: '0.8rem', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                  🖨 Imprimir
+                </button>
               </div>
             </div>
           </div>

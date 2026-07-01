@@ -174,16 +174,26 @@ const AdminSettings = () => {
   const [settings, setSettings] = useState({});
   const [loading, setLoading] = useState(true);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchSettings = async () => {
-      const { data } = await supabase
-        .from('site_settings')
-        .select('key, value');
-      if (data) {
-        setSettings(Object.fromEntries(data.map(r => [r.key, r.value])));
+      try {
+        const { data, error } = await supabase
+          .from('site_settings')
+          .select('key, value');
+        
+        if (error) throw error;
+        
+        if (data) {
+          setSettings(Object.fromEntries(data.map(r => [r.key, r.value])));
+        }
+      } catch (err) {
+        console.error('Error fetching settings:', err);
+        setError('No se pudieron cargar los ajustes (la tabla site_settings podría no existir).');
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     fetchSettings();
   }, []);
