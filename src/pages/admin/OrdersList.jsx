@@ -596,6 +596,23 @@ const OrdersList = () => {
     setManualTotalOverride(null);
   };
 
+  const updateCustomLine = (productId, field, value) => {
+    setManualLines(prev => prev.map(l => {
+      if (l.product_id !== productId) return l;
+      return { ...l, [field]: value };
+    }));
+  };
+
+  const addCustomItem = () => {
+    setManualLines(prev => [...prev, {
+      product_id: 'custom-' + Date.now(),
+      name: 'Item personalizado',
+      price: 0,
+      quantity: 1,
+      isCustom: true
+    }]);
+  };
+
   const calculatedTotal = manualLines.reduce((sum, l) => sum + l.price * l.quantity, 0);
   const hasAutoDiscount = DISCOUNT_METHODS.includes(manualForm.payment_method) && manualTotalOverride === null;
   const discountedTotal = hasAutoDiscount ? Math.round(calculatedTotal * (1 - DISCOUNT_PERCENT / 100)) : calculatedTotal;
@@ -628,7 +645,7 @@ const OrdersList = () => {
     if (!error) {
       // Descontar stock inmediatamente (el producto ya fue entregado)
       for (const line of manualLines) {
-        if (line.product_id) {
+        if (line.product_id && !line.product_id.startsWith('custom-')) {
           const { data: dbProduct } = await supabase
             .from('products').select('stock').eq('id', line.product_id).single();
           if (dbProduct && dbProduct.stock !== null) {
@@ -1059,6 +1076,14 @@ const OrdersList = () => {
                   </div>
                 )}
               </div>
+              <button 
+                type="button" 
+                onClick={addCustomItem}
+                className="btn-secondary"
+                style={{marginTop: '0.5rem', fontSize: '0.8rem', padding: '0.4rem 0.8rem'}}
+              >
+                + Agregar ítem personalizado
+              </button>
 
               {/* Selected product lines */}
               {manualLines.length > 0 && (
@@ -1067,22 +1092,50 @@ const OrdersList = () => {
                     <div key={line.product_id} style={{
                       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                       padding: '0.65rem 1rem', borderBottom: '1px solid var(--border)',
-                      fontSize: '0.88rem', gap: '0.5rem',
+                      fontSize: '0.88rem', gap: '0.5rem', flexWrap: 'wrap'
                     }}>
-                      <span style={{fontWeight: 600, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>{line.name}</span>
-                      <div style={{display: 'flex', alignItems: 'center', gap: '0.3rem', flexShrink: 0}}>
-                        <button type="button" onClick={() => updateLineQuantity(line.product_id, -1)}
-                          style={{width: 28, height: 28, borderRadius: 6, border: '1px solid var(--border)', background: 'var(--background)', cursor: 'pointer', fontWeight: 700, fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-dark)'}}
-                        >−</button>
-                        <span style={{minWidth: 24, textAlign: 'center', fontWeight: 700}}>{line.quantity}</span>
-                        <button type="button" onClick={() => updateLineQuantity(line.product_id, 1)}
-                          style={{width: 28, height: 28, borderRadius: 6, border: '1px solid var(--border)', background: 'var(--background)', cursor: 'pointer', fontWeight: 700, fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-dark)'}}
-                        >+</button>
+                      {line.isCustom ? (
+                        <input 
+                          type="text"
+                          value={line.name}
+                          onChange={e => updateCustomLine(line.product_id, 'name', e.target.value)}
+                          className="orders-search-input"
+                          style={{flex: 1, minWidth: '150px', margin: 0, padding: '0.3rem 0.5rem'}}
+                          placeholder="Nombre del ítem"
+                        />
+                      ) : (
+                        <span style={{fontWeight: 600, flex: 1, minWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>{line.name}</span>
+                      )}
+                      
+                      <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0, flexWrap: 'wrap'}}>
+                        {line.isCustom ? (
+                          <div style={{display: 'flex', alignItems: 'center', gap: '0.2rem'}}>
+                            <span style={{fontWeight: 600, color: 'var(--text-light)'}}>$</span>
+                            <input 
+                              type="number"
+                              value={line.price}
+                              onChange={e => updateCustomLine(line.product_id, 'price', Number(e.target.value))}
+                              className="orders-search-input"
+                              style={{width: '80px', margin: 0, padding: '0.3rem 0.5rem', textAlign: 'right'}}
+                              min="0"
+                            />
+                          </div>
+                        ) : null}
+
+                        <div style={{display: 'flex', alignItems: 'center', gap: '0.3rem'}}>
+                          <button type="button" onClick={() => updateLineQuantity(line.product_id, -1)}
+                            style={{width: 28, height: 28, borderRadius: 6, border: '1px solid var(--border)', background: 'var(--background)', cursor: 'pointer', fontWeight: 700, fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-dark)'}}
+                          >−</button>
+                          <span style={{minWidth: 24, textAlign: 'center', fontWeight: 700}}>{line.quantity}</span>
+                          <button type="button" onClick={() => updateLineQuantity(line.product_id, 1)}
+                            style={{width: 28, height: 28, borderRadius: 6, border: '1px solid var(--border)', background: 'var(--background)', cursor: 'pointer', fontWeight: 700, fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-dark)'}}
+                          >+</button>
+                        </div>
+                        <span style={{fontWeight: 700, color: 'var(--accent)', minWidth: 70, textAlign: 'right'}}>${(line.price * line.quantity).toLocaleString()}</span>
+                        <button type="button" onClick={() => removeProductLine(line.product_id)}
+                          style={{background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', fontSize: '1rem', padding: '0 0.2rem'}}
+                        >🗑</button>
                       </div>
-                      <span style={{fontWeight: 700, color: 'var(--accent)', minWidth: 70, textAlign: 'right'}}>${(line.price * line.quantity).toLocaleString()}</span>
-                      <button type="button" onClick={() => removeProductLine(line.product_id)}
-                        style={{background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', fontSize: '1rem', padding: '0 0.2rem', flexShrink: 0}}
-                      >🗑</button>
                     </div>
                   ))}
                 </div>
