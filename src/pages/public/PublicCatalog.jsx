@@ -48,7 +48,6 @@ function PublicCatalog() {
   }, [location.state]);
 
   useEffect(() => {
-    fetchPublicProducts();
     // Fetch hero images from site_settings — only show hero once resolved
     supabase
       .from('site_settings')
