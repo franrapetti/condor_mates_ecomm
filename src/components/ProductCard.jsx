@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { useWishlist } from '../context/WishlistContext';
 import { useLaunchTimer } from '../hooks/useLaunchTimer';
-import { Heart, Star } from 'lucide-react';
+import { Heart, Star, Flame } from 'lucide-react';
 import { getImgUrl } from '../lib/imageUtils';
 import './ProductCard.css';
 
@@ -36,7 +36,10 @@ const ProductCard = ({ product, onAddToCart, noZoom }) => {
           />
         </Link>
         {product.best_seller && (
-          <span className="best-seller-badge">MÁS VENDIDO</span>
+          <span className="best-seller-badge">
+            <Flame size={12} fill="currentColor" strokeWidth={1} />
+            MÁS VENDIDO
+          </span>
         )}
         {isLaunched && (product.category === 'Mates' || product.sub_category === 'Bombillones de Alpaca') && (
           <span className="packaging-badge">🎁 Packaging Incluido</span>

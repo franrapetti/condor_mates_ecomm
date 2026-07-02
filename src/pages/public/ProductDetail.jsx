@@ -10,7 +10,7 @@ import Header from '../../components/Header';
 import ProductCard from '../../components/ProductCard';
 import { ProductDetailSkeleton } from '../../components/ProductSkeleton';
 import { Helmet } from 'react-helmet-async';
-import { Heart, ShoppingBag, Star } from 'lucide-react';
+import { Heart, ShoppingBag, Star, Flame } from 'lucide-react';
 import { getImgUrl } from '../../lib/imageUtils';
 import './ProductDetail.css';
 
@@ -321,7 +321,10 @@ function ProductDetail() {
             <div style={{display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '0.5rem', flexWrap: 'wrap'}}>
               {product.category && <span className="category-badge" style={{margin: 0}}>{product.sub_category || product.category}</span>}
               {product.best_seller && (
-                <span className="best-seller-badge" style={{position: 'relative', transform: 'none', bottom: 0, left: 0}}>MÁS VENDIDO</span>
+                <span className="best-seller-badge" style={{position: 'relative', top: 'auto', left: 'auto'}}>
+                  <Flame size={12} fill="currentColor" strokeWidth={1} />
+                  MÁS VENDIDO
+                </span>
               )}
             </div>
             <h1 className="product-title-large">{product.name}</h1>
