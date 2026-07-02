@@ -932,6 +932,12 @@ const OrdersList = () => {
   });
 
   // Calculate Basic KPIs (Unified)
+  const getCutoff = () => {
+    if (dateRange === 'all') return null;
+    const days = dateRange === '7d' ? 7 : dateRange === '30d' ? 30 : 90;
+    return new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+  };
+  
   const cutoff = getCutoff();
   
   const validWeb = orders.filter(o => {
@@ -984,11 +990,6 @@ const OrdersList = () => {
   const yerbaPercentage = totalRevenue > 0 ? ((yerbaRevenue / totalRevenue) * 100).toFixed(1) : 0;
 
   // Calculate Advanced KPIs
-  const getCutoff = () => {
-    if (dateRange === 'all') return null;
-    const days = dateRange === '7d' ? 7 : dateRange === '30d' ? 30 : 90;
-    return new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-  };
 
   const filteredViews = useMemo(() => {
     const cutoff = getCutoff();
