@@ -35,15 +35,17 @@ const ProductCard = ({ product, onAddToCart, noZoom }) => {
             decoding="async" 
           />
         </Link>
-        {product.best_seller && (
-          <span className="best-seller-badge">
-            <Flame size={12} fill="currentColor" strokeWidth={1} />
-            MÁS VENDIDO
-          </span>
-        )}
-        {isLaunched && (product.category === 'Mates' || product.sub_category === 'Bombillones de Alpaca') && (
-          <span className="packaging-badge">🎁 Packaging Incluido</span>
-        )}
+        <div className="top-left-badges">
+          {product.best_seller && (
+            <span className="best-seller-badge">
+              <Flame size={12} fill="currentColor" strokeWidth={1} />
+              MÁS VENDIDO
+            </span>
+          )}
+          {isLaunched && (product.category === 'Mates' || product.sub_category === 'Bombillones de Alpaca') && (
+            <span className="packaging-badge">🎁 Packaging Incluido</span>
+          )}
+        </div>
         <button
           className={`wishlist-btn ${wishlisted ? 'wishlisted' : ''}`}
           onClick={(e) => {

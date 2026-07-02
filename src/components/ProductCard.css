@@ -27,15 +27,24 @@
   object-fit: contain;
   transition: transform 0.3s ease;
   background-color: transparent;
+  display: block;
+}
+
+.top-left-badges {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+  z-index: 10;
 }
 
 .packaging-badge {
-  position: absolute;
-  top: 8px;
-  right: 8px;
   background-color: var(--surface);
   color: var(--accent);
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   font-weight: 700;
   padding: 4px 8px;
   border-radius: 12px;
@@ -46,9 +55,6 @@
 }
 
 .best-seller-badge {
-  position: absolute;
-  top: 8px;
-  left: 8px;
   background-color: var(--text-dark); /* Dark premium background */
   color: #fff;
   font-size: 0.65rem;
@@ -60,7 +66,6 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  z-index: 10;
 }
 
 .product-rating {
