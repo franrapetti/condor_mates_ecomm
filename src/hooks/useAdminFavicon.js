@@ -19,9 +19,6 @@ export function useAdminFavicon() {
     }
 
     const img = new Image();
-    img.crossOrigin = 'Anonymous';
-    img.src = originalHref;
-    
     img.onload = () => {
       const canvas = document.createElement('canvas');
       canvas.width = img.width;
@@ -31,17 +28,16 @@ export function useAdminFavicon() {
       // Draw original
       ctx.drawImage(img, 0, 0);
       
-      // Color tint overlay (bright green for admin)
-      ctx.globalCompositeOperation = 'color';
+      // Solid green silhouette keeping the original alpha channel
+      ctx.globalCompositeOperation = 'source-in';
       ctx.fillStyle = '#16a34a'; 
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       
-      // Mask it back to original alpha
-      ctx.globalCompositeOperation = 'destination-in';
-      ctx.drawImage(img, 0, 0);
-      
       newFavicon.href = canvas.toDataURL('image/png');
     };
+    
+    img.crossOrigin = 'Anonymous';
+    img.src = originalHref;
 
     return () => {
       if (newFavicon) document.head.removeChild(newFavicon);
