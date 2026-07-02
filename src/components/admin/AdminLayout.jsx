@@ -3,6 +3,7 @@ import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { LayoutGrid, ShoppingBag, Moon, Sun, LogOut, ExternalLink, Settings, Mail, Download, Printer, Menu, X } from 'lucide-react';
+import { useAdminFavicon } from '../../hooks/useAdminFavicon';
 import './AdminLayout.css';
 
 const NAV_LINKS = [
@@ -26,6 +27,7 @@ const AdminLayout = () => {
   const { logout, user } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
+  useAdminFavicon();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
