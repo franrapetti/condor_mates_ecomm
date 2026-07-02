@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { useWishlist } from '../context/WishlistContext';
 import { useLaunchTimer } from '../hooks/useLaunchTimer';
-import { Heart } from 'lucide-react';
+import { Heart, Star } from 'lucide-react';
 import { getImgUrl } from '../lib/imageUtils';
 import './ProductCard.css';
 
@@ -27,7 +27,7 @@ const ProductCard = ({ product, onAddToCart, noZoom }) => {
   return (
     <div className="product-card">
       <div className={`product-image-container ${noZoom ? 'no-zoom' : ''}`}>
-        <Link to={`/producto/${product.id}`} onClick={handleProductClick}>
+        <Link to={`/producto/${product.slug || product.id}`} onClick={handleProductClick}>
           <img 
             src={getImgUrl(product.image_url, { w: 400, q: 65 })} 
             alt={product.name} 
@@ -35,6 +35,9 @@ const ProductCard = ({ product, onAddToCart, noZoom }) => {
             decoding="async" 
           />
         </Link>
+        {product.best_seller && (
+          <span className="best-seller-badge">MÁS VENDIDO</span>
+        )}
         {isLaunched && (product.category === 'Mates' || product.sub_category === 'Bombillones de Alpaca') && (
           <span className="packaging-badge">🎁 Packaging Incluido</span>
         )}
@@ -53,9 +56,17 @@ const ProductCard = ({ product, onAddToCart, noZoom }) => {
       </div>
       {isLaunched && (
         <div className="product-info">
-          <Link to={`/producto/${product.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+          <Link to={`/producto/${product.slug || product.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
             <h3 className="product-title">{product.name}</h3>
           </Link>
+          
+          {product.reviews_count > 0 && (
+            <div className="product-rating">
+              <Star size={14} fill="#C6A87C" strokeWidth={0} />
+              <span className="rating-value">{product.rating || '4.9'}</span>
+              <span className="rating-count">({product.reviews_count})</span>
+            </div>
+          )}
           <>
             {product.promo_price ? (
               <div className="product-price-block">

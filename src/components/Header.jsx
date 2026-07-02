@@ -30,9 +30,9 @@ const Header = ({ cartCount, onCartClick, onNavClick, currentCategory }) => {
   return (
     <header className="header sticky">
       <div className="container header-content">
-        <div className="header-logo" onClick={() => onNavClick('All')}>
+        <Link to="/" className="header-logo" onClick={() => onNavClick('All')}>
           <img src={isDark ? "/logo-noche.png" : "/logo.png"} alt="Cóndor Mates" className="logo-img" />
-        </div>
+        </Link>
 
         {isLaunched && (
           <>
@@ -74,8 +74,8 @@ const Header = ({ cartCount, onCartClick, onNavClick, currentCategory }) => {
                     ))}
                   </div>
                 </li>
-                <li><button className={currentCategory === 'Nosotros' ? 'active' : ''} onClick={() => handleNavClick('Nosotros', 'All')}>Quiénes somos</button></li>
-                <li><button className={currentCategory === 'Envios' ? 'active' : ''} onClick={() => handleNavClick('Envios', 'All')}>Envíos</button></li>
+                <li><Link to="/nosotros" onClick={() => setIsMenuOpen(false)} className={`header-nav-link ${currentCategory === 'Nosotros' ? 'active' : ''}`}>Quiénes somos</Link></li>
+                <li><Link to="/envios" onClick={() => setIsMenuOpen(false)} className={`header-nav-link ${currentCategory === 'Envios' ? 'active' : ''}`}>Envíos</Link></li>
                 <li><Link to="/empresas" onClick={() => setIsMenuOpen(false)} className={`header-nav-link ${currentCategory === 'Empresas' ? 'active' : ''}`}>Empresas 🏢</Link></li>
               </ul>
             </nav>

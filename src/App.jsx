@@ -29,7 +29,19 @@ import { WishlistProvider } from './context/WishlistContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { useAnalytics } from './hooks/useAnalytics';
 import { HelmetProvider } from 'react-helmet-async';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import About from './pages/public/About';
+import Shipping from './pages/public/Shipping';
 import './App.css';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const AnalyticsWrapper = () => {
   useAnalytics();
@@ -39,8 +51,9 @@ const AnalyticsWrapper = () => {
 function App() {
   return (
     <HelmetProvider>
-      <ThemeProvider>
-        <AuthProvider>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <AuthProvider>
         <ToastProvider>
           <CartProvider>
             <WishlistProvider>
@@ -57,6 +70,8 @@ function App() {
                     <Route path="/checkout/success" element={<CheckoutSuccess />} />
                     <Route path="/favoritos" element={<Wishlist />} />
                     <Route path="/empresas" element={<CorporatePage />} />
+                    <Route path="/nosotros" element={<About />} />
+                    <Route path="/envios" element={<Shipping />} />
                     <Route path="/combo" element={<ComboBuilder />} />
                     <Route path="/devoluciones" element={<Returns />} />
                   </Route>
@@ -82,8 +97,9 @@ function App() {
             </WishlistProvider>
           </CartProvider>
         </ToastProvider>
-      </AuthProvider>
+        </AuthProvider>
       </ThemeProvider>
+      </QueryClientProvider>
     </HelmetProvider>
   );
 }

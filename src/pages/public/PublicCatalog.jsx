@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabaseClient';
+import { useQuery } from '@tanstack/react-query';
 import Header from '../../components/Header';
 import ProductCard from '../../components/ProductCard';
 import ProductCardSkeleton from '../../components/ProductSkeleton';
@@ -12,8 +13,6 @@ import { getImgUrl } from '../../lib/imageUtils';
 import { trackPixelEvent, logAnalyticsEvent } from '../../lib/analytics';
 
 function PublicCatalog() {
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
   // Dynamic hero — start null to avoid flash while fetching from Supabase
   const [heroDesktop, setHeroDesktop] = useState(null);
   const [heroMobile, setHeroMobile] = useState(null);
@@ -71,24 +70,18 @@ function PublicCatalog() {
 
   // ...
 
-  const fetchPublicProducts = async () => {
-    try {
-      setLoading(true);
+  const { data: products = [], isLoading: loading } = useQuery({
+    queryKey: ['products'],
+    queryFn: async () => {
       const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: false });
       if (error) throw error;
-      setProducts(data || []);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
+      return data || [];
     }
-  };
+  });
   
   let visibleProducts = [...products];
   
-  if (currentCategory === 'Nosotros' || currentCategory === 'Envios') {
-    visibleProducts = [];
-  } else if (currentCategory !== 'All') {
+  if (currentCategory !== 'All') {
     visibleProducts = visibleProducts.filter(p => p.category === currentCategory);
     if (mateSubCategory !== 'All') {
       visibleProducts = visibleProducts.filter(p => p.sub_category === mateSubCategory);
@@ -291,60 +284,7 @@ function PublicCatalog() {
       )}
 
       <main className="container main-content" id="catalog-section">
-        {currentCategory === 'Nosotros' ? (
-          <div className="page-section fade-in modern-layout">
-            <div className="capsule-hero">
-              <span className="badge-modern">Sobre nosotros</span>
-              <h2 className="title-modern" style={{ fontWeight: 900 }}>Conocé a <br/><span className="text-gradient" style={{ fontWeight: 900 }}>Cóndor Mates</span></h2>
-            </div>
-            <div className="capsule-grid">
-              <div className="capsule green-dark" style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: '1.5rem', alignItems: 'center', textAlign: 'center' }}>
-                <img src="/img/francisco_portrait.jpg" alt="Francisco - Fundador" style={{ width: '120px', height: '120px', borderRadius: '50%', objectFit: 'cover', border: '3px solid white', boxShadow: '0 8px 20px rgba(0,0,0,0.2)' }} onError={(e) => e.target.style.display='none'} />
-                <div>
-                  <h3 style={{ marginBottom: '0.5rem', fontWeight: 800 }}>Hola, soy Francisco 👋</h3>
-                  <p style={{ fontSize: '1.1rem', lineHeight: '1.6' }}>
-                    Soy un apasionado del mate nacido en <strong>Río Segundo, Córdoba</strong>. En Cóndor Mates nacimos con una misión simple pero importante: llevar la mejor calidad y la verdadera mística de la cultura matera a cada rincón de Argentina. <br/><br/>
-                    Yo personalmente selecciono y superviso cada pieza, asegurando que a tu casa llegue un producto premium, duradero y hecho con dedicación.
-                  </p>
-                </div>
-              </div>
-              <div className="capsule green-light">
-                <span className="emoji-huge" style={{ justifyContent: 'center' }}>🇦🇷</span>
-                <h3 style={{ textAlign: 'center' }}>Origen Cordobés</h3>
-                <p style={{ textAlign: 'center' }}>De Río Segundo para todo el país con la mejor energía.</p>
-              </div>
-              <div className="capsule green-accent">
-                <span className="emoji-huge" style={{ justifyContent: 'center' }}>🦅</span>
-                <h3 style={{ textAlign: 'center' }}>El Cóndor</h3>
-                <p style={{ textAlign: 'center' }}>Elegancia, altura y tradición en cada mate que armamos.</p>
-              </div>
-            </div>
-          </div>
-        ) : currentCategory === 'Envios' ? (
-          <div className="page-section fade-in modern-layout">
-            <div className="capsule-hero">
-              <span className="badge-modern">Logística</span>
-              <h2 className="title-modern" style={{ fontWeight: 900 }}><strong>Tus mates,</strong><br/><span className="text-gradient" style={{ fontWeight: 900 }}>a tu puerta</span></h2>
-            </div>
-            <div className="capsule-grid-2">
-              <div className="capsule green-dark full-width">
-                <h3>Envíos a Todo el País 🇦🇷</h3>
-                <p>Tu pedido será preparado y despachado con máxima prioridad dentro de las 24 horas hábiles luego de confirmado tu pago. ¡Llegamos a donde estés!</p>
-              </div>
-              <div className="capsule border-style">
-                <span className="emoji-huge">📦</span>
-                <h3>Packaging Gratis</h3>
-                <p>¡Todos nuestros productos incluyen packaging de regalo premium sin cargo extra! Llegar a casa o abrirlo enfrente de un amigo es toda una experiencia.</p>
-              </div>
-              <div className="capsule border-style">
-                <span className="emoji-huge">⚡</span>
-                <h3>Seguimiento Rápido</h3>
-                <p>Te enviamos el código de rastreo por WhatsApp al instante de despachar el paquete.</p>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="fade-in catalog-main-content">
+        <div className="fade-in catalog-main-content">
             <div className="catalog-header">
               <div className="catalog-title-bar">
                 <h2>
@@ -412,7 +352,6 @@ function PublicCatalog() {
               </div>
             )}
           </div>
-        )}
       </main>
     </>
   );

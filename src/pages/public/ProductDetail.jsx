@@ -10,7 +10,7 @@ import Header from '../../components/Header';
 import ProductCard from '../../components/ProductCard';
 import { ProductDetailSkeleton } from '../../components/ProductSkeleton';
 import { Helmet } from 'react-helmet-async';
-import { Heart, ShoppingBag } from 'lucide-react';
+import { Heart, ShoppingBag, Star } from 'lucide-react';
 import { getImgUrl } from '../../lib/imageUtils';
 import './ProductDetail.css';
 
@@ -71,7 +71,8 @@ function ProductDetail() {
         setIsVariantSwitching(true);
       }
 
-      const { data, error } = await supabase.from('products').select('*').eq('id', productId).single();
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(productId);
+      const { data, error } = await supabase.from('products').select('*').eq(isUUID ? 'id' : 'slug', productId).single();
       if (error) throw error;
       setProduct(data);
       setActiveImage(data.image_url);
@@ -154,7 +155,7 @@ function ProductDetail() {
 
       if (data.color_group) {
         const { data: variants } = await supabase.from('products')
-          .select('id, color_name, image_url')
+          .select('id, slug, color_name, image_url')
           .eq('color_group', data.color_group)
           .neq('id', data.id);
         if (variants) setColorVariants(variants);
@@ -167,8 +168,8 @@ function ProductDetail() {
     }
   };
 
-  const handleVariantSwitch = (variantId) => {
-    navigate(`/producto/${variantId}`, { replace: true });
+  const handleVariantSwitch = (variant) => {
+    navigate(`/producto/${variant.slug || variant.id}`, { replace: true });
   };
 
   useEffect(() => {
@@ -317,7 +318,12 @@ function ProductDetail() {
           </div>
           
           <div className="product-info">
-            {product.category && <span className="category-badge">{product.sub_category || product.category}</span>}
+            <div style={{display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '0.5rem', flexWrap: 'wrap'}}>
+              {product.category && <span className="category-badge" style={{margin: 0}}>{product.sub_category || product.category}</span>}
+              {product.best_seller && (
+                <span className="best-seller-badge" style={{position: 'relative', transform: 'none', bottom: 0, left: 0}}>MÁS VENDIDO</span>
+              )}
+            </div>
             <h1 className="product-title-large">{product.name}</h1>
 
             {/* Color Variants */}
@@ -333,7 +339,7 @@ function ProductDetail() {
                   <span
                     key={v.id}
                     className="color-swatch-name"
-                    onClick={() => handleVariantSwitch(v.id)}
+                    onClick={() => handleVariantSwitch(v)}
                     style={{cursor:'pointer'}}
                   >
                     {v.color_name || 'Otro color'}
@@ -343,10 +349,15 @@ function ProductDetail() {
             )}
             
             {/* Reviews Summary */}
-            {reviewCount > 0 && (
-              <div className="product-rating-summary" onClick={() => document.getElementById('reviews-section').scrollIntoView({behavior: 'smooth'})} style={{cursor: 'pointer'}}>
-                <span className="stars">{'★'.repeat(Math.round(ratingAvg))}{'☆'.repeat(5 - Math.round(ratingAvg))}</span>
-                <span className="rating-text">{ratingAvg} ({reviewCount} reseñas)</span>
+            {product.reviews_count > 0 && (
+              <div className="product-rating-summary" onClick={() => document.getElementById('reviews-section').scrollIntoView({behavior: 'smooth'})} style={{cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '1rem'}}>
+                <div style={{display: 'flex', color: '#C6A87C'}}>
+                  {Array.from({length: 5}).map((_, i) => (
+                    <Star key={i} size={16} fill={i < Math.round(product.rating || 0) ? "currentColor" : "none"} strokeWidth={i < Math.round(product.rating || 0) ? 0 : 1} />
+                  ))}
+                </div>
+                <span className="rating-text" style={{fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-dark)'}}>{product.rating}</span>
+                <span className="rating-text" style={{fontSize: '0.85rem', color: 'var(--text-light)'}}>({product.reviews_count} reseñas)</span>
               </div>
             )}
             

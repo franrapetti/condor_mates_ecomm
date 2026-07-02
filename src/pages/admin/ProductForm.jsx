@@ -101,6 +101,10 @@ const ProductForm = () => {
     is_corporate: false,
     show_stock_alert: false,
     is_priority: false,
+    slug: '',
+    best_seller: false,
+    rating: '',
+    reviews_count: '',
   });
 
   // Corporate pricing tiers: [{min, max, price}]
@@ -143,6 +147,10 @@ const ProductForm = () => {
         is_corporate: data.is_corporate ?? false,
         show_stock_alert: data.show_stock_alert ?? false,
         is_priority: data.is_priority ?? false,
+        slug: data.slug ?? '',
+        best_seller: data.best_seller ?? false,
+        rating: data.rating ?? '',
+        reviews_count: data.reviews_count ?? '',
       });
 
       if (data.corporate_pricing && Array.isArray(data.corporate_pricing)) {
@@ -233,6 +241,10 @@ const ProductForm = () => {
         corporate_pricing: formData.is_corporate ? corporateTiers : null,
         show_stock_alert: formData.show_stock_alert || false,
         is_priority: formData.is_priority || false,
+        slug: formData.slug || null,
+        best_seller: formData.best_seller || false,
+        rating: formData.rating !== '' ? Number(formData.rating) : null,
+        reviews_count: formData.reviews_count !== '' ? Number(formData.reviews_count) : 0,
       };
 
       setUploadProgress('Guardando en base de datos...');
@@ -287,8 +299,23 @@ const ProductForm = () => {
                 type="text"
                 required
                 value={formData.name}
-                onChange={e => set('name', e.target.value)}
+                onChange={e => {
+                  set('name', e.target.value);
+                  if (!isEditing && !formData.slug) {
+                    set('slug', e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''));
+                  }
+                }}
                 placeholder="Ej: Mate Torpedo Premium"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>URL Amigable (Slug) <span className="form-label-hint">Para SEO</span></label>
+              <input
+                type="text"
+                value={formData.slug}
+                onChange={e => set('slug', e.target.value.toLowerCase().replace(/[^a-z0-9\-]+/g, ''))}
+                placeholder="Ej: mate-torpedo-premium"
               />
             </div>
 
@@ -408,11 +435,45 @@ const ProductForm = () => {
               <label className="toggle-label mb-3">
                 <input
                   type="checkbox"
+                  checked={formData.best_seller}
+                  onChange={e => set('best_seller', e.target.checked)}
+                />
+                <span>💎 Etiqueta "El Más Vendido" (Premium CRO)</span>
+              </label>
+
+              <label className="toggle-label mb-3">
+                <input
+                  type="checkbox"
                   checked={formData.show_stock_alert}
                   onChange={e => set('show_stock_alert', e.target.checked)}
                 />
                 <span>🔥 Mostrar etiqueta "Últimas Unidades"</span>
               </label>
+            </div>
+
+            <div className="form-row mt-4">
+              <div className="form-group">
+                <label>Rating (Estrellas)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  min="1"
+                  max="5"
+                  value={formData.rating}
+                  onChange={e => set('rating', e.target.value)}
+                  placeholder="Ej: 4.9"
+                />
+              </div>
+              <div className="form-group">
+                <label>Cantidad de Reseñas</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={formData.reviews_count}
+                  onChange={e => set('reviews_count', e.target.value)}
+                  placeholder="Ej: 128"
+                />
+              </div>
             </div>
           </div>
 
