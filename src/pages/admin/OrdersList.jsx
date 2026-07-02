@@ -546,7 +546,30 @@ const OrdersList = () => {
       if (!window.confirm('¿Estás seguro de que querés cancelar esta orden web? Esta acción no se puede deshacer.')) return;
     }
     try {
-      const { error } = await supabase.from('orders').update({ status }).eq('id', id);
+      const payload = { status };
+      
+      // Fix _combo ids for Postgres trigger compatibility
+      const orderToUpdate = orders.find(o => o.id === id);
+      if (orderToUpdate && orderToUpdate.items) {
+        let parsedItems = orderToUpdate.items;
+        if (typeof parsedItems === 'string') {
+          try { parsedItems = JSON.parse(parsedItems); } catch (_) { parsedItems = null; }
+        }
+        if (Array.isArray(parsedItems)) {
+          const needsFix = parsedItems.some(i => typeof i.id === 'string' && (i.id.includes('_combo') || i.id.startsWith('custom-')));
+          if (needsFix) {
+            payload.items = parsedItems.map(i => {
+              if (typeof i.id === 'string') {
+                if (i.id.includes('_combo')) return { ...i, id: parseInt(i.id.split('_')[0], 10) };
+                if (i.id.startsWith('custom-')) return { ...i, id: 0 };
+              }
+              return i;
+            });
+          }
+        }
+      }
+
+      const { error } = await supabase.from('orders').update(payload).eq('id', id);
       if (error) throw error;
       
       setOrders(prev => prev.map(o => o.id === id ? { ...o, status: status } : o));
@@ -917,6 +940,23 @@ const OrdersList = () => {
   const todaySalesCount = todaySales.length;
   const todayRevenue = todaySales.reduce((acc, s) => acc + (s.total || 0), 0);
 
+  // Yerbas Sales Percentage
+  let yerbaRevenue = 0;
+  [...validWeb, ...validManual].forEach(sale => {
+    let items = sale.original?.items || sale.items;
+    if (typeof items === 'string') {
+      try { items = JSON.parse(items); } catch (_) { items = []; }
+    }
+    if (Array.isArray(items)) {
+      items.forEach(item => {
+        if (item.name && item.name.toLowerCase().includes('yerba')) {
+          yerbaRevenue += (item.price || 0) * (item.quantity || 1);
+        }
+      });
+    }
+  });
+  const yerbaPercentage = totalRevenue > 0 ? ((yerbaRevenue / totalRevenue) * 100).toFixed(1) : 0;
+
   // Calculate Advanced KPIs
   const getCutoff = () => {
     if (dateRange === 'all') return null;
@@ -1242,6 +1282,13 @@ const OrdersList = () => {
         <div className="kpi-card">
           <h3>Ticket Promedio</h3>
           <p className="kpi-value">${Math.round(avgTicket).toLocaleString()}</p>
+        </div>
+        <div className="kpi-card" style={{background: 'linear-gradient(135deg, rgba(217, 119, 6, 0.05), rgba(217, 119, 6, 0.01))', borderColor: 'rgba(217, 119, 6, 0.2)'}}>
+          <h3 style={{color: '#b45309'}}>Proporción Yerbas</h3>
+          <p className="kpi-value" style={{color: '#d97706', fontSize: '1.25rem'}}>{yerbaPercentage}% <span style={{fontSize: '0.85rem', fontWeight: 600, opacity: 0.8}}>del ingreso</span></p>
+          <p style={{fontSize: '0.7rem', color: 'var(--text-light)', marginTop: '0.2rem', lineHeight: 1.3}}>
+            <strong>Margen prom:</strong> ~23% (30% sobre costo)
+          </p>
         </div>
         <div className="kpi-card analytics-kpi">
           <h3>Visitas Únicas</h3>
