@@ -25,13 +25,20 @@ export function useAdminFavicon() {
       canvas.height = img.height;
       const ctx = canvas.getContext('2d');
       
-      // Draw original
+      // 1. Invert the image first (Black background -> White, White Condor -> Black)
+      ctx.filter = 'invert(1)';
       ctx.drawImage(img, 0, 0);
       
-      // Solid green silhouette keeping the original alpha channel
-      ctx.globalCompositeOperation = 'source-in';
+      // 2. Multiply with green. 
+      // White background * Green = Green. 
+      // Black condor * Green = Black.
+      ctx.filter = 'none';
+      ctx.globalCompositeOperation = 'multiply';
       ctx.fillStyle = '#16a34a'; 
       ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Restore composite for safety
+      ctx.globalCompositeOperation = 'source-over';
       
       newFavicon.href = canvas.toDataURL('image/png');
     };
