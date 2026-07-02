@@ -658,35 +658,44 @@ const OrdersList = () => {
     e.preventDefault();
     if (!manualForm.customer_name.trim() || manualLines.length === 0) return;
     setSavingManual(true);
-    const itemsString = manualLines.map(l => `${l.quantity}x ${l.name}`);
-    const itemsJson = JSON.stringify(manualLines.map(l => ({ id: l.product_id, name: l.name, quantity: l.quantity, price: l.price })));
-    const { error } = await supabase.from('manual_sales').insert([{
-      ...manualForm,
-      items: itemsJson,
-      total_amount: effectiveTotal,
-    }]);
-    if (!error) {
+    
+    try {
+      const itemsJson = JSON.stringify(manualLines.map(l => ({ id: l.product_id, name: l.name, quantity: l.quantity, price: l.price })));
+      const { error } = await supabase.from('manual_sales').insert([{
+        ...manualForm,
+        items: itemsJson,
+        total_amount: effectiveTotal,
+      }]);
+      
+      if (error) throw error;
+
       // Descontar stock inmediatamente (el producto ya fue entregado)
       for (const line of manualLines) {
-        if (line.product_id && !line.product_id.startsWith('custom-')) {
-          const { data: dbProduct } = await supabase
-            .from('products').select('stock').eq('id', line.product_id).single();
-          if (dbProduct && dbProduct.stock !== null) {
+        if (line.product_id && !String(line.product_id).startsWith('custom-')) {
+          const productId = String(line.product_id).includes('_combo') ? parseInt(String(line.product_id).split('_')[0], 10) : line.product_id;
+          
+          const { data: dbProduct, error: stockError } = await supabase
+            .from('products').select('stock').eq('id', productId).single();
+            
+          if (!stockError && dbProduct && dbProduct.stock !== null) {
             await supabase.from('products')
               .update({ stock: Math.max(0, dbProduct.stock - line.quantity) })
-              .eq('id', line.product_id);
+              .eq('id', productId);
           }
         }
       }
+      
       setManualForm(EMPTY_FORM);
       setManualLines([]);
       setManualTotalOverride(null);
       setShowManualForm(false);
       fetchData();
-    } else {
-      alert('Error al guardar: ' + error.message);
+    } catch (err) {
+      console.error(err);
+      alert('Error al guardar: ' + (err.message || JSON.stringify(err)));
+    } finally {
+      setSavingManual(false);
     }
-    setSavingManual(false);
   };
 
   const handleDeleteManual = async (id) => {
