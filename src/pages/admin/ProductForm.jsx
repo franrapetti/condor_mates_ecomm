@@ -251,12 +251,34 @@ const ProductForm = () => {
       if (isEditing) {
         const { error } = await supabase.from('products').update(payload).eq('id', id);
         if (error) throw error;
+        navigate('/admin');
       } else {
         const { error } = await supabase.from('products').insert([payload]);
         if (error) throw error;
+        
+        alert('✅ ¡Producto agregado con éxito al catálogo!');
+        
+        // Reset form for next entry
+        setFormData({
+          name: '',
+          price: '',
+          promo_price: '',
+          stock: '',
+          category_raw: CATEGORIES[0],
+          quick_add_upsell: false,
+          color_group: '',
+          color_name: '',
+          is_corporate: false,
+          show_stock_alert: false,
+          is_priority: false,
+          slug: '',
+          best_seller: false,
+          rating: '',
+          reviews_count: '',
+        });
+        setImages([]);
+        setCorporateTiers([{ min: 10, max: 49, price: '' }, { min: 50, max: '', price: '' }]);
       }
-
-      navigate('/admin');
     } catch (error) {
       console.error(error);
       alert('Error al guardar el producto:\n\n' + (error.message || error.details || JSON.stringify(error)));

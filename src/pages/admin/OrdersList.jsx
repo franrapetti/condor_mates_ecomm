@@ -923,14 +923,26 @@ const OrdersList = () => {
   });
 
   // Calculate Basic KPIs (Unified)
-  const validWeb = orders.filter(o => o.status === 'paid' || o.status === 'shipped');
-  const validManual = manualSales.filter(s => s.status === 'paid');
+  const cutoff = getCutoff();
+  
+  const validWeb = orders.filter(o => {
+    if (cutoff && new Date(o.created_at) < cutoff) return false;
+    return o.status === 'paid' || o.status === 'shipped';
+  });
+  
+  const validManual = manualSales.filter(s => {
+    if (cutoff && new Date(s.created_at) < cutoff) return false;
+    return s.status === 'paid';
+  });
   
   const totalRevenue = validWeb.reduce((acc, o) => acc + o.total_price, 0) + validManual.reduce((acc, m) => acc + m.total_amount, 0);
   const totalSalesCount = validWeb.length + validManual.length;
   const avgTicket = totalSalesCount > 0 ? totalRevenue / totalSalesCount : 0;
   
-  const debtSales = manualSales.filter(s => s.status === 'debt');
+  const debtSales = manualSales.filter(s => {
+    if (cutoff && new Date(s.created_at) < cutoff) return false;
+    return s.status === 'debt';
+  });
   const totalDebt = debtSales.reduce((acc, s) => acc + s.total_amount, 0);
 
   // Today Sales
@@ -949,8 +961,13 @@ const OrdersList = () => {
     }
     if (Array.isArray(items)) {
       items.forEach(item => {
-        if (item.name && item.name.toLowerCase().includes('yerba')) {
-          yerbaRevenue += (item.price || 0) * (item.quantity || 1);
+        const catProd = catalogProducts.find(p => p.id === (item.product_id || item.id));
+        const isYerba = catProd ? 
+          (catProd.category === 'Yerbas' || catProd.category === 'Yerba Mate') : 
+          /yerba|baldo|canarias|sara|rey verde/i.test(item.name || '');
+          
+        if (isYerba) {
+          yerbaRevenue += (Number(item.price) || 0) * (Number(item.quantity) || 1);
         }
       });
     }
