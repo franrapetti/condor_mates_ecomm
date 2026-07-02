@@ -976,7 +976,13 @@ const OrdersList = () => {
     }
     if (Array.isArray(items)) {
       items.forEach(item => {
-        const catProd = catalogProducts.find(p => p.id === (item.product_id || item.id));
+        const rawId = item.product_id || item.id;
+        let numericId = null;
+        if (rawId) {
+          numericId = String(rawId).includes('_combo') ? parseInt(String(rawId).split('_')[0], 10) : Number(rawId);
+        }
+        
+        const catProd = catalogProducts.find(p => Number(p.id) === numericId);
         const isYerba = catProd ? 
           (catProd.category === 'Yerbas' || catProd.category === 'Yerba Mate') : 
           /yerba|baldo|canarias|sara|rey verde/i.test(item.name || '');
