@@ -1,7 +1,10 @@
 /* ── SHELL ── */
 .adm-shell {
   display: flex;
-  height: 100vh;
+  height: 100dvh; /* Fix iOS keyboard layout shift */
+  width: 100%;
+  position: fixed;
+  inset: 0;
   background: var(--background);
   overflow: hidden;
 }
