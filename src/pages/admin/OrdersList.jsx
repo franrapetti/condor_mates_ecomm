@@ -487,7 +487,7 @@ const OrdersList = () => {
       // Fetch product catalog for autocomplete
       const { data: prods } = await supabase
         .from('products')
-        .select('id, name, price, promo_price, stock, image_url')
+        .select('id, name, price, promo_price, stock, image_url, category')
         .order('name');
       if (prods) setCatalogProducts(prods);
 

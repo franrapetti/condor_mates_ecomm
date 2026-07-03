@@ -65,14 +65,34 @@ const ProductsList = () => {
     ? products 
     : products.filter(p => p.category === selectedCategory);
 
+  const totalStockValue = products.reduce((acc, p) => {
+    const stock = p.stock || 0;
+    const price = p.price || 0;
+    if (stock > 0 && price > 0) {
+      return acc + (stock * price * 0.9);
+    }
+    return acc;
+  }, 0);
+
   return (
     <div className="admin-page">
-      <div className="adm-page-header">
+      <div className="adm-page-header" style={{ marginBottom: '1rem' }}>
         <div className="adm-page-title">
           <h1>Catálogo de Productos</h1>
           <span className="adm-count-pill">{products.length} artículos</span>
         </div>
         <Link to="/admin/products/new" className="btn-primary">+ Nuevo Producto</Link>
+      </div>
+
+      <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
+        <div style={{ background: 'var(--surface)', padding: '1.25rem', borderRadius: '12px', border: '1px solid var(--border)', flex: '1 1 auto', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+          <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-light)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            Valor Total de Stock (Transf.)
+          </span>
+          <span style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--text-dark)' }}>
+            ${Math.round(totalStockValue).toLocaleString()}
+          </span>
+        </div>
       </div>
 
       <ProductHeatmap products={products} />
