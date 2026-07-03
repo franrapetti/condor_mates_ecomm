@@ -650,3 +650,109 @@
   color: var(--text-dark);
   line-height: 1.4;
 }
+
+/* ── CATALOG FILTERS ── */
+.catalog-filters {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1.5rem;
+  -webkit-overflow-scrolling: touch;
+}
+.catalog-filters::-webkit-scrollbar {
+  height: 4px;
+}
+.catalog-filters::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+.filter-btn {
+  white-space: nowrap;
+  padding: 0.4rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.filter-btn.active {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+/* ── MOBILE CATALOG GRID ── */
+.mobile-catalog-wrapper {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .desktop-catalog {
+    display: none;
+  }
+  .mobile-catalog-wrapper {
+    display: block;
+  }
+  
+  .mobile-catalog-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+  }
+  
+  .mobile-product-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
+    aspect-ratio: 1;
+  }
+  
+  .mobile-product-img-wrapper {
+    width: 100%;
+    height: 100%;
+    position: relative;
+  }
+  
+  .mobile-product-img-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  
+  .mobile-stock-badge {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 2px 5px;
+    border-radius: 6px;
+    color: white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  }
+  .mobile-stock-badge.ok-stock { background: #16a34a; }
+  .mobile-stock-badge.low-stock { background: #ea580c; }
+  .mobile-stock-badge.no-stock { background: #dc2626; }
+  
+  .mobile-product-price {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-align: center;
+    padding: 3px 0;
+    backdrop-filter: blur(2px);
+  }
+}
