@@ -68,7 +68,8 @@ const ProductsList = () => {
   const totalStockValue = products.reduce((acc, p) => {
     const stock = p.stock || 0;
     const price = p.price || 0;
-    if (stock > 0 && price > 0) {
+    const isGrabado = p.name && p.name.toLowerCase().includes('grabado');
+    if (stock > 0 && price > 0 && !isGrabado) {
       return acc + (stock * price * 0.9);
     }
     return acc;
