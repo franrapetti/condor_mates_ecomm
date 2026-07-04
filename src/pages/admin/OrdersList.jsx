@@ -1728,13 +1728,13 @@ const OrdersList = () => {
                         <span>Subtotal</span>
                         <span style={{ fontSize: '13px', color: '#3d3929', fontWeight: 600 }}>${ticketModal.discountInfo.subtotal.toLocaleString()}</span>
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', color: '#234a2e', fontWeight: 600 }}>
-                        <span style={{ fontSize: '12px' }}>
-                          Desc. {ticketModal.discountInfo.percent}% {(ticketModal.discountInfo.method === 'Efectivo' || ticketModal.discountInfo.method === 'Transferencia') ? 'Efv / Transf.' : ticketModal.discountInfo.method}
-                          <span style={{ display: 'inline-block', verticalAlign: 'middle', background: 'linear-gradient(135deg, #234a2e, #3a7d44)', color: 'white', fontSize: '9px', fontWeight: 800, padding: '0 8px', borderRadius: '10px', marginLeft: '6px', height: '17px', lineHeight: '17px', position: 'relative', top: '-1px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', color: '#234a2e', fontWeight: 600 }}>
+                        <div style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span>Desc. {ticketModal.discountInfo.percent}% {(ticketModal.discountInfo.method === 'Efectivo' || ticketModal.discountInfo.method === 'Transferencia') ? 'Efv / Transf.' : ticketModal.discountInfo.method}</span>
+                          <span style={{ background: 'linear-gradient(135deg, #234a2e, #3a7d44)', color: 'white', fontSize: '9px', fontWeight: 800, padding: '4px 8px 4px 8px', borderRadius: '10px' }}>
                             {ticketModal.discountInfo.percent}% OFF
                           </span>
-                        </span>
+                        </div>
                         <span style={{ fontSize: '13px', fontWeight: 700 }}>-${ticketModal.discountInfo.amount.toLocaleString()}</span>
                       </div>
                     </div>
@@ -1753,8 +1753,8 @@ const OrdersList = () => {
                 <div style={{ textAlign: 'center', padding: '20px 32px 28px', background: 'linear-gradient(180deg, transparent, rgba(35, 74, 46, 0.03))' }}>
                   <div style={{ fontSize: '15px', fontWeight: 700, color: '#234a2e', marginBottom: '6px' }}>¡Gracias por tu compra! 🧉</div>
                   <div style={{ fontSize: '11px', color: '#9c9585', lineHeight: 1.5 }}>Esperamos que disfrutes tu pedido.<br/>Cualquier consulta, escribinos.</div>
-                  <div style={{ display: 'inline-block', marginTop: '12px', fontSize: '12px', fontWeight: 600, color: '#234a2e', padding: '0 14px', border: '1.5px solid #234a2e', borderRadius: '20px', height: '28px', lineHeight: '25px', boxSizing: 'border-box' }}>
-                    @condor_mates
+                  <div style={{ marginTop: '12px', display: 'inline-block' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 600, color: '#234a2e', padding: '6px 14px 6px 14px', border: '1.5px solid #234a2e', borderRadius: '20px' }}>@condor_mates</span>
                   </div>
                 </div>
               </div>
