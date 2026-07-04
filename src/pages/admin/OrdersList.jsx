@@ -782,7 +782,7 @@ const OrdersList = () => {
 
     let discountText = '';
     if (discountInfo?.applied) {
-      discountText = `\nSubtotal: $${discountInfo.subtotal.toLocaleString()}\nDesc. ${discountInfo.percent}% ${discountInfo.method}: -$${discountInfo.amount.toLocaleString()}`;
+      discountText = `\nSubtotal: $${discountInfo.subtotal.toLocaleString()}\nDesc. ${discountInfo.percent}% ${(discountInfo.method === 'Efectivo' || discountInfo.method === 'Transferencia') ? 'Efv / Transf.' : discountInfo.method}: -$${discountInfo.amount.toLocaleString()}`;
     }
 
     return `🧉 *CÓNDOR MATES*\nComprobante #${orderId}\n\n👤 *Cliente:* ${customerName}\n📅 *Fecha:* ${formattedDate}\n\n📦 *Pedido:*\n${itemsList}\n${discountText}\n💰 *Total: $${total.toLocaleString()}*\n\n¡Gracias por tu compra! 🧉\n🌐 condormates.com.ar\n📸 @condor_mates`;
@@ -1729,9 +1729,9 @@ const OrdersList = () => {
                         <span style={{ fontSize: '13px', color: '#3d3929', fontWeight: 600 }}>${ticketModal.discountInfo.subtotal.toLocaleString()}</span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', color: '#234a2e', fontWeight: 600 }}>
-                        <span style={{ fontSize: '12px', display: 'flex', alignItems: 'center' }}>
-                          Desc. {ticketModal.discountInfo.percent}% {ticketModal.discountInfo.method}
-                          <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, background: 'linear-gradient(135deg, #234a2e, #3a7d44)', color: 'white', fontSize: '9px', fontWeight: 800, padding: '3px 8px 2px', borderRadius: '10px', marginLeft: '6px' }}>
+                        <span style={{ fontSize: '12px' }}>
+                          Desc. {ticketModal.discountInfo.percent}% {(ticketModal.discountInfo.method === 'Efectivo' || ticketModal.discountInfo.method === 'Transferencia') ? 'Efv / Transf.' : ticketModal.discountInfo.method}
+                          <span style={{ display: 'inline-block', verticalAlign: 'middle', background: 'linear-gradient(135deg, #234a2e, #3a7d44)', color: 'white', fontSize: '9px', fontWeight: 800, padding: '0 8px', borderRadius: '10px', marginLeft: '6px', height: '17px', lineHeight: '17px', position: 'relative', top: '-1px' }}>
                             {ticketModal.discountInfo.percent}% OFF
                           </span>
                         </span>
@@ -1753,7 +1753,7 @@ const OrdersList = () => {
                 <div style={{ textAlign: 'center', padding: '20px 32px 28px', background: 'linear-gradient(180deg, transparent, rgba(35, 74, 46, 0.03))' }}>
                   <div style={{ fontSize: '15px', fontWeight: 700, color: '#234a2e', marginBottom: '6px' }}>¡Gracias por tu compra! 🧉</div>
                   <div style={{ fontSize: '11px', color: '#9c9585', lineHeight: 1.5 }}>Esperamos que disfrutes tu pedido.<br/>Cualquier consulta, escribinos.</div>
-                  <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginTop: '12px', fontSize: '12px', fontWeight: 600, color: '#234a2e', padding: '7px 14px 6px', border: '1.5px solid #234a2e', borderRadius: '20px', lineHeight: 1 }}>
+                  <div style={{ display: 'inline-block', marginTop: '12px', fontSize: '12px', fontWeight: 600, color: '#234a2e', padding: '0 14px', border: '1.5px solid #234a2e', borderRadius: '20px', height: '28px', lineHeight: '25px', boxSizing: 'border-box' }}>
                     @condor_mates
                   </div>
                 </div>
