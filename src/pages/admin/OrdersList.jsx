@@ -818,22 +818,35 @@ const OrdersList = () => {
   const handleShareImage = async () => {
     if (!ticketRef.current) return;
     try {
-      // Usamos un clon en el body para evitar que el scroll del modal recorte la imagen en html2canvas
-      const clone = ticketRef.current.cloneNode(true);
-      clone.style.position = 'absolute';
-      clone.style.top = '-9999px';
-      clone.style.left = '-9999px';
-      clone.style.margin = '0';
-      document.body.appendChild(clone);
+      // Usamos un wrapper con fondo para la exportación y forzamos un ancho mayor
+      const wrapper = document.createElement('div');
+      wrapper.style.position = 'absolute';
+      wrapper.style.top = '-9999px';
+      wrapper.style.left = '-9999px';
+      wrapper.style.padding = '40px';
+      wrapper.style.background = '#f7f4ef'; // Fondo similar al modal
+      wrapper.style.display = 'flex';
+      wrapper.style.justifyContent = 'center';
+      wrapper.style.alignItems = 'center';
 
-      const canvas = await html2canvas(clone, {
+      const clone = ticketRef.current.cloneNode(true);
+      clone.style.width = '480px'; // Un poco más ancho
+      clone.style.maxWidth = 'none';
+      clone.style.margin = '0';
+      clone.style.position = 'relative';
+      clone.style.transform = 'none';
+      
+      wrapper.appendChild(clone);
+      document.body.appendChild(wrapper);
+
+      const canvas = await html2canvas(wrapper, {
         scale: 2,
         useCORS: true,
-        backgroundColor: '#fffdf8',
+        backgroundColor: '#f7f4ef',
         logging: false,
       });
       
-      document.body.removeChild(clone);
+      document.body.removeChild(wrapper);
 
       const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
       if (!blob) return;
@@ -1647,7 +1660,7 @@ const OrdersList = () => {
                 }} />
                 
                 <div style={{ textAlign: 'center', padding: '36px 32px 24px', borderBottom: '2px dashed #e8e2d6' }}>
-                  <img src="/logo.png" alt="Cóndor Mates" style={{ height: '70px', marginBottom: '12px', objectFit: 'contain' }} />
+                  <img src="/logo.png" alt="Cóndor Mates" style={{ height: '70px', width: 'auto', display: 'inline-block', marginBottom: '12px', objectFit: 'contain' }} />
                   <div style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '3px', textTransform: 'uppercase', color: '#234a2e' }}>Cóndor Mates</div>
                   <div style={{ fontSize: '11px', color: '#9c9585', fontStyle: 'italic', marginTop: '4px' }}>El arte de cebar</div>
                 </div>
