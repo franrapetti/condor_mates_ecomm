@@ -43,7 +43,7 @@ const ProductCard = ({ product, onAddToCart, noZoom }) => {
             </span>
           )}
           {isLaunched && (product.category === 'Mates' || product.sub_category === 'Bombillones de Alpaca') && (
-            <span className="packaging-badge">🎁 Packaging Premium (Valor $3,500)</span>
+            <span className="packaging-badge">🎁 Packaging Premium <span style={{textDecoration: 'line-through', opacity: 0.8}}>$3,500</span> GRATIS</span>
           )}
         </div>
         <button

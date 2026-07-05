@@ -71,8 +71,8 @@ function ProductDetail() {
         setIsVariantSwitching(true);
       }
 
-      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(productId);
-      const { data, error } = await supabase.from('products').select('*').eq(isUUID ? 'id' : 'slug', productId).single();
+      const isId = /^\d+$/.test(productId) || /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(productId);
+      const { data, error } = await supabase.from('products').select('*').eq(isId ? 'id' : 'slug', productId).single();
       if (error) throw error;
       setProduct(data);
       setActiveImage(data.image_url);
