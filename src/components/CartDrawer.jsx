@@ -69,6 +69,25 @@ const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem
     }
   };
 
+  const savePartialLead = async () => {
+    if (!formData.email) return;
+    try {
+      await fetch('/api/save_cart_lead', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: formData.email,
+          name: formData.name,
+          phone: '', // Can add phone later if needed
+          cartData: cartItems,
+          total: finalTotal
+        })
+      });
+    } catch (e) {
+      // fail silent
+    }
+  };
+
   const handleCheckoutSubmit = async (e) => {
     e.preventDefault();
     
@@ -76,7 +95,7 @@ const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem
       setIsPaying(true);
       try {
         sessionStorage.setItem('mate_last_cart', JSON.stringify(cartItems));
-        sessionStorage.setItem('mate_last_total', Math.round(finalTotal * 0.9).toString()); // 10% discount
+        sessionStorage.setItem('mate_last_total', Math.round(finalTotal * 0.8).toString()); // 20% discount
 
         const response = await fetch('/api/create_transfer_order', {
           method: 'POST',
@@ -85,7 +104,7 @@ const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem
             items: cartItems,
             customer: formData,
             shippingMethod: selectedShipping,
-            total: Math.round(finalTotal * 0.9), // 10% discount total
+            total: Math.round(finalTotal * 0.8), // 20% discount total
             source: localStorage.getItem('mate_traffic_source') || 'direct'
           })
         });
@@ -183,23 +202,23 @@ const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem
               <form className="checkout-form fade-in" onSubmit={handleCheckoutSubmit}>
                 <div className="form-group">
                   <label>Nombre Completo</label>
-                  <input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Ej: Juan Pérez" />
+                  <input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} onBlur={savePartialLead} placeholder="Ej: Juan Pérez" />
                 </div>
                 <div className="form-group">
                   <label>Email (para envío del recibo)</label>
-                  <input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} placeholder="Ej: juan@email.com" />
+                  <input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} onBlur={savePartialLead} placeholder="Ej: juan@email.com" />
                 </div>
                 <div className="form-group">
                   <label>Código Postal</label>
-                  <input required type="text" value={formData.postalCode} onChange={handlePostalCodeChange} placeholder="Ej: 5000" />
+                  <input required type="text" value={formData.postalCode} onChange={handlePostalCodeChange} onBlur={savePartialLead} placeholder="Ej: 5000" />
                 </div>
                 <div className="form-group">
                   <label>Ciudad</label>
-                  <input required type="text" value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} placeholder="Ej: Córdoba Capital" />
+                  <input required type="text" value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} onBlur={savePartialLead} placeholder="Ej: Córdoba Capital" />
                 </div>
                 <div className="form-group">
                   <label>Notas Adicionales (Opcional)</label>
-                  <textarea rows="3" value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} placeholder="Instrucciones para la entrega, etc." />
+                  <textarea rows="3" value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} onBlur={savePartialLead} placeholder="Instrucciones para la entrega, etc." />
                 </div>
 
                 {shippingOptions.length > 0 && (
@@ -245,7 +264,7 @@ const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem
                     {isPaying ? 'Procesando...' : '💳 Pagar Seguro con Mercado Pago'}
                   </button>
                   <button type="submit" onClick={() => setSubmitAction('whatsapp')} className="whatsapp-btn " disabled={isPaying} style={{marginTop: '-0.5rem', backgroundColor: '#25D366', color: 'white', border: 'none'}}>
-                    {isPaying ? 'Procesando...' : '🏦 Pagar con Transferencia (-10% OFF Extras)'}
+                    {isPaying ? 'Procesando...' : '🏦 Pagar con Transferencia (-20% OFF Extras)'}
                   </button>
                   
                   <div className="trust-badges-container">

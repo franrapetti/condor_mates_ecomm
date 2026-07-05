@@ -43,7 +43,7 @@ const ExitIntentPopup = () => {
     try {
       const { error } = await supabase.from('leads').insert([{
         email: email.trim(),
-        source: 'exit_intent'
+        source: 'exit_intent_15off_freeshipping'
       }]);
       
       // We might get an error if they previously submitted their email (uniqueness constraint)
@@ -81,27 +81,27 @@ const ExitIntentPopup = () => {
             <span className="exit-emoji-huge">🎉</span>
             <h2>¡Gracias por sumarte!</h2>
             <p className="exit-desc">Aplicá el siguiente código en el checkout de Mercado Pago o avisanos por WhatsApp:</p>
-            <div className="discount-code-box">CONDOR10</div>
-            <p className="exit-small">10% OFF en tu primer mate imperial.</p>
+            <div className="discount-code-box">CONDOR15</div>
+            <p className="exit-small">15% OFF + Envío Gratis en tu primera compra.</p>
             <button className="exit-submit-btn mt-4" onClick={closePopup}>Seguir Viendo</button>
           </div>
         ) : (
           <div className="exit-form-container text-center">
             <span className="exit-emoji-huge">🧉</span>
-            <h2>¡Esperá! ¿Te vas con las manos vacías?</h2>
-            <p className="exit-desc">Dejanos tu email y llevate un <strong>10% OFF automático</strong> para tu primera compra de un Mate Imperial.</p>
+            <h2>¡No te vayas con el mate lavado!</h2>
+            <p className="exit-desc">Dejanos tu WhatsApp (o Email) y te mandamos un <strong>Cupón de 15% OFF + Envío Gratis</strong> para tu primera compra.</p>
             
             <form onSubmit={handleSubmit} className="exit-form">
               <input 
-                type="email" 
-                placeholder="Ingresá tu mejor correo..." 
+                type="text" 
+                placeholder="Tu WhatsApp o Email..." 
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 required
                 className="exit-input"
               />
               <button type="submit" disabled={status === 'loading'} className="exit-submit-btn">
-                {status === 'loading' ? 'Procesando...' : 'Quiero mi 10% OFF 🚀'}
+                {status === 'loading' ? 'Procesando...' : 'Quiero mi 15% OFF + Envío Gratis 🚀'}
               </button>
             </form>
             <button className="exit-deny-btn" onClick={closePopup}>No gracias, prefiero pagar precio completo</button>

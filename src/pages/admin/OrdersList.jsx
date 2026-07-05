@@ -1731,12 +1731,16 @@ const OrdersList = () => {
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', color: '#234a2e', fontWeight: 600 }}>
                         <div style={{ fontSize: '12px' }}>
                           Desc. {ticketModal.discountInfo.percent}% {(ticketModal.discountInfo.method === 'Efectivo' || ticketModal.discountInfo.method === 'Transferencia') ? 'Efv / Transf.' : ticketModal.discountInfo.method}
-                          {' '}
-                          <span style={{ display: 'inline-table', borderRadius: '10px', background: 'linear-gradient(135deg, #234a2e, #3a7d44)', marginLeft: '4px' }}>
-                            <span style={{ display: 'table-cell', verticalAlign: 'middle', color: 'white', fontSize: '10px', fontWeight: 800, padding: '3px 9px', whiteSpace: 'nowrap' }}>
+                          
+                          <div style={{ position: 'relative', display: 'inline-block', marginLeft: '6px', verticalAlign: 'middle' }}>
+                            <div style={{ visibility: 'hidden', fontSize: '10px', fontWeight: 800, padding: '4px 9px', lineHeight: 1 }}>
                               {ticketModal.discountInfo.percent}% OFF
-                            </span>
-                          </span>
+                            </div>
+                            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'linear-gradient(135deg, #234a2e, #3a7d44)', borderRadius: '10px' }}></div>
+                            <div style={{ position: 'absolute', top: '4px', left: 0, width: '100%', textAlign: 'center', color: 'white', fontSize: '10px', fontWeight: 800, lineHeight: 1, margin: 0, padding: 0 }}>
+                              {ticketModal.discountInfo.percent}% OFF
+                            </div>
+                          </div>
                         </div>
                         <span style={{ fontSize: '13px', fontWeight: 700 }}>-${ticketModal.discountInfo.amount.toLocaleString()}</span>
                       </div>
@@ -1756,9 +1760,15 @@ const OrdersList = () => {
                 <div style={{ textAlign: 'center', padding: '20px 32px 28px', background: 'linear-gradient(180deg, transparent, rgba(35, 74, 46, 0.03))' }}>
                   <div style={{ fontSize: '15px', fontWeight: 700, color: '#234a2e', marginBottom: '6px' }}>¡Gracias por tu compra! 🧉</div>
                   <div style={{ fontSize: '11px', color: '#9c9585', lineHeight: 1.5 }}>Esperamos que disfrutes tu pedido.<br/>Cualquier consulta, escribinos.</div>
-                  <span style={{ display: 'inline-table', marginTop: '12px', border: '1.5px solid #234a2e', borderRadius: '20px' }}>
-                    <span style={{ display: 'table-cell', verticalAlign: 'middle', fontSize: '12px', fontWeight: 600, color: '#234a2e', padding: '5px 14px', whiteSpace: 'nowrap' }}>@condor_mates</span>
-                  </span>
+                  <div style={{ position: 'relative', display: 'inline-block', marginTop: '12px' }}>
+                    <div style={{ visibility: 'hidden', fontSize: '12px', fontWeight: 600, padding: '6px 14px', lineHeight: 1 }}>
+                      @condor_mates
+                    </div>
+                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, border: '1.5px solid #234a2e', borderRadius: '20px' }}></div>
+                    <div style={{ position: 'absolute', top: '6px', left: 0, width: '100%', textAlign: 'center', color: '#234a2e', fontSize: '12px', fontWeight: 600, lineHeight: 1, margin: 0, padding: 0 }}>
+                      @condor_mates
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

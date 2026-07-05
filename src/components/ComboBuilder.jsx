@@ -109,7 +109,7 @@ function ProductCard({ product, selected, onToggle }) {
       <div className="p-3 pointer-events-none">
         <p className="text-[0.8rem] font-bold text-gray-800 line-clamp-1">{product.name}</p>
         <p className="text-[0.85rem] font-black text-[var(--forest-dark)] mt-0.5">${(product.promo_price || product.price).toLocaleString()}</p>
-        <p className="text-[0.65rem] font-bold text-green-700 mt-0.5">${Math.round((product.promo_price || product.price) * 0.9).toLocaleString()} transf. (-10%)</p>
+        <p className="text-[0.65rem] font-bold text-green-700 mt-0.5">${Math.round((product.promo_price || product.price) * 0.8).toLocaleString()} transf. (-20%)</p>
       </div>
       {isSelected && (
         <div className="absolute top-2 right-2 bg-[var(--forest-dark)] text-white w-5 h-5 rounded-full flex items-center justify-center pointer-events-none shadow-md">
@@ -185,8 +185,8 @@ function VisualBox({ selections, discount, subtotal, finalPrice, itemCount, onAd
             </div>
             
             <div className="bg-green-50 border border-green-200 rounded-lg p-2.5 mt-3 flex justify-between items-center shadow-sm">
-              <span className="text-[0.7rem] font-black text-green-700 uppercase tracking-tight leading-tight">Por transferencia <br/><span className="font-bold opacity-80">(10% EXTRA OFF)</span></span>
-              <span className="text-xl font-black text-green-800">${Math.round(finalPrice * 0.9).toLocaleString()}</span>
+              <span className="text-[0.7rem] font-black text-green-700 uppercase tracking-tight leading-tight">Por transferencia <br/><span className="font-bold opacity-80">(20% EXTRA OFF)</span></span>
+              <span className="text-xl font-black text-green-800">${Math.round(finalPrice * 0.8).toLocaleString()}</span>
             </div>
           </div>
 
@@ -460,7 +460,7 @@ export default function ComboBuilder() {
             <div>
               <p className="text-[0.65rem] font-bold text-gray-400 uppercase tracking-wider">{itemCount} PRODUCTOS</p>
               <p className="text-xl font-black text-gray-900">${finalPrice.toLocaleString()}</p>
-              <p className="text-[0.65rem] font-bold text-green-700">${Math.round(finalPrice * 0.9).toLocaleString()} transf.</p>
+              <p className="text-[0.65rem] font-bold text-green-700">${Math.round(finalPrice * 0.8).toLocaleString()} transf.</p>
             </div>
             <button
               onClick={handleAddToCart}

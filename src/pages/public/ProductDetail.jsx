@@ -370,9 +370,9 @@ function ProductDetail() {
                 <div className="transfer-price-hero">
                   <span className="transfer-price-label">💸 Pagando con transferencia</span>
                   <span className="transfer-price-amount">
-                    ${Math.round((product.promo_price || product.price) * 0.9).toLocaleString()}
+                    ${Math.round((product.promo_price || product.price) * 0.8).toLocaleString()}
                   </span>
-                  <span className="transfer-price-badge">10% OFF</span>
+                  <span className="transfer-price-badge">20% OFF</span>
                 </div>
 
                 {/* List price — secundario */}
@@ -431,6 +431,13 @@ function ProductDetail() {
                 <Heart size={22} fill={isWishlisted(product.id) ? "currentColor" : "none"} strokeWidth={1.5} />
               </button>
             </div>
+            {isLaunched && (
+              <div style={{ marginTop: '1rem', padding: '0.75rem', backgroundColor: '#f0f9f0', border: '1px solid #c2e0c6', borderRadius: '8px' }}>
+                <p style={{ margin: 0, fontSize: '0.9rem', color: '#1e4620', fontWeight: 600 }}>
+                  🛡️ Garantía Cóndor 30 Días: Cobertura total por cualquier defecto. Te mandamos un mate de reemplazo de igual valor al instante, sin vueltas.
+                </p>
+              </div>
+            )}
             {isLaunched && <p className="secure-checkout-text">🔒 Pagos procesados encriptados via Mercado Pago</p>}
 
             {/* Calculador Envío */}
@@ -511,7 +518,7 @@ function ProductDetail() {
                 <h3 style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
                    ✨ Armá tu Kit Perfecto
                 </h3>
-                <p className="bundle-desc">Agregá estos accesorios ideales y llevate la experiencia completa.</p>
+                <p className="bundle-desc">Llevate el kit completo hoy y ahorrá un 20% extra pagando por transferencia.</p>
                 <div className="bundle-items">
                   <div className="bundle-item main">
                     <img src={getImgUrl(product.image_url, { w: 150, q: 60 })} alt="Mate" />
@@ -525,7 +532,10 @@ function ProductDetail() {
                         <img src={getImgUrl(item.image_url, { w: 150, q: 60 })} alt={item.name} />
                         <div className="bundle-addon-info">
                           <strong>{item.name}</strong>
-                          <span>${(item.promo_price || item.price).toLocaleString()}</span>
+                          <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <span style={{ fontSize: '0.8rem', textDecoration: 'line-through', color: '#999' }}>Normalmente ${(item.promo_price || item.price).toLocaleString()}</span>
+                            <span style={{ color: 'var(--accent)', fontWeight: 'bold' }}>Hoy ${Math.round((item.promo_price || item.price) * 0.8).toLocaleString()}</span>
+                          </div>
                         </div>
                       </div>
                     </React.Fragment>

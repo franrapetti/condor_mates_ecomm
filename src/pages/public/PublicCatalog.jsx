@@ -144,7 +144,7 @@ function PublicCatalog() {
         <meta property="og:type" content="website" />
         <meta property="og:url" content={window.location.origin} />
         <meta property="og:title" content="Cóndor Mates | Tienda de Mates Premium" />
-        <meta property="og:description" content="Buscamos los mejores mates para tu ritual. Torpedos, Imperiales y más. ¡Armá tu combo y llevate un 20% OFF!" />
+        <meta property="og:description" content="Buscamos los mejores mates para tu ritual. Torpedos, Imperiales y más. ¡Armá tu combo y llevate hasta 30% OFF!" />
         <meta property="og:image" content={heroDesktop || "/logo.png"} />
         <meta property="og:site_name" content="Cóndor Mates" />
 
@@ -197,9 +197,9 @@ function PublicCatalog() {
             </picture>
             <div className="hero-fullbleed-overlay" />
             <div className="hero-fullbleed-content" style={{ position: 'relative', zIndex: 1 }}>
-              <span className="hero-badge">📦 Envíos al instante + Regalo</span>
-              <h1 className="hero-fullbleed-title">El arte de <span className="handwriting-accent">cebar.</span></h1>
-              <p className="hero-fullbleed-subtitle">Mates, bombillas y accesorios premium. Seleccionados con criterio para conectarte con la verdadera tradición en cada cebada.</p>
+              <span className="hero-badge">📦 Envíos Rápidos + Regalo Valor $3,500</span>
+              <h1 className="hero-fullbleed-title">Armá tu <span className="handwriting-accent">Kit Premium.</span></h1>
+              <p className="hero-fullbleed-subtitle">Llevate hasta 30% OFF acumulando descuentos de combos y pago por transferencia. El mejor regalo para vos o para alguien especial.</p>
               <div className="hero-buttons-container" style={{ display: 'flex', gap: '0.75rem', flexWrap: 'nowrap', marginTop: '1.5rem', width: '100%' }}>
                 <button className="hero-fullbleed-cta" onClick={scrollToCatalog} style={{ flex: 1, padding: '0.9rem 1rem', whiteSpace: 'nowrap', textAlign: 'center', fontWeight: 900 }}>
                   Catálogo ↓

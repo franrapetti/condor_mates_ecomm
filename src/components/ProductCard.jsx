@@ -43,7 +43,7 @@ const ProductCard = ({ product, onAddToCart, noZoom }) => {
             </span>
           )}
           {isLaunched && (product.category === 'Mates' || product.sub_category === 'Bombillones de Alpaca') && (
-            <span className="packaging-badge">🎁 Packaging Incluido</span>
+            <span className="packaging-badge">🎁 Packaging Premium (Valor $3,500)</span>
           )}
         </div>
         <button
@@ -84,8 +84,8 @@ const ProductCard = ({ product, onAddToCart, noZoom }) => {
             )}
             {/* Precio con transferencia */}
             <div className="transfer-price-container">
-              <div className="transfer-price-amount">${Math.round((product.promo_price || product.price) * 0.9).toLocaleString()}</div>
-              <div className="transfer-price-text">con transferencia (10% OFF)</div>
+              <div className="transfer-price-amount">${Math.round((product.promo_price || product.price) * 0.8).toLocaleString()}</div>
+              <div className="transfer-price-text">con transferencia (20% OFF)</div>
             </div>
 
             {product.show_stock_alert && (
