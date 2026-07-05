@@ -353,9 +353,9 @@ const ProductForm = () => {
                   placeholder="Ej: 12000"
                 />
                 {formData.price && (
-                  <small className="form-label-hint" style={{ marginTop: '0.3rem', display: 'block', color: 'var(--accent)' }}>
-                    Aprox. transferencia (10% OFF): ${Math.round(formData.price * 0.9).toLocaleString()}
-                  </small>
+                  <p className="price-hint">
+                    Aprox. transferencia (20% OFF): ${Math.round(formData.price * 0.8).toLocaleString()}
+                  </p>
                 )}
               </div>
               <div className="form-group">

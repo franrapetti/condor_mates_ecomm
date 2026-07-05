@@ -70,7 +70,7 @@ const ProductsList = () => {
     const price = p.price || 0;
     const isGrabado = p.name && p.name.toLowerCase().includes('grabado');
     if (stock > 0 && price > 0 && !isGrabado) {
-      return acc + (stock * price * 0.9);
+      return acc + (stock * price * 0.8);
     }
     return acc;
   }, 0);

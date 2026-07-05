@@ -164,12 +164,13 @@ const ScreenshotCatalog = () => {
                       <p className="screenshot-card-price-original">
                         $ {product.price?.toLocaleString()}
                       </p>
-                      <div className="screenshot-card-price-discount-row">
-                        <p className="screenshot-card-price">
-                          <span className="screenshot-card-price-symbol">$</span>
-                          {Math.round(product.price * 0.9).toLocaleString()}
-                        </p>
-                        <span className="screenshot-card-discount-badge">10% OFF pagando con transferencia o efectivo</span>
+                      <div className="screenshot-card-discount">
+                        <span className="screenshot-card-discount-price">
+                          ${product.promo_price 
+                            ? Math.round(product.promo_price * 0.8).toLocaleString() 
+                            : Math.round(product.price * 0.8).toLocaleString()}
+                        </span>
+                        <span className="screenshot-card-discount-badge">20% OFF pagando con transferencia o efectivo</span>
                       </div>
                     </div>
                     
