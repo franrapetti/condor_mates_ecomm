@@ -11,6 +11,7 @@ import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
 import { getImgUrl } from '../../lib/imageUtils';
 import { trackPixelEvent, logAnalyticsEvent } from '../../lib/analytics';
+import { ShieldCheck, Star, Truck, CreditCard, BadgeCheck } from 'lucide-react';
 
 function PublicCatalog() {
   // Dynamic hero — start null to avoid flash while fetching from Supabase
@@ -234,10 +235,14 @@ function PublicCatalog() {
 
           {/* Trust Metrics Bar */}
           <div className="trust-bar fade-in">
-            <div className="trust-bar-item">✅ <strong>+500 ventas</strong> concretadas</div>
-            <div className="trust-bar-item">⭐ <strong>4.9/5</strong> de satisfacción</div>
-            <div className="trust-bar-item">🚚 Envíos por <strong>Andreani</strong></div>
-            <div className="trust-bar-item">💳 Pagos seguros por <strong>Mercado Pago</strong></div>
+            <div className="trust-bar-item" style={{display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center'}}>
+              <BadgeCheck size={20} color="#2ea337" />
+              <strong>+{870 + products.reduce((acc, p) => acc + (p.sold_count || 0), 0)} ventas</strong> concretadas
+              <span style={{ fontSize: '0.7rem', backgroundColor: '#e6f4ea', color: '#1e8e3e', padding: '2px 6px', borderRadius: '12px', fontWeight: 'bold', marginLeft: '4px', display: 'flex', alignItems: 'center' }}>Verificado</span>
+            </div>
+            <div className="trust-bar-item" style={{display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center'}}><Star size={20} fill="#e5b62b" color="#e5b62b" /> <strong>4.9/5</strong> de satisfacción</div>
+            <div className="trust-bar-item" style={{display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center'}}><Truck size={20} color="#2663eb" /> Envíos por <strong>Andreani</strong></div>
+            <div className="trust-bar-item" style={{display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center'}}><CreditCard size={20} color="#454545" /> Pagos seguros por <strong>Mercado Pago</strong></div>
           </div>
 
           {/* Categories Preview Grid */}

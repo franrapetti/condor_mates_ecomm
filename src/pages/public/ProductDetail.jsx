@@ -10,7 +10,7 @@ import Header from '../../components/Header';
 import ProductCard from '../../components/ProductCard';
 import { ProductDetailSkeleton } from '../../components/ProductSkeleton';
 import { Helmet } from 'react-helmet-async';
-import { Heart, ShoppingBag, Star, Flame } from 'lucide-react';
+import { Heart, ShoppingBag, Star, Flame, ShoppingCart, ShieldCheck, Truck, CreditCard, BadgeCheck } from 'lucide-react';
 import { getImgUrl } from '../../lib/imageUtils';
 import './ProductDetail.css';
 
@@ -418,8 +418,9 @@ function ProductDetail() {
                   className="add-to-cart-large" 
                   onClick={() => addToCart(product)}
                   disabled={product.stock === 0}
+                  style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'}}
                 >
-                  {product.stock === 0 ? 'Sin Stock' : 'Agregar al Carrito 🛒'}
+                  {product.stock === 0 ? 'Sin Stock' : <><ShoppingCart size={20} /> Agregar al Carrito</>}
                 </button>
               )}
               <button 
@@ -542,7 +543,7 @@ function ProductDetail() {
                   ))}
                 </div>
                 <button className="add-bundle-btn" onClick={handleBundleAdd} style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'}}>
-                  Sumar Kit Completo al Carrito 🛒
+                  <ShoppingCart size={20} /> Sumar Kit Completo al Carrito
                 </button>
               </div>
             )}
