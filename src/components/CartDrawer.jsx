@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { initMercadoPago, Wallet } from '@mercadopago/sdk-react';
-import { X, Trash2, ShoppingBag, ShieldCheck } from 'lucide-react';
+import { X, Trash2, ShoppingBag, ShieldCheck, CreditCard, Landmark } from 'lucide-react';
 import { trackPixelEvent, trackTikTokEvent, logAnalyticsEvent } from '../lib/analytics';
 import './CartDrawer.css';
 
@@ -260,17 +260,19 @@ const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem
                 <div className="checkout-actions">
                   <button type="button" className="btn-back" onClick={() => setIsCheckout(false)}>← Volver al carrito</button>
                   
-                  <button type="submit" onClick={() => setSubmitAction('mp')} className="whatsapp-btn mp-btn" disabled={isPaying} style={{backgroundColor: '#009ee3'}}>
-                    {isPaying ? 'Procesando...' : '💳 Pagar Seguro con Mercado Pago'}
+                  <button type="submit" onClick={() => setSubmitAction('mp')} className="whatsapp-btn mp-btn" disabled={isPaying} style={{backgroundColor: '#009ee3', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'}}>
+                    {isPaying ? 'Procesando...' : <><CreditCard size={20} /> Pagar Seguro con Mercado Pago</>}
                   </button>
-                  <button type="submit" onClick={() => setSubmitAction('whatsapp')} className="whatsapp-btn " disabled={isPaying} style={{marginTop: '-0.5rem', backgroundColor: '#25D366', color: 'white', border: 'none'}}>
-                    {isPaying ? 'Procesando...' : '🏦 Pagar con Transferencia (-20% OFF Extras)'}
+                  <button type="submit" onClick={() => setSubmitAction('whatsapp')} className="whatsapp-btn " disabled={isPaying} style={{marginTop: '-0.5rem', backgroundColor: '#25D366', color: 'white', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'}}>
+                    {isPaying ? 'Procesando...' : <><Landmark size={20} /> Pagar con Transferencia (-20% OFF Extras)</>}
                   </button>
                   
                   <div className="trust-badges-container">
                     <div className="trust-logos">
                       <img src="https://http2.mlstatic.com/frontend-assets/ml-web-navigation/ui-navigation/5.19.1/mercadolibre/logo__small@2x.png" alt="Mercado Pago" title="MercadoPago" />
-                      <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" alt="Visa" title="Visa" />
+                      <svg className="visa-logo-svg" viewBox="0 0 32 10" width="40" height="13" fill="none" xmlns="http://www.w3.org/2000/svg" title="Visa">
+                        <path fill="#1434CB" d="M14.636 0l-1.896 9.53H9.702L11.597 0h3.039zm12.302 0l-1.503 6.945c-.218.995-1.127 1.455-2.072 1.455h-2.906l1.45-6.945c.231-.994 1.134-1.455 2.067-1.455h2.964zm-5.632 0l-1.897 9.53h-3.04l1.898-9.53h3.039zM8.337 0L5.352 6.814 3.733 1.2C3.51.272 2.766 0 1.83 0H0l2.915 9.53h3.292l3.708-9.53H8.337z"/>
+                      </svg>
                       <img src="https://upload.wikimedia.org/wikipedia/commons/b/b7/MasterCard_Logo.svg" alt="Mastercard" title="Mastercard" />
                     </div>
                     <p className="trust-text" style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px'}}>

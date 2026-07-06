@@ -287,14 +287,16 @@
   margin-bottom: 0.5rem;
 }
 
-.trust-logos img {
+.trust-logos img,
+.trust-logos svg {
   height: 20px;
   opacity: 0.7;
   filter: grayscale(100%);
   transition: all 0.2s;
 }
 
-.trust-logos img:hover {
+.trust-logos img:hover,
+.trust-logos svg:hover {
   opacity: 1;
   filter: grayscale(0%);
 }
