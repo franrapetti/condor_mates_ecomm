@@ -10,7 +10,7 @@ import Header from '../../components/Header';
 import ProductCard from '../../components/ProductCard';
 import { ProductDetailSkeleton } from '../../components/ProductSkeleton';
 import { Helmet } from 'react-helmet-async';
-import { Heart, ShoppingBag, Star, Flame, ShoppingCart, ShieldCheck, Truck, CreditCard, BadgeCheck } from 'lucide-react';
+import { Heart, ShoppingBag, Star, Flame, ShoppingCart, ShieldCheck, Truck, CreditCard, BadgeCheck, Banknote, Zap, Frown, Package, Sparkles, Scale, Palette, Lock } from 'lucide-react';
 import { getImgUrl } from '../../lib/imageUtils';
 import './ProductDetail.css';
 
@@ -332,8 +332,8 @@ function ProductDetail() {
             {/* Color Variants */}
             {(colorVariants.length > 0 || product.color_name) && (
               <div className="color-variants">
-                <span className="color-variant-label">
-                  {product.category === 'Yerbas' ? '⚖️ Tamaño:' : '🎨 Color:'}
+                <span className="color-variant-label" style={{display: 'inline-flex', alignItems: 'center', gap: '4px'}}>
+                  {product.category === 'Yerbas' ? <><Scale size={16} /> Tamaño:</> : <><Palette size={16} /> Color:</>}
                 </span>
                 <span className="color-swatch-name active">
                   {product.color_name || 'Este color'}
@@ -368,7 +368,7 @@ function ProductDetail() {
               <>
                 {/* Transfer price — protagonista */}
                 <div className="transfer-price-hero">
-                  <span className="transfer-price-label">💸 Pagando con transferencia</span>
+                  <span className="transfer-price-label" style={{display: 'inline-flex', alignItems: 'center', gap: '4px'}}><Banknote size={16} /> Pagando con transferencia</span>
                   <span className="transfer-price-amount">
                     ${Math.round((product.promo_price || product.price) * 0.8).toLocaleString()}
                   </span>
@@ -393,22 +393,22 @@ function ProductDetail() {
             {/* Social Proof */}
             <div className="product-social-proof">
               {soldCount > 0 && (
-                <span className="sold-count-badge">🔥 {soldCount} persona{soldCount > 1 ? 's' : ''} ya lo compr{soldCount > 1 ? 'aron' : 'ó'}</span>
+                <span className="sold-count-badge" style={{display: 'inline-flex', alignItems: 'center', gap: '4px'}}><Flame size={16} color="#e65100" /> {soldCount} persona{soldCount > 1 ? 's' : ''} ya lo compr{soldCount > 1 ? 'aron' : 'ó'}</span>
               )}
               {product.stock !== null && product.stock <= 5 && product.stock > 0 && (
-                <span className="low-stock-badge">⚡ ¡Solo quedan {product.stock}!</span>
+                <span className="low-stock-badge" style={{display: 'inline-flex', alignItems: 'center', gap: '4px'}}><Zap size={16} color="#e5b62b" /> ¡Solo quedan {product.stock}!</span>
               )}
               {product.stock === 0 && (
-                <span className="no-stock-badge">😔 Sin stock por el momento</span>
+                <span className="no-stock-badge" style={{display: 'inline-flex', alignItems: 'center', gap: '4px'}}><Frown size={16} /> Sin stock por el momento</span>
               )}
             </div>
             
             {/* Trust Badges Minimal */}
             {isLaunched && (
               <div className="trust-badges">
-                <span>💳 Pagos Seguros MP</span>
-                <span>🚚 Envíos por Andreani</span>
-                <span>🛡️ Compra Protegida</span>
+                <span><CreditCard size={16} className="mr-1" style={{marginRight: '6px'}} /> Pagos Seguros MP</span>
+                <span><Truck size={16} className="mr-1" style={{marginRight: '6px'}} /> Envíos por Andreani</span>
+                <span><ShieldCheck size={16} className="mr-1" style={{marginRight: '6px'}} /> Compra Protegida</span>
               </div>
             )}
             
@@ -434,17 +434,18 @@ function ProductDetail() {
             </div>
             {isLaunched && (
               <div style={{ marginTop: '1rem', padding: '0.75rem', backgroundColor: '#f0f9f0', border: '1px solid #c2e0c6', borderRadius: '8px' }}>
-                <p style={{ margin: 0, fontSize: '0.9rem', color: '#1e4620', fontWeight: 600 }}>
-                  🛡️ Garantía Cóndor 30 Días: Cobertura total por cualquier defecto. Te mandamos un mate de reemplazo de igual valor al instante, sin vueltas.
+                <p style={{ margin: 0, fontSize: '0.9rem', color: '#1e4620', fontWeight: 600, display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
+                  <ShieldCheck size={18} style={{flexShrink: 0, marginTop: '2px'}} />
+                  <span>Garantía Cóndor 30 Días: Cobertura total por cualquier defecto. Te mandamos un mate de reemplazo de igual valor al instante, sin vueltas.</span>
                 </p>
               </div>
             )}
-            {isLaunched && <p className="secure-checkout-text">🔒 Pagos procesados encriptados via Mercado Pago</p>}
+            {isLaunched && <p className="secure-checkout-text" style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px'}}><Lock size={14} /> Pagos procesados encriptados via Mercado Pago</p>}
 
             {/* Calculador Envío */}
             {isLaunched && (
               <div className="shipping-calculator">
-                <h4>📦 Calcular opciones de envío</h4>
+                <h4 style={{display: 'flex', alignItems: 'center', gap: '6px'}}><Package size={18} /> Calcular opciones de envío</h4>
                 <form onSubmit={handleCalculateShipping} className="shipping-form">
                   <input 
                     type="number" 
@@ -517,7 +518,7 @@ function ProductDetail() {
             {isLaunched && bundleItems.length > 0 && (
               <div className="bundle-section fade-in">
                 <h3 style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                   ✨ Armá tu Kit Perfecto
+                   <Sparkles size={20} color="#e5b62b" /> Armá tu Kit Perfecto
                 </h3>
                 <p className="bundle-desc">Llevate el kit completo hoy y ahorrá un 20% extra pagando por transferencia.</p>
                 <div className="bundle-items">
@@ -581,11 +582,11 @@ function ProductDetail() {
                 <div className="form-group">
                   <label>Calificación (1 a 5)</label>
                   <select value={newReview.rating} onChange={e => setNewReview({...newReview, rating: Number(e.target.value)})}>
-                    <option value={5}>⭐⭐⭐⭐⭐ (Excelente)</option>
-                    <option value={4}>⭐⭐⭐⭐ (Muy Bueno)</option>
-                    <option value={3}>⭐⭐⭐ (Bueno)</option>
-                    <option value={2}>⭐⭐ (Regular)</option>
-                    <option value={1}>⭐ (Malo)</option>
+                    <option value={5}>5 Estrellas (Excelente)</option>
+                    <option value={4}>4 Estrellas (Muy Bueno)</option>
+                    <option value={3}>3 Estrellas (Bueno)</option>
+                    <option value={2}>2 Estrellas (Regular)</option>
+                    <option value={1}>1 Estrella (Malo)</option>
                   </select>
                 </div>
                 <div className="form-group">
