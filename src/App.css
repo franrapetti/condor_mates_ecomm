@@ -238,7 +238,7 @@
   position: relative;
   width: 100%;
   min-height: 82vh;
-  /* background-image removed — handled dynamically via <picture> in React */
+  min-height: 82svh;
   display: flex;
   align-items: flex-end;
   justify-content: flex-start;
@@ -339,6 +339,7 @@
 @media (max-width: 768px) {
   .hero-fullbleed {
     min-height: 88vh;
+    min-height: 88svh;
   }
   .hero-fullbleed-content {
     padding: 0 1.25rem 3.5rem;
@@ -398,43 +399,115 @@
 /* ===== TRUST BAR ===== */
 .trust-bar {
   width: 100%;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-around;
-  align-items: center;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
-  padding: 0.9rem 2rem;
-  gap: 0;
+  padding: 1.5rem 1rem;
+}
+
+.trust-bar-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
 }
 
 .trust-bar-item {
-  flex: 1;
-  min-width: 160px;
-  text-align: center;
-  font-size: 0.88rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.9rem;
   color: var(--text-dark);
-  padding: 0.5rem 1rem;
-  border-right: 1px solid var(--border);
+  flex: 1;
+  justify-content: center;
 }
 
-.trust-bar-item:last-child {
-  border-right: none;
+.trust-icon-wrapper {
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
 }
 
-.trust-bar-item strong {
-  color: var(--accent);
+.trust-text-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.3;
 }
 
-@media (max-width: 640px) {
-  .trust-bar-item {
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-    min-width: 48%;
+.trust-title {
+  font-weight: 700;
+  color: var(--text-dark);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.95rem;
+}
+
+.trust-subtitle {
+  font-size: 0.75rem;
+  color: var(--text-light);
+  font-weight: 500;
+}
+
+.verified-badge {
+  font-size: 0.65rem;
+  background-color: #e6f4ea;
+  color: #1e8e3e;
+  padding: 2px 6px;
+  border-radius: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+@media (max-width: 900px) {
+  .trust-bar-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem 1rem;
   }
-  .trust-bar-item:last-child,
-  .trust-bar-item:nth-last-child(2):nth-child(odd) {
-    border-bottom: none;
+  
+  .trust-bar-item {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .trust-bar {
+    padding: 1.5rem 0.5rem;
+  }
+  
+  .trust-bar-container {
+    gap: 1.5rem 0.5rem;
+  }
+
+  .trust-bar-item {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .trust-text-wrapper {
+    align-items: center;
+  }
+
+  .trust-title {
+    font-size: 0.9rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .trust-subtitle {
+    font-size: 0.75rem;
   }
 }
 

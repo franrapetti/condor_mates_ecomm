@@ -235,14 +235,50 @@ function PublicCatalog() {
 
           {/* Trust Metrics Bar */}
           <div className="trust-bar fade-in">
-            <div className="trust-bar-item" style={{display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center'}}>
-              <BadgeCheck size={20} color="#2ea337" />
-              <strong>+{870 + products.reduce((acc, p) => acc + (p.sold_count || 0), 0)} ventas</strong> concretadas
-              <span style={{ fontSize: '0.7rem', backgroundColor: '#e6f4ea', color: '#1e8e3e', padding: '2px 6px', borderRadius: '12px', fontWeight: 'bold', marginLeft: '4px', display: 'flex', alignItems: 'center' }}>Verificado</span>
+            <div className="trust-bar-container">
+              <div className="trust-bar-item">
+                <div className="trust-icon-wrapper">
+                  <BadgeCheck size={20} color="#2ea337" />
+                </div>
+                <div className="trust-text-wrapper">
+                  <div className="trust-title">
+                    +{870 + products.reduce((acc, p) => acc + (p.sold_count || 0), 0)} ventas
+                    <span className="verified-badge">Verificado</span>
+                  </div>
+                  <span className="trust-subtitle">concretadas globalmente</span>
+                </div>
+              </div>
+              
+              <div className="trust-bar-item">
+                <div className="trust-icon-wrapper">
+                  <Star size={20} fill="#e5b62b" color="#e5b62b" />
+                </div>
+                <div className="trust-text-wrapper">
+                  <div className="trust-title">4.9/5 Estrellas</div>
+                  <span className="trust-subtitle">de satisfacción</span>
+                </div>
+              </div>
+              
+              <div className="trust-bar-item">
+                <div className="trust-icon-wrapper">
+                  <Truck size={20} color="#2663eb" />
+                </div>
+                <div className="trust-text-wrapper">
+                  <div className="trust-title">Envíos rápidos</div>
+                  <span className="trust-subtitle">por Andreani</span>
+                </div>
+              </div>
+              
+              <div className="trust-bar-item">
+                <div className="trust-icon-wrapper">
+                  <CreditCard size={20} color="#454545" />
+                </div>
+                <div className="trust-text-wrapper">
+                  <div className="trust-title">Pagos seguros</div>
+                  <span className="trust-subtitle">por Mercado Pago</span>
+                </div>
+              </div>
             </div>
-            <div className="trust-bar-item" style={{display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center'}}><Star size={20} fill="#e5b62b" color="#e5b62b" /> <strong>4.9/5</strong> de satisfacción</div>
-            <div className="trust-bar-item" style={{display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center'}}><Truck size={20} color="#2663eb" /> Envíos por <strong>Andreani</strong></div>
-            <div className="trust-bar-item" style={{display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center'}}><CreditCard size={20} color="#454545" /> Pagos seguros por <strong>Mercado Pago</strong></div>
           </div>
 
           {/* Categories Preview Grid */}
