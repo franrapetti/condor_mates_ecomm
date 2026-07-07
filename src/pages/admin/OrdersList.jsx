@@ -18,7 +18,7 @@ const EMPTY_FORM = {
 };
 
 const DISCOUNT_METHODS = ['Efectivo', 'Transferencia'];
-const DISCOUNT_PERCENT = 10;
+const DISCOUNT_PERCENT = 20;
 
 const generateTicket = (sale, discountInfo) => {
   const logoUrl = window.location.origin + '/logo.png';
