@@ -75,6 +75,26 @@ const ProductsList = () => {
     return acc;
   }, 0);
 
+  const copyYerbasPrices = () => {
+    const yerbas = products.filter(p => p.category === 'Yerbas');
+    if (yerbas.length === 0) {
+      alert('No hay yerbas para copiar.');
+      return;
+    }
+    
+    let text = '🧉 *Lista de Yerbas (Precio Efectivo o Transferencia)*\n\n';
+    yerbas.forEach(y => {
+      text += `• ${y.name}: $${y.price?.toLocaleString()}\n`;
+    });
+    
+    navigator.clipboard.writeText(text).then(() => {
+      alert('¡Lista de yerbas copiada al portapapeles!');
+    }).catch(err => {
+      console.error('Error al copiar:', err);
+      alert('Error al copiar la lista.');
+    });
+  };
+
   return (
     <div className="admin-page">
       <div className="adm-page-header" style={{ marginBottom: '1rem' }}>
@@ -82,7 +102,29 @@ const ProductsList = () => {
           <h1>Catálogo de Productos</h1>
           <span className="adm-count-pill">{products.length} artículos</span>
         </div>
-        <Link to="/admin/products/new" className="btn-primary">+ Nuevo Producto</Link>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <button 
+            onClick={copyYerbasPrices} 
+            style={{ 
+              background: 'white', 
+              color: '#111827', 
+              border: '1px solid #d1d5db', 
+              padding: '0.5rem 1rem', 
+              borderRadius: '8px', 
+              cursor: 'pointer', 
+              fontWeight: 600,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+              fontSize: '0.875rem'
+            }}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            Precios Yerbas
+          </button>
+          <Link to="/admin/products/new" className="btn-primary">+ Nuevo Producto</Link>
+        </div>
       </div>
 
       <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
