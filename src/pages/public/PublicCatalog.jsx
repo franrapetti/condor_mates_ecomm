@@ -199,8 +199,8 @@ function PublicCatalog() {
             <div className="hero-fullbleed-overlay" />
             <div className="hero-fullbleed-content" style={{ position: 'relative', zIndex: 1 }}>
               <span className="hero-badge">📦 Envíos Rápidos + Regalo Valor $3,500</span>
-              <h1 className="hero-fullbleed-title">Armá tu <span className="handwriting-accent">Kit Premium.</span></h1>
-              <p className="hero-fullbleed-subtitle">Llevate hasta 30% OFF acumulando descuentos de combos y pago por transferencia. El mejor regalo para vos o para alguien especial.</p>
+              <h1 className="hero-fullbleed-title">Renová tu mate hoy con hasta <span className="handwriting-accent">30% OFF.</span></h1>
+              <p className="hero-fullbleed-subtitle">Acumulá descuentos de combos y pago por transferencia. El mejor regalo para vos o para alguien especial.</p>
               <div className="hero-buttons-container" style={{ display: 'flex', gap: '0.75rem', flexWrap: 'nowrap', marginTop: '1.5rem', width: '100%' }}>
                 <button className="hero-fullbleed-cta" onClick={scrollToCatalog} style={{ flex: 1, padding: '0.9rem 1rem', whiteSpace: 'nowrap', textAlign: 'center', fontWeight: 900 }}>
                   Catálogo ↓
@@ -245,7 +245,7 @@ function PublicCatalog() {
                     +{870 + products.reduce((acc, p) => acc + (p.sold_count || 0), 0)} ventas
                     <span className="verified-badge">Verificado</span>
                   </div>
-                  <span className="trust-subtitle">concretadas globalmente</span>
+                  <span className="trust-subtitle">en todo el país</span>
                 </div>
               </div>
               
