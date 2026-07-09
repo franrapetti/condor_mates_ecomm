@@ -284,7 +284,7 @@ function PublicCatalog() {
           {/* Categories Preview Grid */}
           <div className="container" style={{ marginTop: '3.5rem', marginBottom: '1.5rem' }}>
             <h2 style={{ fontSize: '1.8rem', textAlign: 'center', marginBottom: '2.5rem', fontWeight: 800, color: 'var(--accent)' }}>Explorá nuestras colecciones</h2>
-            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '2.5rem' }}>
+            <div className="mobile-categories-scroll">
               {Object.values(
                 products.reduce((acc, p) => {
                   if (!acc[p.category] || p.price > acc[p.category].price) {

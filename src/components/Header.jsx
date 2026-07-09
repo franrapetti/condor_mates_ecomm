@@ -30,6 +30,11 @@ const Header = ({ cartCount, onCartClick, onNavClick, currentCategory }) => {
   return (
     <header className="header sticky">
       <div className="container header-content">
+        {isLaunched && (
+          <button className="mobile-menu-btn" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        )}
         <Link to="/" className="header-logo" onClick={() => onNavClick('All')}>
           <img src={isDark ? "/logo-noche.png" : "/logo.png"} alt="Cóndor Mates" className="logo-img" />
         </Link>
@@ -80,9 +85,6 @@ const Header = ({ cartCount, onCartClick, onNavClick, currentCategory }) => {
               </ul>
             </nav>
             <div className="header-actions">
-              <button className="mobile-menu-btn" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-                {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-              </button>
               <button className="theme-toggle" onClick={toggleTheme} title="Cambiar Tema" style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                 {isDark ? <Sun size={20} strokeWidth={1.5} /> : <Moon size={20} strokeWidth={1.5} />}
               </button>

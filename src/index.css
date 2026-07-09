@@ -82,3 +82,32 @@ h1, h2, h3, h4, h5, h6 {
   padding: 0 1rem;
 }
 
+/* Categories Mobile Scroll */
+.mobile-categories-scroll {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2.5rem;
+}
+
+@media (max-width: 768px) {
+  .mobile-categories-scroll {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 1rem;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .mobile-categories-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mobile-categories-scroll > div {
+    scroll-snap-align: start;
+    flex: 0 0 auto;
+  }
+}
+

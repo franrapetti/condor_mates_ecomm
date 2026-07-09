@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { Link, useNavigate } from 'react-router-dom';
 import ProductHeatmap from '../../components/admin/ProductHeatmap';
@@ -9,6 +9,80 @@ const ProductsList = () => {
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('Todos');
   const navigate = useNavigate();
+
+  const [showRestockForm, setShowRestockForm] = useState(false);
+  const [restockSearch, setRestockSearch] = useState('');
+  const [restockSuggestions, setRestockSuggestions] = useState([]);
+  const [showRestockSuggestions, setShowRestockSuggestions] = useState(false);
+  const [restockLines, setRestockLines] = useState([]);
+  const [savingRestock, setSavingRestock] = useState(false);
+  const suggestionsRef = useRef(null);
+
+  useEffect(() => {
+    if (restockSearch.length < 2) {
+      setRestockSuggestions([]);
+      return;
+    }
+    const term = restockSearch.toLowerCase();
+    const filtered = products.filter(p => p.name?.toLowerCase().includes(term));
+    setRestockSuggestions(filtered.slice(0, 8));
+  }, [restockSearch, products]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (suggestionsRef.current && !suggestionsRef.current.contains(event.target)) {
+        setShowRestockSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const addRestockLine = (product) => {
+    if (restockLines.find(l => l.id === product.id)) {
+      setRestockLines(prev => prev.map(l => l.id === product.id ? { ...l, quantity: l.quantity + 1 } : l));
+    } else {
+      setRestockLines(prev => [...prev, { id: product.id, name: product.name, quantity: 1, currentStock: product.stock || 0 }]);
+    }
+    setRestockSearch('');
+    setShowRestockSuggestions(false);
+  };
+
+  const updateRestockQuantity = (id, newQ) => {
+    setRestockLines(prev => prev.map(l => {
+      if (l.id === id) {
+        return { ...l, quantity: Math.max(1, newQ) };
+      }
+      return l;
+    }));
+  };
+
+  const removeRestockLine = (id) => {
+    setRestockLines(prev => prev.filter(l => l.id !== id));
+  };
+
+  const handleRestockSubmit = async (e) => {
+    e.preventDefault();
+    if (restockLines.length === 0) return;
+    setSavingRestock(true);
+    
+    try {
+      for (const line of restockLines) {
+        const { data: dbProduct } = await supabase.from('products').select('stock').eq('id', line.id).single();
+        if (dbProduct) {
+          await supabase.from('products').update({ stock: (dbProduct.stock || 0) + line.quantity }).eq('id', line.id);
+        }
+      }
+      alert('Stock ingresado correctamente.');
+      setShowRestockForm(false);
+      setRestockLines([]);
+      fetchProducts();
+    } catch (err) {
+      alert('Error al ingresar stock: ' + err.message);
+    } finally {
+      setSavingRestock(false);
+    }
+  };
 
   useEffect(() => {
     fetchProducts();
@@ -103,6 +177,22 @@ const ProductsList = () => {
           <span className="adm-count-pill">{products.length} artículos</span>
         </div>
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <button
+            onClick={() => setShowRestockForm(!showRestockForm)}
+            style={{
+              background: 'var(--text-dark)', 
+              color: 'white', 
+              border: 'none', 
+              padding: '0.5rem 1rem', 
+              borderRadius: '8px', 
+              cursor: 'pointer', 
+              fontWeight: 600,
+              boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+              fontSize: '0.875rem'
+            }}
+          >
+            {showRestockForm ? '✕ Cancelar' : '+ Ingreso de Mercadería'}
+          </button>
           <button 
             onClick={copyYerbasPrices} 
             style={{ 
@@ -126,6 +216,98 @@ const ProductsList = () => {
           <Link to="/admin/products/new" className="btn-primary">+ Nuevo Producto</Link>
         </div>
       </div>
+
+      {showRestockForm && (
+        <div style={{background: 'var(--surface)', padding: '1.5rem', borderRadius: 12, marginBottom: '2rem', border: '1px solid var(--border)'}}>
+          <h3 style={{marginTop: 0}}>📦 Ingreso de Mercadería en Masa</h3>
+          <form onSubmit={handleRestockSubmit}>
+            <div style={{position: 'relative', marginBottom: '1rem'}} ref={suggestionsRef}>
+              <input
+                type="text"
+                placeholder="🔍 Buscar producto para agregar stock..."
+                value={restockSearch}
+                onChange={e => { setRestockSearch(e.target.value); setShowRestockSuggestions(true); }}
+                onFocus={() => restockSearch.length >= 2 && setShowRestockSuggestions(true)}
+                style={{
+                  width: '100%', padding: '0.75rem 1rem', borderRadius: 8, border: '1px solid var(--border)', 
+                  background: 'var(--background)', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box'
+                }}
+              />
+              {showRestockSuggestions && restockSuggestions.length > 0 && (
+                <div style={{
+                  position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 20,
+                  background: 'var(--surface)', border: '1px solid var(--border)',
+                  borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                  maxHeight: 240, overflowY: 'auto', marginTop: 4
+                }}>
+                  {restockSuggestions.map(p => (
+                    <div
+                      key={p.id}
+                      onClick={() => addRestockLine(p)}
+                      style={{
+                        padding: '0.7rem 1rem', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', 
+                        alignItems: 'center', borderBottom: '1px solid var(--border)', transition: 'background 0.1s', fontSize: '0.88rem'
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(35, 74, 46, 0.06)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                    >
+                      <span style={{fontWeight: 600, color: 'var(--text-dark)'}}>{p.name}</span>
+                      <span style={{fontWeight: 700, color: 'var(--text-light)', fontSize: '0.85rem'}}>
+                        Stock actual: {p.stock ?? 0}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {restockLines.length > 0 && (
+              <div style={{marginBottom: '1.5rem', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden'}}>
+                {restockLines.map(line => (
+                  <div key={line.id} style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '0.65rem 1rem', borderBottom: '1px solid var(--border)', fontSize: '0.88rem', gap: '0.5rem', flexWrap: 'wrap'
+                  }}>
+                    <div style={{display: 'flex', flexDirection: 'column', minWidth: '150px', flex: 1}}>
+                      <span style={{fontWeight: 600}}>{line.name}</span>
+                      <span style={{fontSize: '0.75rem', color: 'var(--text-light)'}}>Stock actual: {line.currentStock}</span>
+                    </div>
+                    
+                    <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
+                      <span style={{fontWeight: 600, fontSize: '0.8rem', color: 'var(--text-light)', marginRight: '0.5rem'}}>Ingresan:</span>
+                      <div style={{display: 'flex', alignItems: 'center', gap: '0.3rem'}}>
+                        <button type="button" onClick={() => updateRestockQuantity(line.id, line.quantity - 1)}
+                          style={{width: 28, height: 28, borderRadius: 6, border: '1px solid var(--border)', background: 'var(--background)', cursor: 'pointer', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-dark)'}}
+                        >−</button>
+                        <input
+                          type="number"
+                          value={line.quantity}
+                          onChange={e => updateRestockQuantity(line.id, parseInt(e.target.value) || 1)}
+                          style={{width: '50px', textAlign: 'center', padding: '0.2rem', borderRadius: 4, border: '1px solid var(--border)'}}
+                          min="1"
+                        />
+                        <button type="button" onClick={() => updateRestockQuantity(line.id, line.quantity + 1)}
+                          style={{width: 28, height: 28, borderRadius: 6, border: '1px solid var(--border)', background: 'var(--background)', cursor: 'pointer', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-dark)'}}
+                        >+</button>
+                      </div>
+                      <span style={{fontWeight: 700, color: 'var(--accent)', minWidth: 60, textAlign: 'right', fontSize: '0.8rem', marginLeft: '0.5rem'}}>
+                        Quedarán: {line.currentStock + line.quantity}
+                      </span>
+                      <button type="button" onClick={() => removeRestockLine(line.id)}
+                        style={{background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', fontSize: '1rem', padding: '0 0.2rem', marginLeft: '0.5rem'}}
+                      >🗑</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <button type="submit" className="btn-primary" disabled={savingRestock || restockLines.length === 0} style={{maxWidth: 220}}>
+              {savingRestock ? 'Guardando...' : '✓ Confirmar Ingreso'}
+            </button>
+          </form>
+        </div>
+      )}
 
       <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
         <div style={{ background: 'var(--surface)', padding: '1.25rem', borderRadius: '12px', border: '1px solid var(--border)', flex: '1 1 auto', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
