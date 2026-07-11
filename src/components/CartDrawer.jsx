@@ -440,8 +440,17 @@ const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem
                   <span className="total-price" style={{ color: appliedPromo ? 'var(--accent)' : 'inherit' }}>${total.toLocaleString()}</span>
                 </div>
               </div>
-              <p className="shipping-notice">¡Envío con packaging de regalo incluido!</p>
-              <button className="whatsapp-btn" onClick={() => {
+
+              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#e8f5e9', padding: '10px 12px', borderRadius: '8px', marginBottom: '1rem', border: '1px solid #c8e6c9'}}>
+                <span style={{fontSize: '0.9rem', color: '#1b5e20', fontWeight: 600}}>Pagando con Transferencia</span>
+                <div style={{textAlign: 'right'}}>
+                  <span style={{fontSize: '1rem', color: '#1b5e20', fontWeight: 'bold'}}>${Math.round(total * 0.8).toLocaleString()}</span>
+                  <div style={{fontSize: '0.75rem', color: '#2e7d32', marginTop: '2px', fontWeight: 600}}>Ahorrás ${Math.round(total * 0.2).toLocaleString()} (-20%)</div>
+                </div>
+              </div>
+
+              <p className="shipping-notice" style={{ marginBottom: '1rem' }}>¡Envío con packaging de regalo incluido!</p>
+              <button className="whatsapp-btn" style={{ backgroundColor: '#0A4D3C' }} onClick={() => {
                 setIsCheckout(true);
 
                 // Meta Pixel: InitiateCheckout

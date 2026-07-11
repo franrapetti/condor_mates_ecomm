@@ -22,7 +22,10 @@ const CrossSellModal = ({ isOpen, onClose, onQuickAdd, crossSells = [] }) => {
                 <Link to={`/producto/${item.id}`} onClick={onClose} style={{ textDecoration: 'none', color: 'inherit' }}>
                   <h4>{item.name}</h4>
                 </Link>
-                <p>${item.price?.toLocaleString()}</p>
+                <div style={{ display: 'flex', flexDirection: 'column', margin: '4px 0 10px 0' }}>
+                  <span style={{ fontSize: '0.8rem', textDecoration: 'line-through', color: '#999' }}>Lista: ${(item.promo_price || item.price)?.toLocaleString()}</span>
+                  <span style={{ color: 'var(--accent)', fontWeight: 'bold', fontSize: '1.05rem' }}>${Math.round((item.promo_price || item.price) * 0.8).toLocaleString()} <span style={{fontSize: '0.75rem', fontWeight: 'normal'}}>transf.</span></span>
+                </div>
                 <button 
                   className="quick-add-btn"
                   onClick={() => {
