@@ -236,6 +236,11 @@ function ProductDetail() {
   const reviewCount = reviews.length;
   const ratingAvg = reviewCount > 0 ? (reviews.reduce((a, b) => a + b.rating, 0) / reviewCount).toFixed(1) : 0;
 
+  const getFramingText = (category) => {
+    if (category === 'Yerbas') return 'Tu ritual de todos los días, por menos de lo que vale un alfajor.';
+    return 'Un compañero para toda la vida por el costo de una cena.';
+  };
+
   return (
     <>
       {product && (
@@ -387,6 +392,13 @@ function ProductDetail() {
                     Precio de lista: ${product.price.toLocaleString()}
                   </p>
                 )}
+                
+                {/* Value Framing */}
+                <div style={{marginTop: '0.5rem', marginBottom: '1rem', backgroundColor: 'var(--accent-light)', padding: '8px 12px', borderRadius: '8px', display: 'inline-block'}}>
+                  <p style={{margin: 0, fontSize: '0.85rem', color: 'var(--text-dark)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px'}}>
+                    💡 {getFramingText(product.category)}
+                  </p>
+                </div>
               </>
             )}
             
@@ -412,6 +424,30 @@ function ProductDetail() {
               </div>
             )}
             
+            {/* Comparison Table */}
+            {isLaunched && (product.category === 'Mates' || product.category === 'Materas y Yerberas') && (
+              <div style={{margin: '1.5rem 0', padding: '1rem', backgroundColor: 'var(--surface)', borderRadius: '12px', border: '1px solid var(--border)'}}>
+                <h4 style={{margin: '0 0 1rem 0', fontSize: '0.95rem'}}>¿Por qué elegir Cóndor Mates?</h4>
+                <div style={{display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr', gap: '8px', fontSize: '0.85rem', textAlign: 'center'}}>
+                  <div style={{fontWeight: 'bold', color: 'var(--text-light)', textAlign: 'left', paddingBottom: '4px', borderBottom: '1px solid var(--border)'}}>Característica</div>
+                  <div style={{fontWeight: 'bold', color: 'var(--accent)', paddingBottom: '4px', borderBottom: '1px solid var(--border)'}}>En Cóndor 🦅</div>
+                  <div style={{fontWeight: 'bold', color: 'var(--text-light)', paddingBottom: '4px', borderBottom: '1px solid var(--border)'}}>Otros ❌</div>
+                  
+                  <div style={{textAlign: 'left', paddingTop: '4px'}}>Materiales</div>
+                  <div style={{paddingTop: '4px'}}>Premium</div>
+                  <div style={{paddingTop: '4px'}}>Estándar</div>
+
+                  <div style={{textAlign: 'left', paddingTop: '4px'}}>Garantía</div>
+                  <div style={{paddingTop: '4px'}}>30 Días (Cambio)</div>
+                  <div style={{paddingTop: '4px'}}>Sin garantía</div>
+
+                  <div style={{textAlign: 'left', paddingTop: '4px'}}>Terminaciones</div>
+                  <div style={{paddingTop: '4px'}}>Costuras a mano</div>
+                  <div style={{paddingTop: '4px'}}>Pegados</div>
+                </div>
+              </div>
+            )}
+
             <div className="detail-cta-row">
               {isLaunched && (
                 <button 

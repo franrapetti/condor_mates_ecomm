@@ -164,9 +164,19 @@ const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem
     <>
       <div className={`cart-overlay ${isOpen ? 'open' : ''}`} onClick={handleClose}></div>
       <div className={`cart-drawer ${isOpen ? 'open' : ''}`}>
-        <div className="cart-header">
-          <h2>{isCheckout ? 'Tus Datos' : 'Tu Carrito'}</h2>
-          <button className="close-btn" onClick={handleClose} style={{display: 'flex', alignItems: 'center'}}><X size={24} strokeWidth={1.5} /></button>
+        <div className="cart-header" style={{flexDirection: 'column', alignItems: 'flex-start', gap: '10px'}}>
+          <div style={{display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center'}}>
+            <h2 style={{margin: 0}}>{isCheckout ? (preferenceId ? 'Pago' : 'Tus Datos') : 'Tu Carrito'}</h2>
+            <button className="close-btn" onClick={handleClose} style={{display: 'flex', alignItems: 'center'}}><X size={24} strokeWidth={1.5} /></button>
+          </div>
+          {/* Progress Tracker */}
+          <div style={{display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--text-light)', width: '100%'}}>
+            <span style={{color: !isCheckout ? 'var(--text-dark)' : 'inherit'}}>1. Carrito</span>
+            <span>›</span>
+            <span style={{color: isCheckout && !preferenceId ? 'var(--text-dark)' : 'inherit'}}>2. Datos</span>
+            <span>›</span>
+            <span style={{color: preferenceId ? 'var(--text-dark)' : 'inherit'}}>3. Pago</span>
+          </div>
         </div>
 
         {/* Free Shipping Progress Bar */}
@@ -259,13 +269,21 @@ const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem
                 
                 <div className="checkout-actions">
                   <button type="button" className="btn-back" onClick={() => setIsCheckout(false)}>← Volver al carrito</button>
-                  
+                  <div style={{textAlign: 'center', margin: '1rem 0', fontSize: '0.85rem'}}>
+                    <div style={{color: '#e5b62b', fontSize: '1.2rem', letterSpacing: '2px', marginBottom: '2px'}}>★★★★★</div>
+                    <strong style={{color: 'var(--text-dark)'}}>4.9/5</strong> basado en más de 500 clientes felices.
+                  </div>
+
                   <button type="submit" onClick={() => setSubmitAction('mp')} className="whatsapp-btn mp-btn" disabled={isPaying} style={{backgroundColor: '#009ee3', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'}}>
-                    {isPaying ? 'Procesando...' : <><CreditCard size={20} /> Pagar Seguro con Mercado Pago</>}
+                    {isPaying ? 'Procesando...' : <><CreditCard size={20} /> Pagar Seguro con Mercado Pago →</>}
                   </button>
-                  <button type="submit" onClick={() => setSubmitAction('whatsapp')} className="whatsapp-btn " disabled={isPaying} style={{marginTop: '-0.5rem', backgroundColor: '#25D366', color: 'white', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'}}>
-                    {isPaying ? 'Procesando...' : <><Landmark size={20} /> Pagar con Transferencia (-20% OFF Extras)</>}
-                  </button>
+                  
+                  <div style={{position: 'relative', marginTop: '-0.5rem'}}>
+                    <span style={{position: 'absolute', top: '-10px', right: '10px', backgroundColor: '#e65100', color: 'white', fontSize: '0.7rem', fontWeight: 'bold', padding: '2px 8px', borderRadius: '12px', zIndex: 1, boxShadow: '0 2px 4px rgba(0,0,0,0.2)'}}>RECOMENDADO</span>
+                    <button type="submit" onClick={() => setSubmitAction('whatsapp')} className="whatsapp-btn " disabled={isPaying} style={{backgroundColor: '#25D366', color: 'white', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', width: '100%'}}>
+                      {isPaying ? 'Procesando...' : <><Landmark size={20} /> Pagar con Transferencia (-20% OFF Extras) →</>}
+                    </button>
+                  </div>
                   
                   <div className="trust-badges-container">
                     <div className="trust-logos">
