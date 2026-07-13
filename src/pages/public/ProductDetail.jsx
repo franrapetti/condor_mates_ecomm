@@ -394,9 +394,9 @@ function ProductDetail() {
                 )}
                 
                 {/* Value Framing */}
-                <div style={{marginTop: '0.5rem', marginBottom: '1rem', backgroundColor: 'var(--accent-light)', padding: '8px 12px', borderRadius: '8px', display: 'inline-block'}}>
-                  <p style={{margin: 0, fontSize: '0.85rem', color: 'var(--text-dark)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px'}}>
-                    💡 {getFramingText(product.category)}
+                <div style={{marginTop: '0.5rem', marginBottom: '1rem', borderLeft: '3px solid var(--accent)', padding: '6px 12px', backgroundColor: 'rgba(0,0,0,0.02)'}}>
+                  <p style={{margin: 0, fontSize: '0.85rem', color: 'var(--text-dark)', fontWeight: 500, fontStyle: 'italic'}}>
+                    "{getFramingText(product.category)}"
                   </p>
                 </div>
               </>
