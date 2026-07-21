@@ -1,0 +1,302 @@
+/* ═══════════════════════════════════════════════════════════
+   Semana del Amigo — Promo Section Styles
+   Prefixed with .fw- to avoid collisions
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Section container ── */
+.fw-section {
+  width: 100%;
+  padding: 4rem 1rem 3.5rem;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.fw-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ── Section header ── */
+.fw-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.fw-badge {
+  display: inline-block;
+  background-color: rgba(35, 74, 46, 0.08);
+  color: var(--accent);
+  padding: 0.45rem 1.1rem;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  margin-bottom: 1rem;
+}
+
+.fw-title {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  font-weight: 800;
+  color: var(--text-dark);
+  margin: 0 0 0.5rem;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.fw-title-accent {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.fw-subtitle {
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  color: var(--text-light);
+  margin: 0;
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.6;
+}
+
+/* ── Split layout ── */
+.fw-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  align-items: stretch;
+}
+
+/* ── Hero image side ── */
+.fw-hero-image {
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  min-height: 400px;
+}
+
+.fw-hero-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.6s ease;
+}
+
+.fw-hero-image:hover img {
+  transform: scale(1.03);
+}
+
+.fw-hero-image-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(15, 30, 18, 0.5) 0%,
+    transparent 50%
+  );
+  pointer-events: none;
+}
+
+.fw-hero-image-label {
+  position: absolute;
+  bottom: 1.25rem;
+  left: 1.25rem;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* ── Cards column ── */
+.fw-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* ── Individual promo card ── */
+.fw-card {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.25rem;
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.fw-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07);
+}
+
+.fw-card-image {
+  width: 100px;
+  height: 100px;
+  border-radius: 10px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.fw-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.fw-card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.fw-card-name {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin: 0;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fw-card-prices {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.fw-card-original-price {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--text-light);
+  text-decoration: line-through;
+}
+
+.fw-card-promo-price {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: -0.02em;
+}
+
+.fw-card-discount {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #1e8e3e;
+  background: #e6f4ea;
+  padding: 2px 8px;
+  border-radius: 10px;
+  letter-spacing: 0.02em;
+}
+
+.fw-card-transfer {
+  font-size: 0.75rem;
+  color: var(--text-light);
+  font-weight: 500;
+}
+
+.fw-card-transfer strong {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.fw-card-cta {
+  align-self: flex-start;
+  margin-top: 0.25rem;
+  padding: 0.6rem 1.4rem;
+  background: var(--accent);
+  color: white;
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  font-weight: 700;
+  border-radius: 50px;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  letter-spacing: 0.01em;
+}
+
+.fw-card-cta:hover {
+  transform: translateY(-2px);
+  background: #1a3d24;
+  box-shadow: 0 6px 18px rgba(35, 74, 46, 0.4);
+}
+
+.fw-card-cta:active {
+  transform: translateY(0);
+}
+
+/* ── Mobile responsive ── */
+@media (max-width: 768px) {
+  .fw-section {
+    padding: 3rem 1rem 2.5rem;
+  }
+
+  .fw-header {
+    margin-bottom: 2rem;
+  }
+
+  .fw-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .fw-hero-image {
+    min-height: 240px;
+    max-height: 300px;
+  }
+
+  .fw-card {
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  .fw-card-image {
+    width: 80px;
+    height: 80px;
+  }
+
+  .fw-card-name {
+    font-size: 0.92rem;
+  }
+
+  .fw-card-promo-price {
+    font-size: 1.2rem;
+  }
+
+  .fw-card-cta {
+    padding: 0.55rem 1.2rem;
+    font-size: 0.78rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .fw-card-image {
+    width: 70px;
+    height: 70px;
+  }
+}

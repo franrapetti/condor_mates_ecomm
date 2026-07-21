@@ -12,6 +12,8 @@ import { useLocation } from 'react-router-dom';
 import { getImgUrl } from '../../lib/imageUtils';
 import { trackPixelEvent, logAnalyticsEvent } from '../../lib/analytics';
 import { ShieldCheck, Star, Truck, CreditCard, BadgeCheck } from 'lucide-react';
+import { FRIENDS_WEEK_ACTIVE } from '../../data/friendsWeekData';
+import FriendsWeekPromoSection from '../../components/FriendsWeekPromoSection';
 
 function PublicCatalog() {
   // Dynamic hero — start null to avoid flash while fetching from Supabase
@@ -280,6 +282,14 @@ function PublicCatalog() {
               </div>
             </div>
           </div>
+
+          {/* Semana del Amigo — Temporal promo section */}
+          {FRIENDS_WEEK_ACTIVE && (
+            <FriendsWeekPromoSection
+              products={products}
+              onAddToCart={addToCart}
+            />
+          )}
 
           {/* Categories Preview Grid */}
           <div className="container" style={{ marginTop: '3.5rem', marginBottom: '1.5rem' }}>

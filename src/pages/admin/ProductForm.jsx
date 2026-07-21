@@ -105,6 +105,7 @@ const ProductForm = () => {
     best_seller: false,
     rating: '',
     reviews_count: '',
+    is_friends_week_promo: false,
   });
 
   // Corporate pricing tiers: [{min, max, price}]
@@ -151,6 +152,7 @@ const ProductForm = () => {
         best_seller: data.best_seller ?? false,
         rating: data.rating ?? '',
         reviews_count: data.reviews_count ?? '',
+        is_friends_week_promo: data.is_friends_week_promo ?? false,
       });
 
       if (data.corporate_pricing && Array.isArray(data.corporate_pricing)) {
@@ -245,6 +247,7 @@ const ProductForm = () => {
         best_seller: formData.best_seller || false,
         rating: formData.rating !== '' ? Number(formData.rating) : null,
         reviews_count: formData.reviews_count !== '' ? Number(formData.reviews_count) : 0,
+        is_friends_week_promo: formData.is_friends_week_promo || false,
       };
 
       setUploadProgress('Guardando en base de datos...');
@@ -275,6 +278,7 @@ const ProductForm = () => {
           best_seller: false,
           rating: '',
           reviews_count: '',
+          is_friends_week_promo: false,
         });
         setImages([]);
         setCorporateTiers([{ min: 10, max: 49, price: '' }, { min: 50, max: '', price: '' }]);
@@ -470,6 +474,15 @@ const ProductForm = () => {
                   onChange={e => set('show_stock_alert', e.target.checked)}
                 />
                 <span>🔥 Mostrar etiqueta "Últimas Unidades"</span>
+              </label>
+
+              <label className="toggle-label mb-3">
+                <input
+                  type="checkbox"
+                  checked={formData.is_friends_week_promo}
+                  onChange={e => set('is_friends_week_promo', e.target.checked)}
+                />
+                <span>🤝 Promo Semana del Amigo (Aparece en sección especial)</span>
               </label>
             </div>
 
