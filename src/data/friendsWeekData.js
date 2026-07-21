@@ -10,6 +10,6 @@ export const FRIENDS_WEEK_CONFIG = {
   sectionTitle: 'Semana del Amigo',
   sectionSubtitle: 'Promos exclusivas para compartir con tu mejor amigo.',
   ctaText: 'Agregar al carrito',
-  badgeText: '🤝 Promo especial',
+  badgeText: 'Promo especial',
   heroImage: '/fotodiadelamigoweb.jpg',
 };
