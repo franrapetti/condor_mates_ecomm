@@ -6,17 +6,19 @@
 /* ── Section container ── */
 .fw-section {
   width: 100%;
+  max-width: 100vw;
   padding: 4rem 1rem 3.5rem;
   background: var(--surface);
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
-  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .fw-container {
   max-width: 1200px;
   margin: 0 auto;
-  overflow: hidden;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* ── Section header ── */
@@ -72,6 +74,7 @@
   grid-template-columns: 1fr 1fr;
   gap: 2rem;
   align-items: stretch;
+  max-width: 100%;
 }
 
 /* ── Hero image side ── */
@@ -139,6 +142,8 @@
   border: 1px solid var(--border);
   border-radius: 14px;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .fw-card:hover {
@@ -284,6 +289,9 @@
 
   .fw-card-name {
     font-size: 0.92rem;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
   }
 
   .fw-card-promo-price {
