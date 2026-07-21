@@ -25,6 +25,20 @@ const FriendsWeekPromoSection = ({ products, onAddToCart }) => {
   const { sectionTitle, sectionSubtitle, ctaText, badgeText, heroImage } =
     FRIENDS_WEEK_CONFIG;
 
+  const targetDate = new Date(2026, 6, 28, 23, 59, 59); // July 28, 2026 23:59:59
+  const today = new Date();
+  const diffTime = targetDate - today;
+  const daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  let countdownText = 'EDICIÓN LIMITADA';
+  if (daysRemaining > 1) {
+    countdownText = `⏳ ${daysRemaining} DÍAS RESTANTES`;
+  } else if (daysRemaining === 1) {
+    countdownText = '⏳ ÚLTIMO DÍA';
+  } else if (daysRemaining <= 0) {
+    countdownText = 'FINALIZADO';
+  }
+
   return (
     <section className="fw-section fade-in" id="friends-week-section">
       <div className="fw-container">
@@ -47,7 +61,7 @@ const FriendsWeekPromoSection = ({ products, onAddToCart }) => {
               loading="lazy"
             />
             <div className="fw-hero-image-overlay" />
-            <span className="fw-hero-image-label">Edición limitada</span>
+            <span className="fw-hero-image-label">{countdownText}</span>
           </div>
 
           {/* Right: Promo cards */}
@@ -80,25 +94,26 @@ const FriendsWeekPromoSection = ({ products, onAddToCart }) => {
                     <h3 className="fw-card-name">{product.name}</h3>
 
                     <div className="fw-card-prices">
-                      {hasPromo && (
-                        <span className="fw-card-original-price">
-                          ${product.price.toLocaleString()}
+                      <div className="fw-card-prices-top">
+                        {hasPromo && (
+                          <span className="fw-card-original-price">
+                            ${product.price.toLocaleString()}
+                          </span>
+                        )}
+                        <span className="fw-card-promo-price">
+                          ${displayPrice.toLocaleString()}
                         </span>
-                      )}
-                      <span className="fw-card-promo-price">
-                        ${displayPrice.toLocaleString()}
-                      </span>
-                      {discount > 0 && (
-                        <span className="fw-card-discount">
-                          {discount}% OFF
-                        </span>
-                      )}
+                        {discount > 0 && (
+                          <span className="fw-card-discount">
+                            {discount}% OFF
+                          </span>
+                        )}
+                      </div>
+                      <div className="fw-card-transfer-main">
+                        <span className="fw-transfer-label">Transf.</span>
+                        <span className="fw-transfer-amount">${transferPrice.toLocaleString()}</span>
+                      </div>
                     </div>
-
-                    <p className="fw-card-transfer">
-                      Transferencia:{' '}
-                      <strong>${transferPrice.toLocaleString()}</strong>
-                    </p>
 
                     <button
                       className="fw-card-cta"

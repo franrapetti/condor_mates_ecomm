@@ -191,44 +191,58 @@
 
 .fw-card-prices {
   display: flex;
-  align-items: baseline;
-  gap: 0.6rem;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.fw-card-prices-top {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
   flex-wrap: wrap;
 }
 
 .fw-card-original-price {
-  font-size: 0.88rem;
+  font-size: 0.8rem;
   font-weight: 500;
   color: var(--text-light);
   text-decoration: line-through;
 }
 
 .fw-card-promo-price {
-  font-size: 1.35rem;
-  font-weight: 800;
-  color: var(--accent);
-  letter-spacing: -0.02em;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-dark);
 }
 
 .fw-card-discount {
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   font-weight: 700;
   color: #1e8e3e;
   background: #e6f4ea;
-  padding: 2px 8px;
-  border-radius: 10px;
+  padding: 2px 6px;
+  border-radius: 8px;
   letter-spacing: 0.02em;
 }
 
-.fw-card-transfer {
-  font-size: 0.75rem;
-  color: var(--text-light);
-  font-weight: 500;
+.fw-card-transfer-main {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  margin-top: 0.15rem;
 }
 
-.fw-card-transfer strong {
+.fw-transfer-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-light);
+}
+
+.fw-transfer-amount {
+  font-size: 1.45rem;
+  font-weight: 900;
   color: var(--accent);
-  font-weight: 700;
+  letter-spacing: -0.03em;
 }
 
 .fw-card-cta {
@@ -295,7 +309,11 @@
   }
 
   .fw-card-promo-price {
-    font-size: 1.2rem;
+    font-size: 0.9rem;
+  }
+  
+  .fw-transfer-amount {
+    font-size: 1.3rem;
   }
 
   .fw-card-cta {
