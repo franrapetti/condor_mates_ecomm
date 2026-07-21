@@ -14,6 +14,14 @@ import './FriendsWeekPromoSection.css';
  * @param {Function} props.onAddToCart – addToCart function from CartContext
  */
 const FriendsWeekPromoSection = ({ products, onAddToCart }) => {
+  // Update time every minute for the countdown
+  const [now, setNow] = React.useState(new Date());
+  
+  React.useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 60000);
+    return () => clearInterval(timer);
+  }, []);
+
   // Filter products flagged as Friends Week promos (in stock only)
   const promoProducts = products.filter(
     (p) => p.is_friends_week_promo && p.stock !== 0
@@ -26,16 +34,19 @@ const FriendsWeekPromoSection = ({ products, onAddToCart }) => {
     FRIENDS_WEEK_CONFIG;
 
   const targetDate = new Date(2026, 6, 28, 23, 59, 59); // July 28, 2026 23:59:59
-  const today = new Date();
-  const diffTime = targetDate - today;
-  const daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  const diffTime = targetDate - now;
   
   let countdownText = 'EDICIÓN LIMITADA';
-  if (daysRemaining > 1) {
-    countdownText = `⏳ ${daysRemaining} DÍAS RESTANTES`;
-  } else if (daysRemaining === 1) {
-    countdownText = '⏳ ÚLTIMO DÍA';
-  } else if (daysRemaining <= 0) {
+  if (diffTime > 0) {
+    const days = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    
+    if (days > 0) {
+      countdownText = `Quedan ${days} ${days === 1 ? 'día' : 'días'} y ${hours} ${hours === 1 ? 'hora' : 'horas'}`;
+    } else {
+      countdownText = `Último día: quedan ${hours} ${hours === 1 ? 'hora' : 'horas'}`;
+    }
+  } else {
     countdownText = 'FINALIZADO';
   }
 
