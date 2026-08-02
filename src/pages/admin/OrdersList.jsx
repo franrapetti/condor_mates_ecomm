@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { supabase } from '../../lib/supabaseClient';
 import {
   LineChart, Line, BarChart, Bar, AreaChart, Area,
@@ -462,16 +463,6 @@ const OrdersList = () => {
   const [search, setSearch] = useState('');
   const [dateRange, setDateRange] = useState('30d'); // '7d' | '30d' | '90d' | 'all'
   const [showSuccessToast, setShowSuccessToast] = useState(false);
-
-  // Toggle body class for bottom sheet z-index control
-  useEffect(() => {
-    if (showManualForm) {
-      document.body.classList.add('manual-sale-open');
-    } else {
-      document.body.classList.remove('manual-sale-open');
-    }
-    return () => document.body.classList.remove('manual-sale-open');
-  }, [showManualForm]);
 
   useEffect(() => {
     fetchData();
@@ -1114,8 +1105,8 @@ const OrdersList = () => {
         </div>
       </div>
 
-      {/* ── MANUAL SALE BOTTOM SHEET ── */}
-      {showManualForm && (
+      {/* ── MANUAL SALE BOTTOM SHEET (Portal) ── */}
+      {showManualForm && createPortal(
         <>
           <div className="manual-sale-backdrop" onClick={() => setShowManualForm(false)} />
           <div className="manual-sale-sheet">
@@ -1306,7 +1297,8 @@ const OrdersList = () => {
               </div>
             </form>
           </div>
-        </>
+        </>,
+        document.body
       )}
 
       {/* ── SUCCESS TOAST ── */}
