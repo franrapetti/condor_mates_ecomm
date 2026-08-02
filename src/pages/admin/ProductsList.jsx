@@ -277,24 +277,25 @@ const ProductsList = () => {
                       <span style={{fontWeight: 600, fontSize: '0.8rem', color: 'var(--text-light)', marginRight: '0.5rem'}}>Ingresan:</span>
                       <div style={{display: 'flex', alignItems: 'center', gap: '0.3rem'}}>
                         <button type="button" onClick={() => updateRestockQuantity(line.id, line.quantity - 1)}
-                          style={{width: 28, height: 28, borderRadius: 6, border: '1px solid var(--border)', background: 'var(--background)', cursor: 'pointer', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-dark)'}}
+                          style={{width: 44, height: 44, borderRadius: 10, border: '1px solid var(--border)', background: 'var(--background)', cursor: 'pointer', fontWeight: 700, fontSize: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-dark)', WebkitTapHighlightColor: 'transparent', flexShrink: 0}}
                         >−</button>
                         <input
                           type="number"
+                          inputMode="numeric"
                           value={line.quantity}
                           onChange={e => updateRestockQuantity(line.id, parseInt(e.target.value) || 1)}
-                          style={{width: '50px', textAlign: 'center', padding: '0.2rem', borderRadius: 4, border: '1px solid var(--border)'}}
+                          style={{width: '56px', textAlign: 'center', padding: '0.4rem', borderRadius: 8, border: '1px solid var(--border)', fontSize: '1rem', fontWeight: 700}}
                           min="1"
                         />
                         <button type="button" onClick={() => updateRestockQuantity(line.id, line.quantity + 1)}
-                          style={{width: 28, height: 28, borderRadius: 6, border: '1px solid var(--border)', background: 'var(--background)', cursor: 'pointer', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-dark)'}}
+                          style={{width: 44, height: 44, borderRadius: 10, border: '1px solid var(--border)', background: 'var(--background)', cursor: 'pointer', fontWeight: 700, fontSize: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-dark)', WebkitTapHighlightColor: 'transparent', flexShrink: 0}}
                         >+</button>
                       </div>
                       <span style={{fontWeight: 700, color: 'var(--accent)', minWidth: 60, textAlign: 'right', fontSize: '0.8rem', marginLeft: '0.5rem'}}>
                         Quedarán: {line.currentStock + line.quantity}
                       </span>
                       <button type="button" onClick={() => removeRestockLine(line.id)}
-                        style={{background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', fontSize: '1rem', padding: '0 0.2rem', marginLeft: '0.5rem'}}
+                        style={{width: 44, height: 44, background: 'none', border: '1px solid transparent', borderRadius: 10, cursor: 'pointer', color: '#ef4444', fontSize: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', WebkitTapHighlightColor: 'transparent', flexShrink: 0}}
                       >🗑</button>
                     </div>
                   </div>

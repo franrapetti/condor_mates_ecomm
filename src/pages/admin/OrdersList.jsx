@@ -447,6 +447,7 @@ const OrdersList = () => {
   const [productSearch, setProductSearch] = useState('');
   const [manualTotalOverride, setManualTotalOverride] = useState(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [highlightedIdx, setHighlightedIdx] = useState(-1);
   const suggestionsRef = useRef(null);
   const searchInputRef = useRef(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
@@ -460,6 +461,7 @@ const OrdersList = () => {
   const [dismissedAlerts, setDismissedAlerts] = useState([]);
   const [search, setSearch] = useState('');
   const [dateRange, setDateRange] = useState('30d'); // '7d' | '30d' | '90d' | 'all'
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -656,39 +658,43 @@ const OrdersList = () => {
   // --- Manual Sales Mutations ---
   const handleManualSubmit = async (e) => {
     e.preventDefault();
-    if (!manualForm.customer_name.trim() || manualLines.length === 0) return;
+    if (manualLines.length === 0) return;
     setSavingManual(true);
+    
+    const customerName = manualForm.customer_name.trim() || 'Cliente';
     
     try {
       const itemsJson = JSON.stringify(manualLines.map(l => ({ id: l.product_id, name: l.name, quantity: l.quantity, price: l.price })));
       const { error } = await supabase.from('manual_sales').insert([{
         ...manualForm,
+        customer_name: customerName,
         items: itemsJson,
         total_amount: effectiveTotal,
       }]);
       
       if (error) throw error;
 
-      // Descontar stock inmediatamente (el producto ya fue entregado)
-      for (const line of manualLines) {
-        if (line.product_id && !String(line.product_id).startsWith('custom-')) {
+      // Descontar stock en paralelo (más rápido en redes móviles)
+      const stockUpdates = manualLines
+        .filter(line => line.product_id && !String(line.product_id).startsWith('custom-'))
+        .map(async (line) => {
           const productId = String(line.product_id).includes('_combo') ? parseInt(String(line.product_id).split('_')[0], 10) : line.product_id;
-          
           const { data: dbProduct, error: stockError } = await supabase
             .from('products').select('stock').eq('id', productId).single();
-            
           if (!stockError && dbProduct && dbProduct.stock !== null) {
             await supabase.from('products')
               .update({ stock: Math.max(0, dbProduct.stock - line.quantity) })
               .eq('id', productId);
           }
-        }
-      }
+        });
+      await Promise.all(stockUpdates);
       
       setManualForm(EMPTY_FORM);
       setManualLines([]);
       setManualTotalOverride(null);
       setShowManualForm(false);
+      setShowSuccessToast(true);
+      setTimeout(() => setShowSuccessToast(false), 4000);
       fetchData();
     } catch (err) {
       console.error(err);
@@ -1092,197 +1098,215 @@ const OrdersList = () => {
           <button className="btn-secondary" onClick={fetchData} style={{padding: '0.5rem 1rem'}}>
             ↻ Sincronizar
           </button>
-          <button className="btn-primary" onClick={() => setShowManualForm(!showManualForm)} style={{padding: '0.5rem 1rem', background: 'var(--text-dark)'}}>
-            {showManualForm ? '✕ Cancelar' : '+ Venta Manual'}
+          <button className="btn-primary" onClick={() => setShowManualForm(true)} style={{padding: '0.65rem 1.1rem', background: 'var(--text-dark)', fontSize: '0.95rem', minHeight: 44}}>
+            + Venta Manual
           </button>
         </div>
       </div>
 
+      {/* ── MANUAL SALE BOTTOM SHEET ── */}
       {showManualForm && (
-        <div style={{background: 'var(--surface)', padding: '1.5rem', borderRadius: 12, marginBottom: '2rem', border: '1px solid var(--border)'}}>
-          <h3 style={{marginTop: 0}}>📝 Registrar Venta Manual</h3>
-          <form onSubmit={handleManualSubmit}>
-            {/* Row 1: Cliente + Teléfono */}
-            <div style={{display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', marginBottom: '1rem'}}>
-              <input type="text" placeholder="Nombre del Cliente *" required value={manualForm.customer_name} onChange={e => setManualForm({...manualForm, customer_name: e.target.value})} className="orders-search-input" style={{marginLeft: 0}} />
-              <input type="text" placeholder="Teléfono / WhatsApp" value={manualForm.customer_phone} onChange={e => setManualForm({...manualForm, customer_phone: e.target.value})} className="orders-search-input" style={{marginLeft: 0}} />
+        <>
+          <div className="manual-sale-backdrop" onClick={() => setShowManualForm(false)} />
+          <div className="manual-sale-sheet">
+            <div className="manual-sale-sheet-handle" />
+            <div className="manual-sale-sheet-header">
+              <h3>📝 Nueva Venta</h3>
+              <button className="manual-sale-sheet-close" onClick={() => setShowManualForm(false)} type="button">✕</button>
             </div>
-
-            {/* Product Autocomplete */}
-            <div style={{marginBottom: '1rem'}}>
-              <label style={{fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-light)', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: '0.5rem'}}>Productos del pedido *</label>
-              <div style={{position: 'relative'}}>
-                <input
-                  ref={searchInputRef}
-                  type="text"
-                  placeholder="🔍 Escribí el nombre del producto..."
-                  value={productSearch}
-                  onChange={e => { setProductSearch(e.target.value); setShowSuggestions(true); }}
-                  onFocus={() => productSearch.length >= 2 && setShowSuggestions(true)}
-                  className="orders-search-input"
-                  style={{marginLeft: 0, width: '100%', boxSizing: 'border-box'}}
-                />
-                {showSuggestions && suggestions.length > 0 && (
-                  <div ref={suggestionsRef} style={{
-                    position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 20,
-                    background: 'var(--surface)', border: '1px solid var(--border)',
-                    borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-                    maxHeight: 240, overflowY: 'auto', marginTop: 4
-                  }}>
-                    {suggestions.map(p => (
-                      <div
-                        key={p.id}
-                        onClick={() => addProductLine(p)}
-                        style={{
-                          padding: '0.7rem 1rem', cursor: 'pointer',
-                          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                          borderBottom: '1px solid var(--border)',
-                          transition: 'background 0.1s',
-                          fontSize: '0.88rem',
-                        }}
-                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(35, 74, 46, 0.06)'}
-                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                      >
-                        <span style={{fontWeight: 600, color: 'var(--text-dark)'}}>{p.name}</span>
-                        <span style={{
-                          fontWeight: 700,
-                          color: p.promo_price ? '#dc2626' : 'var(--accent)',
-                          fontSize: '0.85rem',
-                          whiteSpace: 'nowrap',
-                          marginLeft: '1rem',
-                          display: 'flex', alignItems: 'center', gap: 4
-                        }}>
-                          ${(p.promo_price || p.price)?.toLocaleString()}
-                          {p.stock === 0 && <span style={{marginLeft: 6, fontSize: '0.7rem', background: '#fee2e2', color: '#dc2626', padding: '1px 6px', borderRadius: 4}}>Sin stock</span>}
-                          {p.stock > 0 && p.stock <= 5 && <span style={{marginLeft: 6, fontSize: '0.7rem', background: '#fef3c7', color: '#d97706', padding: '1px 6px', borderRadius: 4}}>⚠️ {p.stock} disp.</span>}
-                          {p.stock > 5 && <span style={{marginLeft: 6, fontSize: '0.7rem', background: '#dcfce7', color: '#16a34a', padding: '1px 6px', borderRadius: 4}}>{p.stock} disp.</span>}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <button 
-                type="button" 
-                onClick={addCustomItem}
-                className="btn-secondary"
-                style={{marginTop: '0.5rem', fontSize: '0.8rem', padding: '0.4rem 0.8rem'}}
-              >
-                + Agregar ítem personalizado
-              </button>
-
-              {/* Selected product lines */}
-              {manualLines.length > 0 && (
-                <div style={{marginTop: '0.75rem', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden'}}>
-                  {manualLines.map(line => (
-                    <div key={line.product_id} style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                      padding: '0.65rem 1rem', borderBottom: '1px solid var(--border)',
-                      fontSize: '0.88rem', gap: '0.5rem', flexWrap: 'wrap'
-                    }}>
-                      {line.isCustom ? (
-                        <input 
-                          type="text"
-                          value={line.name}
-                          onChange={e => updateCustomLine(line.product_id, 'name', e.target.value)}
-                          className="orders-search-input"
-                          style={{flex: 1, minWidth: '150px', margin: 0, padding: '0.3rem 0.5rem'}}
-                          placeholder="Nombre del ítem"
-                        />
-                      ) : (
-                        <span style={{fontWeight: 600, flex: 1, minWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>{line.name}</span>
-                      )}
-                      
-                      <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0, flexWrap: 'wrap'}}>
-                        {line.isCustom ? (
-                          <div style={{display: 'flex', alignItems: 'center', gap: '0.2rem'}}>
-                            <span style={{fontWeight: 600, color: 'var(--text-light)'}}>$</span>
-                            <input 
-                              type="number"
-                              value={line.price}
-                              onChange={e => updateCustomLine(line.product_id, 'price', Number(e.target.value))}
-                              className="orders-search-input"
-                              style={{width: '80px', margin: 0, padding: '0.3rem 0.5rem', textAlign: 'right'}}
-                              min="0"
-                            />
-                          </div>
-                        ) : null}
-
-                        <div style={{display: 'flex', alignItems: 'center', gap: '0.3rem'}}>
-                          <button type="button" onClick={() => updateLineQuantity(line.product_id, -1)}
-                            style={{width: 28, height: 28, borderRadius: 6, border: '1px solid var(--border)', background: 'var(--background)', cursor: 'pointer', fontWeight: 700, fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-dark)'}}
-                          >−</button>
-                          <span style={{minWidth: 24, textAlign: 'center', fontWeight: 700}}>{line.quantity}</span>
-                          <button type="button" onClick={() => updateLineQuantity(line.product_id, 1)}
-                            style={{width: 28, height: 28, borderRadius: 6, border: '1px solid var(--border)', background: 'var(--background)', cursor: 'pointer', fontWeight: 700, fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-dark)'}}
-                          >+</button>
-                        </div>
-                        <span style={{fontWeight: 700, color: 'var(--accent)', minWidth: 70, textAlign: 'right'}}>${(line.price * line.quantity).toLocaleString()}</span>
-                        <button type="button" onClick={() => removeProductLine(line.product_id)}
-                          style={{background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', fontSize: '1rem', padding: '0 0.2rem'}}
-                        >🗑</button>
-                      </div>
-                    </div>
-                  ))}
+            <form onSubmit={handleManualSubmit} style={{display: 'contents'}}>
+              <div className="manual-sale-sheet-body">
+                {/* Row 1: Cliente + Teléfono */}
+                <div style={{display: 'grid', gap: '0.75rem', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', marginBottom: '1rem'}}>
+                  <input type="text" placeholder="Nombre (opcional)" value={manualForm.customer_name} onChange={e => setManualForm({...manualForm, customer_name: e.target.value})} className="orders-search-input" style={{marginLeft: 0}} />
+                  <input type="tel" placeholder="Teléfono / WhatsApp" value={manualForm.customer_phone} onChange={e => setManualForm({...manualForm, customer_phone: e.target.value})} className="orders-search-input" style={{marginLeft: 0}} inputMode="tel" />
                 </div>
-              )}
-            </div>
 
-            {/* Row 2: Payment, Status, Total */}
-            <div style={{display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', marginBottom: '1rem'}}>
-              <select value={manualForm.payment_method} onChange={e => setManualForm({...manualForm, payment_method: e.target.value})} className="orders-search-input" style={{marginLeft: 0}}>
-                {PAYMENT_METHODS.map(m => <option key={m} value={m}>{m}</option>)}
-              </select>
-              <select value={manualForm.status} onChange={e => setManualForm({...manualForm, status: e.target.value})} className="orders-search-input" style={{marginLeft: 0}}>
-                {STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-              </select>
-              <div style={{display: 'flex', flexDirection: 'column', gap: '0.25rem'}}>
-                <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap'}}>
-                  <span style={{fontWeight: 800, fontSize: '1.15rem', color: manualLines.length > 0 ? 'var(--accent)' : 'var(--text-light)', whiteSpace: 'nowrap'}}>
-                    💰 Total: ${effectiveTotal.toLocaleString()}
-                  </span>
+                {/* Product Autocomplete */}
+                <div style={{marginBottom: '1rem'}}>
+                  <label style={{fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-light)', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: '0.5rem'}}>Productos del pedido</label>
+                  <div style={{position: 'relative'}}>
+                    <input
+                      ref={searchInputRef}
+                      type="text"
+                      placeholder="🔍 Buscar producto..."
+                      value={productSearch}
+                      onChange={e => { setProductSearch(e.target.value); setShowSuggestions(true); setHighlightedIdx(-1); }}
+                      onFocus={() => productSearch.length >= 2 && setShowSuggestions(true)}
+                      onKeyDown={e => {
+                        if (!showSuggestions || suggestions.length === 0) return;
+                        if (e.key === 'ArrowDown') { e.preventDefault(); setHighlightedIdx(prev => Math.min(prev + 1, suggestions.length - 1)); }
+                        else if (e.key === 'ArrowUp') { e.preventDefault(); setHighlightedIdx(prev => Math.max(prev - 1, 0)); }
+                        else if (e.key === 'Enter' && highlightedIdx >= 0) { e.preventDefault(); addProductLine(suggestions[highlightedIdx]); setHighlightedIdx(-1); }
+                        else if (e.key === 'Escape') { setShowSuggestions(false); setHighlightedIdx(-1); }
+                      }}
+                      className="orders-search-input"
+                      style={{marginLeft: 0, width: '100%', boxSizing: 'border-box'}}
+                      autoComplete="off"
+                    />
+                    {showSuggestions && suggestions.length > 0 && (
+                      <div ref={suggestionsRef} style={{
+                        position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 20,
+                        background: 'var(--surface)', border: '1px solid var(--border)',
+                        borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                        maxHeight: 260, overflowY: 'auto', marginTop: 4
+                      }}>
+                        {suggestions.map((p, idx) => (
+                          <div
+                            key={p.id}
+                            onClick={() => { addProductLine(p); setHighlightedIdx(-1); }}
+                            className={`sale-autocomplete-item${idx === highlightedIdx ? ' highlighted' : ''}`}
+                          >
+                            <span style={{fontWeight: 600, color: 'var(--text-dark)'}}>{p.name}</span>
+                            <span style={{
+                              fontWeight: 700,
+                              color: p.promo_price ? '#dc2626' : 'var(--accent)',
+                              fontSize: '0.85rem',
+                              whiteSpace: 'nowrap',
+                              marginLeft: '0.75rem',
+                              display: 'flex', alignItems: 'center', gap: 4
+                            }}>
+                              ${(p.promo_price || p.price)?.toLocaleString()}
+                              {p.stock === 0 && <span style={{marginLeft: 6, fontSize: '0.7rem', background: '#fee2e2', color: '#dc2626', padding: '1px 6px', borderRadius: 4}}>Sin stock</span>}
+                              {p.stock > 0 && p.stock <= 5 && <span style={{marginLeft: 6, fontSize: '0.7rem', background: '#fef3c7', color: '#d97706', padding: '1px 6px', borderRadius: 4}}>⚠️ {p.stock}</span>}
+                              {p.stock > 5 && <span style={{marginLeft: 6, fontSize: '0.7rem', background: '#dcfce7', color: '#16a34a', padding: '1px 6px', borderRadius: 4}}>{p.stock}</span>}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <button 
+                    type="button" 
+                    onClick={addCustomItem}
+                    className="btn-secondary"
+                    style={{marginTop: '0.5rem', fontSize: '0.85rem', padding: '0.5rem 1rem', minHeight: 40}}
+                  >
+                    + Ítem personalizado
+                  </button>
+
+                  {/* Selected product lines */}
+                  {manualLines.length > 0 && (
+                    <div style={{marginTop: '0.75rem', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden'}}>
+                      {manualLines.map(line => (
+                        <div key={line.product_id} className="sale-product-line">
+                          {line.isCustom ? (
+                            <input 
+                              type="text"
+                              value={line.name}
+                              onChange={e => updateCustomLine(line.product_id, 'name', e.target.value)}
+                              className="orders-search-input"
+                              style={{flex: 1, minWidth: '120px', margin: 0, padding: '0.4rem 0.6rem'}}
+                              placeholder="Nombre del ítem"
+                            />
+                          ) : (
+                            <span style={{fontWeight: 600, flex: 1, minWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '0.9rem'}}>{line.name}</span>
+                          )}
+                          
+                          <div style={{display: 'flex', alignItems: 'center', gap: '0.4rem', flexShrink: 0}}>
+                            {line.isCustom ? (
+                              <div style={{display: 'flex', alignItems: 'center', gap: '0.2rem'}}>
+                                <span style={{fontWeight: 600, color: 'var(--text-light)'}}>$</span>
+                                <input 
+                                  type="number"
+                                  inputMode="decimal"
+                                  value={line.price}
+                                  onChange={e => updateCustomLine(line.product_id, 'price', Number(e.target.value))}
+                                  className="orders-search-input"
+                                  style={{width: '80px', margin: 0, padding: '0.4rem 0.5rem', textAlign: 'right'}}
+                                  min="0"
+                                />
+                              </div>
+                            ) : null}
+
+                            <div style={{display: 'flex', alignItems: 'center', gap: '0.25rem'}}>
+                              <button type="button" onClick={() => updateLineQuantity(line.product_id, -1)} className="qty-btn">−</button>
+                              <span style={{minWidth: 28, textAlign: 'center', fontWeight: 700, fontSize: '1rem'}}>{line.quantity}</span>
+                              <button type="button" onClick={() => updateLineQuantity(line.product_id, 1)} className="qty-btn">+</button>
+                            </div>
+                            <span style={{fontWeight: 700, color: 'var(--accent)', minWidth: 60, textAlign: 'right', fontSize: '0.9rem'}}>${(line.price * line.quantity).toLocaleString()}</span>
+                            <button type="button" onClick={() => removeProductLine(line.product_id)} className="line-delete-btn">🗑</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Row 2: Payment, Status, Total */}
+                <div style={{display: 'grid', gap: '0.75rem', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', marginBottom: '1rem'}}>
+                  <select value={manualForm.payment_method} onChange={e => setManualForm({...manualForm, payment_method: e.target.value})} className="orders-search-input" style={{marginLeft: 0, minHeight: 44}}>
+                    {PAYMENT_METHODS.map(m => <option key={m} value={m}>{m}</option>)}
+                  </select>
+                  <select value={manualForm.status} onChange={e => setManualForm({...manualForm, status: e.target.value})} className="orders-search-input" style={{marginLeft: 0, minHeight: 44}}>
+                    {STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                </div>
+
+                {/* Total display */}
+                <div style={{background: 'var(--background)', borderRadius: 10, padding: '0.75rem 1rem', marginBottom: '1rem'}}>
+                  <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap'}}>
+                    <span style={{fontWeight: 800, fontSize: '1.2rem', color: manualLines.length > 0 ? 'var(--accent)' : 'var(--text-light)', whiteSpace: 'nowrap'}}>
+                      💰 Total: ${effectiveTotal.toLocaleString()}
+                    </span>
+                    {hasAutoDiscount && calculatedTotal > 0 && (
+                      <span style={{
+                        background: 'linear-gradient(135deg, #234a2e, #3a7d44)', color: 'white',
+                        fontSize: '0.72rem', fontWeight: 800, padding: '3px 10px',
+                        borderRadius: 10, letterSpacing: '0.03em', whiteSpace: 'nowrap'
+                      }}>
+                        {DISCOUNT_PERCENT}% OFF {manualForm.payment_method}
+                      </span>
+                    )}
+                    {manualTotalOverride !== null && (
+                      <button type="button" onClick={() => setManualTotalOverride(null)}
+                        style={{background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.8rem', color: '#6b7280', textDecoration: 'underline', padding: '0.25rem'}}
+                      >Resetear</button>
+                    )}
+                  </div>
                   {hasAutoDiscount && calculatedTotal > 0 && (
-                    <span style={{
-                      background: 'linear-gradient(135deg, #234a2e, #3a7d44)', color: 'white',
-                      fontSize: '0.7rem', fontWeight: 800, padding: '2px 8px',
-                      borderRadius: 10, letterSpacing: '0.03em', whiteSpace: 'nowrap'
-                    }}>
-                      {DISCOUNT_PERCENT}% OFF {manualForm.payment_method}
+                    <span style={{fontSize: '0.78rem', color: '#6b7280', marginTop: '0.25rem', display: 'block'}}>
+                      Sin desc: <span style={{textDecoration: 'line-through'}}>${calculatedTotal.toLocaleString()}</span>
+                      {' '}→ Ahorro: ${(calculatedTotal - effectiveTotal).toLocaleString()}
                     </span>
                   )}
-                  {manualTotalOverride !== null && (
-                    <button type="button" onClick={() => setManualTotalOverride(null)}
-                      style={{background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.75rem', color: '#6b7280', textDecoration: 'underline'}}
-                    >Resetear</button>
-                  )}
                 </div>
-                {hasAutoDiscount && calculatedTotal > 0 && (
-                  <span style={{fontSize: '0.75rem', color: '#6b7280'}}>
-                    Sin desc: <span style={{textDecoration: 'line-through'}}>${calculatedTotal.toLocaleString()}</span>
-                    {' '}→{' '}Ahorro: ${(calculatedTotal - effectiveTotal).toLocaleString()}
-                  </span>
-                )}
+
+                {/* Override total + Notes */}
+                <div style={{display: 'grid', gap: '0.75rem', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', marginBottom: '0.5rem'}}>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    placeholder="Override total"
+                    min="0"
+                    value={manualTotalOverride ?? ''}
+                    onChange={e => setManualTotalOverride(e.target.value === '' ? null : Number(e.target.value))}
+                    className="orders-search-input"
+                    style={{marginLeft: 0}}
+                  />
+                  <input type="text" placeholder="Notas opcionales" value={manualForm.notes} onChange={e => setManualForm({...manualForm, notes: e.target.value})} className="orders-search-input" style={{marginLeft: 0}} />
+                </div>
               </div>
-            </div>
 
-            {/* Override total + Notes */}
-            <div style={{display: 'grid', gap: '1rem', gridTemplateColumns: '160px 1fr', marginBottom: '1rem'}}>
-              <input
-                type="number"
-                placeholder="Override total"
-                min="0"
-                value={manualTotalOverride ?? ''}
-                onChange={e => setManualTotalOverride(e.target.value === '' ? null : Number(e.target.value))}
-                className="orders-search-input"
-                style={{marginLeft: 0, fontSize: '0.82rem'}}
-              />
-              <input type="text" placeholder="Notas opcionales" value={manualForm.notes} onChange={e => setManualForm({...manualForm, notes: e.target.value})} className="orders-search-input" style={{marginLeft: 0}} />
-            </div>
+              {/* Sticky footer with save button */}
+              <div className="manual-sale-sheet-footer">
+                <button type="submit" className="btn-save-sale" disabled={savingManual || manualLines.length === 0}>
+                  {savingManual ? '⏳ Guardando...' : '✓ Guardar Venta'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </>
+      )}
 
-            <button type="submit" className="btn-primary" disabled={savingManual || manualLines.length === 0} style={{maxWidth: 220}}>
-              {savingManual ? 'Guardando...' : '✓ Guardar Venta'}
-            </button>
-          </form>
+      {/* ── SUCCESS TOAST ── */}
+      {showSuccessToast && (
+        <div className="sale-success-toast">
+          <span className="toast-icon">✅</span>
+          <span>¡Venta guardada!</span>
+          <button className="toast-new-btn" onClick={() => { setShowSuccessToast(false); setShowManualForm(true); }} type="button">
+            + Nueva venta
+          </button>
         </div>
       )}
 
