@@ -463,6 +463,16 @@ const OrdersList = () => {
   const [dateRange, setDateRange] = useState('30d'); // '7d' | '30d' | '90d' | 'all'
   const [showSuccessToast, setShowSuccessToast] = useState(false);
 
+  // Toggle body class for bottom sheet z-index control
+  useEffect(() => {
+    if (showManualForm) {
+      document.body.classList.add('manual-sale-open');
+    } else {
+      document.body.classList.remove('manual-sale-open');
+    }
+    return () => document.body.classList.remove('manual-sale-open');
+  }, [showManualForm]);
+
   useEffect(() => {
     fetchData();
   }, []);

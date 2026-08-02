@@ -623,6 +623,13 @@
   }
 }
 
+/* ── SIDEBAR Z-INDEX FIX WHEN SHEET IS OPEN ── */
+body.manual-sale-open .adm-sidebar,
+body.manual-sale-open .adm-topbar,
+body.manual-sale-open .adm-bottom-nav {
+  z-index: 1 !important;
+}
+
 /* ── MANUAL SALE BOTTOM SHEET ── */
 .manual-sale-backdrop {
   position: fixed;
