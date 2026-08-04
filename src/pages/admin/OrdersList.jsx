@@ -462,6 +462,7 @@ const OrdersList = () => {
   // Ticket modal state
   const [ticketModal, setTicketModal] = useState(null); // { sale, discountInfo }
   const [ticketCopied, setTicketCopied] = useState(false);
+  const [isSharingImage, setIsSharingImage] = useState(false);
   const ticketRef = useRef(null);
   const [filter, setFilter] = useState('all');
   const [alerts, setAlerts] = useState([]);
@@ -829,7 +830,8 @@ const OrdersList = () => {
   };
 
   const handleShareImage = async () => {
-    if (!ticketRef.current) return;
+    if (!ticketRef.current || isSharingImage) return;
+    setIsSharingImage(true);
     try {
       // Usamos un wrapper con fondo para la exportación y forzamos un ancho mayor
       const wrapper = document.createElement('div');
@@ -882,6 +884,8 @@ const OrdersList = () => {
       URL.revokeObjectURL(url);
     } catch (err) {
       console.error('Error generating image:', err);
+    } finally {
+      setIsSharingImage(false);
     }
   };
 
@@ -1798,8 +1802,8 @@ const OrdersList = () => {
                 <button onClick={handleShareWhatsApp} style={{ flex: 1, minWidth: '140px', background: '#25D366', color: 'white', border: 'none', borderRadius: '8px', padding: '0.8rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
                   💬 Enviar WhatsApp
                 </button>
-                <button onClick={handleShareImage} style={{ flex: 1, minWidth: '140px', background: 'var(--accent)', color: 'white', border: 'none', borderRadius: '8px', padding: '0.8rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-                  📤 Compartir Imagen
+                <button onClick={handleShareImage} disabled={isSharingImage} style={{ flex: 1, minWidth: '140px', background: 'var(--accent)', color: 'white', border: 'none', borderRadius: '8px', padding: '0.8rem', fontWeight: 700, cursor: isSharingImage ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', opacity: isSharingImage ? 0.6 : 1 }}>
+                  {isSharingImage ? '⏳ Generando...' : '📤 Compartir Imagen'}
                 </button>
               </div>
               <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'center' }}>
