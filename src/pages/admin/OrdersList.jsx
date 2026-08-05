@@ -440,6 +440,8 @@ const OrdersList = () => {
   const [manualSales, setManualSales] = useState([]);
   const [pageViews, setPageViews] = useState([]);
   const [allEvents, setAllEvents] = useState([]);
+  const [rpcAnalytics, setRpcAnalytics] = useState(null);
+  const [rpcFunnel, setRpcFunnel] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
   
@@ -1025,6 +1027,26 @@ const OrdersList = () => {
   });
   const yerbaPercentage = totalRevenue > 0 ? ((yerbaRevenue / totalRevenue) * 100).toFixed(1) : 0;
 
+  // --- Analytics RPC Fetch ---
+  useEffect(() => {
+    let active = true;
+    const fetchRpc = async () => {
+      const days = dateRange === '7d' ? 7 : dateRange === '30d' ? 30 : dateRange === '90d' ? 90 : 0;
+      try {
+        const [{ data: analytics, error: err1 }, { data: funnel, error: err2 }] = await Promise.all([
+          supabase.rpc('get_analytics_summary', { p_days: days }),
+          supabase.rpc('get_funnel_summary', { p_days: days })
+        ]);
+        if (!err1 && analytics && active) setRpcAnalytics(analytics);
+        if (!err2 && funnel && active) setRpcFunnel(funnel);
+      } catch (e) {
+        // Silently fall back to local computation if RPC is not available yet
+      }
+    };
+    fetchRpc();
+    return () => { active = false; };
+  }, [dateRange]);
+
   // Calculate Advanced KPIs
 
   const filteredViews = useMemo(() => {
@@ -1032,16 +1054,19 @@ const OrdersList = () => {
     return pageViews.filter(v => !cutoff || new Date(v.created_at) >= cutoff);
   }, [pageViews, dateRange]);
 
-  const uniqueSessions = new Set(filteredViews.map(v => v.session_id)).size;
-  const conversionRate = uniqueSessions > 0 ? ((totalSalesCount / uniqueSessions) * 100).toFixed(2) : 0;
+  const uniqueSessions = rpcAnalytics ? rpcAnalytics.unique_sessions : new Set(filteredViews.map(v => v.session_id)).size;
   
-  const totalDuration = filteredViews.reduce((acc, v) => acc + (v.duration_seconds || 0), 0);
-  const avgDurationSeconds = uniqueSessions > 0 ? Math.floor(totalDuration / uniqueSessions) : 0;
+  const webSalesCount = unifiedSales.filter(s => s.type === 'web' && (s.status === 'paid' || s.status === 'shipped')).length;
+  const conversionRate = uniqueSessions > 0 ? ((webSalesCount / uniqueSessions) * 100).toFixed(2) : 0;
+  
+  const avgDurationSeconds = rpcAnalytics ? rpcAnalytics.avg_duration : (() => {
+    const totalDuration = filteredViews.reduce((acc, v) => acc + (v.duration_seconds || 0), 0);
+    const validViews = filteredViews.filter(v => v.duration_seconds > 0).length;
+    return validViews > 0 ? Math.floor(totalDuration / validViews) : 0;
+  })();
   const avgDurationFormatted = `${Math.floor(avgDurationSeconds / 60)}m ${avgDurationSeconds % 60}s`;
 
   const funnelData = useMemo(() => {
-    const cutoff = getCutoff();
-    const filteredEvents = allEvents.filter(e => !cutoff || new Date(e.created_at) >= cutoff);
     const funnelSteps = [
       { key: 'view_catalog', label: '1. Visitaron el Sitio', emoji: '🌐' },
       { key: 'view_product', label: '2. Vieron un Producto', emoji: '👁️' },
@@ -1049,11 +1074,19 @@ const OrdersList = () => {
       { key: 'initiate_checkout', label: '4. Iniciaron Checkout', emoji: '💳' },
       { key: 'purchase', label: '5. Compra Exitosa', emoji: '✅' },
     ];
+    if (rpcFunnel) {
+      return funnelSteps.map(step => {
+        const found = rpcFunnel.find(f => f.event_name === step.key);
+        return { ...step, sessions: found ? found.unique_sessions : 0 };
+      });
+    }
+    const cutoff = getCutoff();
+    const filteredEvents = allEvents.filter(e => !cutoff || new Date(e.created_at) >= cutoff);
     return funnelSteps.map(step => {
       const unique = new Set(filteredEvents.filter(e => e.event_name === step.key).map(e => e.session_id)).size;
       return { ...step, sessions: unique };
     });
-  }, [allEvents, dateRange]);
+  }, [allEvents, dateRange, rpcFunnel]);
 
   // Chart Data Preparation (Unified)
   const chartData = useMemo(() => {
@@ -1064,28 +1097,39 @@ const OrdersList = () => {
     const dailyData = days.map(d => ({ name: d, ordenes: 0 }));
     const hourlyData = Array.from({ length: 24 }, (_, i) => ({ name: `${i}:00`, volumen: 0 }));
 
-    const sourceDataMap = {};
-    filteredViews.forEach(v => {
-      const raw = v.source && v.source !== 'null' ? v.source.toLowerCase() : 'direct';
-      const labelMap = {
-        instagram: '📸 Instagram', facebook: '👥 Facebook', whatsapp: '💬 WhatsApp',
-        tiktok: '🎵 TikTok', google: '🔍 Google', direct: '🌐 Directo',
-      };
-      const origin = labelMap[raw] || `🔗 ${raw.charAt(0).toUpperCase() + raw.slice(1)}`;
-      sourceDataMap[origin] = (sourceDataMap[origin] || 0) + 1;
-    });
-    const sourceData = Object.entries(sourceDataMap).map(([name, visitas]) => ({ name, visitas })).sort((a, b) => b.visitas - a.visitas);
+    let sourceData = [];
+    if (rpcAnalytics && rpcAnalytics.sources) {
+      sourceData = rpcAnalytics.sources.map(s => {
+        const raw = s.source && s.source !== 'null' ? s.source.toLowerCase() : 'direct';
+        const labelMap = { instagram: '📸 Instagram', facebook: '👥 Facebook', whatsapp: '💬 WhatsApp', tiktok: '🎵 TikTok', google: '🔍 Google', direct: '🌐 Directo' };
+        return { name: labelMap[raw] || `🔗 ${raw.charAt(0).toUpperCase() + raw.slice(1)}`, visitas: s.views };
+      });
+    } else {
+      const sourceDataMap = {};
+      filteredViews.forEach(v => {
+        const raw = v.source && v.source !== 'null' ? v.source.toLowerCase() : 'direct';
+        const labelMap = { instagram: '📸 Instagram', facebook: '👥 Facebook', whatsapp: '💬 WhatsApp', tiktok: '🎵 TikTok', google: '🔍 Google', direct: '🌐 Directo' };
+        const origin = labelMap[raw] || `🔗 ${raw.charAt(0).toUpperCase() + raw.slice(1)}`;
+        sourceDataMap[origin] = (sourceDataMap[origin] || 0) + 1;
+      });
+      sourceData = Object.entries(sourceDataMap).map(([name, visitas]) => ({ name, visitas })).sort((a, b) => b.visitas - a.visitas);
+    }
 
-    const monthlyViewsMap = {};
-    pageViews.forEach(v => {
-      const d = new Date(v.created_at);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      const label = `${months[d.getMonth()]} ${d.getFullYear()}`;
-      if (!monthlyViewsMap[key]) monthlyViewsMap[key] = { name: label, visitas: 0, sesiones: 0, _sessions: new Set() };
-      monthlyViewsMap[key].visitas += 1;
-      monthlyViewsMap[key]._sessions.add(v.session_id);
-    });
-    const monthlyViews = Object.entries(monthlyViewsMap).sort(([a], [b]) => a.localeCompare(b)).map(([, v]) => ({ name: v.name, visitas: v.visitas, sesiones: v._sessions.size }));
+    let monthlyViews = [];
+    if (rpcAnalytics && rpcAnalytics.monthly_views) {
+      monthlyViews = rpcAnalytics.monthly_views.map(m => ({ name: m.label, visitas: m.views, sesiones: m.sessions }));
+    } else {
+      const monthlyViewsMap = {};
+      pageViews.forEach(v => {
+        const d = new Date(v.created_at);
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        const label = `${months[d.getMonth()]} ${d.getFullYear()}`;
+        if (!monthlyViewsMap[key]) monthlyViewsMap[key] = { name: label, visitas: 0, sesiones: 0, _sessions: new Set() };
+        monthlyViewsMap[key].visitas += 1;
+        monthlyViewsMap[key]._sessions.add(v.session_id);
+      });
+      monthlyViews = Object.entries(monthlyViewsMap).sort(([a], [b]) => a.localeCompare(b)).map(([, v]) => ({ name: v.name, visitas: v.visitas, sesiones: v._sessions.size }));
+    }
 
     unifiedSales.forEach(sale => {
       const isValid = (sale.type === 'web' && (sale.status === 'paid' || sale.status === 'shipped')) ||
@@ -1099,7 +1143,7 @@ const OrdersList = () => {
     });
 
     return { monthlyData, dailyData, hourlyData, sourceData, monthlyViews };
-  }, [unifiedSales, filteredViews, pageViews]);
+  }, [unifiedSales, filteredViews, pageViews, rpcAnalytics]);
 
   return (
     <div className="orders-dashboard">

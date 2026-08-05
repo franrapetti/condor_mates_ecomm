@@ -1,16 +1,17 @@
 import { supabase } from './supabaseClient';
+import { getOrCreateSession } from '../hooks/useAnalytics';
 
 const IS_DEV = import.meta.env.DEV;
 
-// ─── Session Helper ───────────────────────────────────────────────────────────
-function getSessionId() {
-  const KEY = 'mate_session_id';
-  let id = localStorage.getItem(KEY);
-  if (!id) {
-    id = `s_${Math.random().toString(36).slice(2, 11)}_${Date.now()}`;
-    localStorage.setItem(KEY, id);
-  }
-  return id;
+// ─── Bot Detection (lightweight check) ──────────────────────────────────────
+// Full bot list is in useAnalytics.js — this is a quick guard for event logging.
+
+function isLikelyBot() {
+  if (typeof navigator === 'undefined') return true;
+  if (navigator.webdriver) return true;
+  const ua = (navigator.userAgent || '').toLowerCase();
+  if (!ua || ua.length < 10) return true;
+  return /bot|crawl|spider|slurp|lighthouse|headlesschrome|phantomjs|prerender/i.test(ua);
 }
 
 // ─── Analytics Event Logger ──────────────────────────────────────────────────
@@ -21,9 +22,12 @@ function getSessionId() {
 // Safe to call anywhere — logs failures in dev, silent in production.
 
 export const logAnalyticsEvent = async (eventName, metadata = {}) => {
+  // Skip bots — they shouldn't count in the funnel
+  if (isLikelyBot()) return;
+
   try {
     const { error } = await supabase.from('analytics_events').insert([{
-      session_id: getSessionId(),
+      session_id: getOrCreateSession(),
       event_name: eventName,
       metadata,
     }]);

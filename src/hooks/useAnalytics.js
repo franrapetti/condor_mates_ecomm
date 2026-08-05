@@ -2,20 +2,72 @@ import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// ─── Constants ───────────────────────────────────────────────────────────────
 
 const IS_DEV = import.meta.env.DEV;
 
-/** Persistent anonymous session ID — survives tab close (unlike sessionStorage) */
-function getOrCreateSession() {
-  const KEY = 'mate_session_id';
-  let id = localStorage.getItem(KEY);
-  if (!id) {
+/** Session expires after 30 minutes of inactivity */
+const SESSION_TIMEOUT_MS = 30 * 60 * 1000;
+
+/** Minimum interval between tracking the same path (prevents StrictMode/re-render dupes) */
+const DEDUP_WINDOW_MS = 2000;
+
+// ─── Bot Detection ───────────────────────────────────────────────────────────
+
+const BOT_PATTERNS = [
+  'googlebot', 'bingbot', 'slurp', 'duckduckbot', 'baiduspider',
+  'yandexbot', 'sogou', 'facebot', 'facebookexternalhit', 'ia_archiver',
+  'semrushbot', 'ahrefsbot', 'dotbot', 'rogerbot', 'twitterbot',
+  'linkedinbot', 'embedly', 'quora link preview', 'showyoubot',
+  'outbrain', 'pinterest', 'applebot', 'mj12bot', 'seznambot',
+  'petalbot', 'bytespider', 'gptbot', 'claudebot', 'anthropic',
+  'headlesschrome', 'phantomjs', 'prerender', 'lighthouse',
+  'chrome-lighthouse', 'pagespeed', 'gtmetrix', 'webpagetest',
+];
+
+let _isBot = null;
+
+function isBot() {
+  if (_isBot !== null) return _isBot;
+  if (typeof navigator === 'undefined') { _isBot = true; return true; }
+  // navigator.webdriver is true for automated browsers (Puppeteer, Selenium, etc.)
+  if (navigator.webdriver) { _isBot = true; return true; }
+  const ua = (navigator.userAgent || '').toLowerCase();
+  if (!ua || ua.length < 10) { _isBot = true; return true; }
+  _isBot = BOT_PATTERNS.some(p => ua.includes(p));
+  return _isBot;
+}
+
+// ─── Session Management ──────────────────────────────────────────────────────
+// Uses sessionStorage (dies on tab close) + 30-minute inactivity rotation.
+// This replaces the old localStorage-based session that never expired.
+
+const SESSION_KEY = 'mate_session_id';
+const SESSION_TS_KEY = 'mate_session_ts';
+
+/**
+ * Get or create a session ID.
+ * - Stored in sessionStorage (cleared when tab closes = new session)
+ * - Auto-rotates after 30 minutes of inactivity
+ * - Exported so analytics.js can reuse it (eliminates duplication)
+ */
+export function getOrCreateSession() {
+  const now = Date.now();
+  let id = sessionStorage.getItem(SESSION_KEY);
+  const lastTs = parseInt(sessionStorage.getItem(SESSION_TS_KEY) || '0', 10);
+
+  // Rotate if expired or missing
+  if (!id || (now - lastTs) > SESSION_TIMEOUT_MS) {
     id = `s_${Math.random().toString(36).slice(2, 11)}_${Date.now()}`;
-    localStorage.setItem(KEY, id);
+    sessionStorage.setItem(SESSION_KEY, id);
   }
+
+  // Always update the timestamp to track last activity
+  sessionStorage.setItem(SESSION_TS_KEY, String(now));
   return id;
 }
+
+// ─── Traffic Source Resolution ───────────────────────────────────────────────
 
 /**
  * Resolve the traffic source.
@@ -52,6 +104,30 @@ export function resolveSource(search) {
     return fresh.toLowerCase();
   }
   return localStorage.getItem(SOURCE_KEY) || 'direct';
+}
+
+// ─── Global Dedup Tracker (Singleton) ────────────────────────────────────────
+// Lives outside React lifecycle so StrictMode double-mounts don't cause dupes.
+
+const _trackedPaths = new Map(); // path → timestamp of last track
+
+function shouldTrack(path) {
+  const now = Date.now();
+  const lastTracked = _trackedPaths.get(path);
+  if (lastTracked && (now - lastTracked) < DEDUP_WINDOW_MS) {
+    if (IS_DEV) console.log(`[Analytics] Dedup: skipping "${path}" (tracked ${now - lastTracked}ms ago)`);
+    return false;
+  }
+  _trackedPaths.set(path, now);
+
+  // Cleanup old entries (keep map small)
+  if (_trackedPaths.size > 50) {
+    for (const [key, ts] of _trackedPaths) {
+      if (now - ts > 60000) _trackedPaths.delete(key);
+    }
+  }
+
+  return true;
 }
 
 // ─── View ID Promise Bridge ──────────────────────────────────────────────────
@@ -93,6 +169,22 @@ export const useAnalytics = () => {
   const startRef  = useRef(Date.now());
 
   useEffect(() => {
+    // ── Guard: don't track bots ──
+    if (isBot()) {
+      if (IS_DEV) console.log('[Analytics] Bot detected — skipping tracking');
+      return;
+    }
+
+    // ── Guard: don't track admin pages ──
+    if (location.pathname.startsWith('/admin')) {
+      return;
+    }
+
+    // ── Guard: dedup (StrictMode double-mount / rapid re-renders) ──
+    if (!shouldTrack(location.pathname)) {
+      return;
+    }
+
     const sessionId = getOrCreateSession();
     const source    = resolveSource(location.search);
 
@@ -125,8 +217,6 @@ export const useAnalytics = () => {
 
         if (alive && data) {
           viewIdRef.current = data.id;
-          // Also keep localStorage as a fallback for edge cases
-          localStorage.setItem('mate_last_view_id', data.id);
           // ✅ Resolve the promise so logProductPageView can proceed
           _viewIdResolve?.(data.id);
         } else {
@@ -142,18 +232,12 @@ export const useAnalytics = () => {
       alive = false;
       const duration = Math.floor((Date.now() - startRef.current) / 1000);
       if (viewIdRef.current && duration > 0) {
-        // ✅ Use sendBeacon for reliable delivery on page unload/navigation
+        // ✅ Use fetch with keepalive for reliable delivery on page unload/navigation
         const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
         const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-        if (supabaseUrl && supabaseKey && navigator.sendBeacon) {
+        if (supabaseUrl && supabaseKey) {
           const url = `${supabaseUrl}/rest/v1/page_views?id=eq.${viewIdRef.current}`;
-          const blob = new Blob(
-            [JSON.stringify({ duration_seconds: duration })],
-            { type: 'application/json' }
-          );
-          // sendBeacon does not support custom headers natively,
-          // so we fall back to fetch with keepalive as the primary method
           fetch(url, {
             method: 'PATCH',
             headers: {
@@ -166,7 +250,7 @@ export const useAnalytics = () => {
             keepalive: true, // ✅ Survives page unload
           }).catch(() => {});
         } else {
-          // Fallback for environments without sendBeacon
+          // Fallback for environments without env vars
           supabase
             .from('page_views')
             .update({ duration_seconds: duration })
@@ -176,7 +260,8 @@ export const useAnalytics = () => {
         }
       }
     };
-  }, [location.pathname, location.search]);
+    // ✅ Only depend on pathname — search params changes don't warrant a new page view
+  }, [location.pathname]);
 };
 
 // ─── Product Page View Logger ────────────────────────────────────────────────
@@ -186,17 +271,17 @@ export const useAnalytics = () => {
  * Links the current page_view row to the product (for per-product analytics)
  * and atomically increments visit_count on the product.
  *
- * ✅ FIX: Now awaits the view ID from the useAnalytics INSERT instead of
- *    reading a potentially stale value from localStorage (race condition fix).
+ * ✅ Awaits the view ID from the useAnalytics INSERT (race condition fix).
+ * ✅ Skips for bots.
  */
 export const logProductPageView = async (productId) => {
-  if (!productId) return;
+  if (!productId || isBot()) return;
 
   // URL params are always strings — cast to integer to match products.id BIGINT type
   const numericId = Number(productId);
   if (!Number.isFinite(numericId)) return; // guard against UUID-type products
 
-  // 1. ✅ AWAIT the view ID from the current page's INSERT (race condition fix)
+  // 1. AWAIT the view ID from the current page's INSERT (race condition fix)
   const viewId = await getViewIdPromise();
 
   if (viewId) {
