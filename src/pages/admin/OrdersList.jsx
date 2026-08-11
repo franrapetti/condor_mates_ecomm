@@ -910,39 +910,50 @@ const OrdersList = () => {
   };
 
   const unifiedSales = useMemo(() => {
-    const web = orders.map(o => ({
-      id: o.id,
-      type: 'web',
-      created_at: o.created_at,
-      customer_name: o.customer_name,
-      customer_info: o.customer_email || o.customer_city,
-      items_desc: o.items?.map(i => `${i.quantity}x ${i.name}`).join(', ') || 'Sin items',
-      total: o.total_price || 0,
-      status: o.status,
-      payment_method: o.payment_method || (o.mp_payment_id ? 'Mercado Pago' : 'Transferencia'),
-      source: o.source,
-      original: o
-    }));
+    const web = orders.map(o => {
+      let parsedItems = [];
+      if (typeof o.items === 'string') {
+        try { parsedItems = JSON.parse(o.items); } catch (_) {}
+      } else if (Array.isArray(o.items)) {
+        parsedItems = o.items;
+      }
+      return {
+        id: o.id,
+        type: 'web',
+        created_at: o.created_at,
+        customer_name: o.customer_name,
+        customer_info: o.customer_email || o.customer_city,
+        items: parsedItems,
+        items_desc: parsedItems.map(i => `${i.quantity}x ${i.name}`).join(', ') || 'Sin items',
+        total: o.total_price || 0,
+        status: o.status,
+        payment_method: o.payment_method || (o.mp_payment_id ? 'Mercado Pago' : 'Transferencia'),
+        source: o.source,
+        original: o
+      };
+    });
 
-    const manual = manualSales.map(m => ({
-      id: m.id,
-      type: 'manual',
-      created_at: m.created_at,
-      customer_name: m.customer_name,
-      customer_info: m.customer_phone ? `📞 ${m.customer_phone}` : '',
-      items_desc: (() => {
-        try {
-          const parsed = JSON.parse(m.items);
-          if (Array.isArray(parsed)) return parsed.map(l => `${l.quantity}x ${l.name}`).join(', ');
-        } catch (_) {}
-        return m.items;
-      })(),
-      total: m.total_amount || 0,
-      status: m.status,
-      payment_method: m.payment_method,
-      source: 'manual',
-      original: m
-    }));
+    const manual = manualSales.map(m => {
+      let parsedItems = [];
+      try {
+        const parsed = JSON.parse(m.items);
+        if (Array.isArray(parsed)) parsedItems = parsed;
+      } catch (_) {}
+      return {
+        id: m.id,
+        type: 'manual',
+        created_at: m.created_at,
+        customer_name: m.customer_name,
+        customer_info: m.customer_phone ? `📞 ${m.customer_phone}` : '',
+        items: parsedItems,
+        items_desc: parsedItems.length > 0 ? parsedItems.map(l => `${l.quantity}x ${l.name}`).join(', ') : m.items,
+        total: m.total_amount || 0,
+        status: m.status,
+        payment_method: m.payment_method,
+        source: 'manual',
+        original: m
+      };
+    });
 
     return [...web, ...manual].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   }, [orders, manualSales]);
@@ -1554,8 +1565,32 @@ const OrdersList = () => {
                       <div style={{fontWeight: 600}}>{sale.customer_name}</div>
                       {sale.customer_info && <div style={{fontSize: '0.75rem', color: '#6b7280'}}>{sale.customer_info}</div>}
                     </td>
-                    <td data-label="Items" className="orders-td-items" style={{maxWidth: 200, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '0.85rem'}} title={sale.items_desc}>
-                      {sale.items_desc}
+                    <td data-label="Items" className="orders-td-items" style={{maxWidth: 250, padding: '0.5rem'}}>
+                      {sale.items && sale.items.length > 0 ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                          {sale.items.map((item, idx) => {
+                            let imgUrl = item.image_url;
+                            if (!imgUrl) {
+                               const catProd = catalogProducts.find(p => p.id == item.id || p.id == item.product_id);
+                               if (catProd) imgUrl = catProd.image_url;
+                            }
+                            return (
+                              <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.85rem', lineHeight: '1.2' }}>
+                                {imgUrl ? (
+                                  <img src={imgUrl} alt={item.name} style={{ width: 32, height: 32, objectFit: 'cover', borderRadius: 6, flexShrink: 0, border: '1px solid #e5e7eb' }} />
+                                ) : (
+                                  <div style={{ width: 32, height: 32, background: '#e5e7eb', borderRadius: 6, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}>🧉</div>
+                                )}
+                                <span style={{ whiteSpace: 'normal', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', color: 'var(--text-dark)' }} title={item.name}>
+                                  <strong>{item.quantity}x</strong> {item.name}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <span style={{ fontSize: '0.85rem', color: 'var(--text-light)' }} title={sale.items_desc}>{sale.items_desc}</span>
+                      )}
                     </td>
                     <td data-label="Estado">{getStatusBadge(sale.status, sale.type === 'manual')}</td>
                     <td data-label="Total" style={{fontWeight: 600, color: sale.status === 'debt' ? '#d97706' : 'var(--accent)'}}>${sale.total.toLocaleString()}</td>
