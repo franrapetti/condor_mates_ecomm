@@ -449,6 +449,7 @@ const OrdersList = () => {
   const [showManualForm, setShowManualForm] = useState(false);
   const [manualForm, setManualForm] = useState(EMPTY_FORM);
   const [savingManual, setSavingManual] = useState(false);
+  const [addToPrepOrders, setAddToPrepOrders] = useState(true);
 
   // Product autocomplete state
   const [catalogProducts, setCatalogProducts] = useState([]);
@@ -675,14 +676,26 @@ const OrdersList = () => {
     
     try {
       const itemsJson = JSON.stringify(manualLines.map(l => ({ id: l.product_id, name: l.name, quantity: l.quantity, price: l.price })));
-      const { error } = await supabase.from('manual_sales').insert([{
+      const { data: insertedData, error } = await supabase.from('manual_sales').insert([{
         ...manualForm,
         customer_name: customerName,
         items: itemsJson,
         total_amount: effectiveTotal,
-      }]);
+      }]).select('id');
       
       if (error) throw error;
+
+      // Insertar en pedidos a preparar si el checkbox está activado
+      if (addToPrepOrders && insertedData && insertedData[0]) {
+        await supabase.from('prep_orders').insert([{
+          sale_id: insertedData[0].id,
+          sale_type: 'manual',
+          customer_name: customerName,
+          items: itemsJson,
+          total_amount: effectiveTotal,
+          notes: manualForm.notes || null,
+        }]);
+      }
 
       // Descontar stock en paralelo (más rápido en redes móviles)
       const stockUpdates = manualLines
@@ -702,6 +715,7 @@ const OrdersList = () => {
       setManualForm(EMPTY_FORM);
       setManualLines([]);
       setManualTotalOverride(null);
+      setAddToPrepOrders(true);
       setShowManualForm(false);
       setShowSuccessToast(true);
       setTimeout(() => setShowSuccessToast(false), 4000);
@@ -735,6 +749,8 @@ const OrdersList = () => {
     }
     const { error } = await supabase.from('manual_sales').delete().eq('id', id);
     if (!error) {
+      // También eliminar de prep_orders si existe
+      await supabase.from('prep_orders').delete().eq('sale_id', id);
       setManualSales(prev => prev.filter(s => s.id !== id));
       setDeleteConfirm(null);
       fetchData();
@@ -1356,6 +1372,15 @@ const OrdersList = () => {
 
               {/* Sticky footer with save button */}
               <div className="manual-sale-sheet-footer">
+                <label style={{display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', padding: '0.5rem 0', fontSize: '0.88rem', fontWeight: 600, color: 'var(--text-dark)', userSelect: 'none'}}>
+                  <input
+                    type="checkbox"
+                    checked={addToPrepOrders}
+                    onChange={e => setAddToPrepOrders(e.target.checked)}
+                    style={{width: 18, height: 18, accentColor: 'var(--accent)', cursor: 'pointer'}}
+                  />
+                  📦 Guardar en Pedidos a Preparar
+                </label>
                 <button type="submit" className="btn-save-sale" disabled={savingManual || manualLines.length === 0}>
                   {savingManual ? '⏳ Guardando...' : '✓ Guardar Venta'}
                 </button>

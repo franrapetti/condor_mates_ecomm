@@ -12,6 +12,7 @@ import AdminLayout from './components/admin/AdminLayout';
 import ProductsList from './pages/admin/ProductsList';
 import ProductForm from './pages/admin/ProductForm';
 import OrdersList from './pages/admin/OrdersList';
+import PrepOrders from './pages/admin/PrepOrders';
 import AdminSettings from './pages/admin/AdminSettings';
 import AdminLeads from './pages/admin/AdminLeads';
 import CsvExport from './pages/admin/CsvExport';
@@ -86,6 +87,7 @@ function App() {
                   }>
                     <Route index element={<ProductsList />} />
                     <Route path="orders" element={<OrdersList />} />
+                    <Route path="prep-orders" element={<PrepOrders />} />
                     <Route path="settings" element={<AdminSettings />} />
                     <Route path="leads" element={<AdminLeads />} />
                     <Route path="export" element={<CsvExport />} />
