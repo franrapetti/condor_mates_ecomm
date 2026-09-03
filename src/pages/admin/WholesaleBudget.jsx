@@ -320,23 +320,13 @@ const WholesaleBudget = () => {
       const imgWidth = canvas.width;
       const imgHeight = canvas.height;
 
-      // A4 dimensions in mm
-      const pdfWidth = 210;
-      const pdfMargin = 15;
-      const contentWidth = pdfWidth - (pdfMargin * 2);
-      const contentHeight = (imgHeight * contentWidth) / imgWidth;
-
       const pdf = new jsPDF({
-        orientation: contentHeight > 297 - (pdfMargin * 2) ? 'portrait' : 'portrait',
-        unit: 'mm',
-        format: 'a4',
+        orientation: imgWidth > imgHeight ? 'landscape' : 'portrait',
+        unit: 'px',
+        format: [imgWidth, imgHeight],
       });
 
-      // Center the image on the page
-      const xOffset = pdfMargin;
-      const yOffset = pdfMargin;
-
-      pdf.addImage(imgData, 'PNG', xOffset, yOffset, contentWidth, contentHeight);
+      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
       pdf.save(`${sanitizeFileName(exportFileName)}.pdf`);
     } catch (error) {
       console.error('Error al exportar PDF:', error);
