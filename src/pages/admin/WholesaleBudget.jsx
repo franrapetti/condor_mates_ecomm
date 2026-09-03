@@ -61,6 +61,8 @@ const WholesaleBudget = () => {
 
   const [products, setProducts] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [customProductName, setCustomProductName] = useState('');
+  const [customProductPrice, setCustomProductPrice] = useState('');
   const [budgets, setBudgets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -192,6 +194,22 @@ const WholesaleBudget = () => {
         image_url: product.image_url || product.image || '',
       }];
     });
+  };
+
+  const addCustomProduct = (e) => {
+    e.preventDefault();
+    if (!customProductName.trim()) return;
+    const price = Number(customProductPrice) || 0;
+    const customId = `custom_${Date.now()}`;
+    setItems(prev => [...prev, {
+      product_id: customId,
+      name: customProductName.trim(),
+      quantity: 1,
+      unit_price: price,
+      image_url: '',
+    }]);
+    setCustomProductName('');
+    setCustomProductPrice('');
   };
 
   const updateItemQuantity = (productId, delta) => {
@@ -384,6 +402,8 @@ const WholesaleBudget = () => {
     setInstallments('none');
     setCustomCommission(5);
     setSearchQuery('');
+    setCustomProductName('');
+    setCustomProductPrice('');
     setExportFileName('');
   };
 
@@ -511,6 +531,33 @@ const WholesaleBudget = () => {
                 })
               )}
             </div>
+
+            <form className="ws-custom-product-form" onSubmit={addCustomProduct}>
+              <div className="ws-custom-product-header">
+                <h4>Añadir Producto Personalizado</h4>
+              </div>
+              <div className="ws-custom-product-inputs">
+                <input
+                  type="text"
+                  placeholder="Nombre del producto..."
+                  value={customProductName}
+                  onChange={e => setCustomProductName(e.target.value)}
+                  className="ws-custom-name-input"
+                />
+                <div className="ws-custom-price-input">
+                  <span className="currency-symbol">$</span>
+                  <input
+                    type="number"
+                    placeholder="Precio"
+                    value={customProductPrice}
+                    onChange={e => setCustomProductPrice(e.target.value)}
+                  />
+                </div>
+                <button type="submit" className="ws-add-custom-btn" disabled={!customProductName.trim()}>
+                  <Plus size={16} />
+                </button>
+              </div>
+            </form>
           </div>
 
           {/* ── Items del Presupuesto ── */}
