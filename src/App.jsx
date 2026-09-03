@@ -17,6 +17,7 @@ import AdminSettings from './pages/admin/AdminSettings';
 import AdminLeads from './pages/admin/AdminLeads';
 import CsvExport from './pages/admin/CsvExport';
 import ScreenshotCatalog from './pages/admin/ScreenshotCatalog';
+import WholesaleBudget from './pages/admin/WholesaleBudget';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { CartProvider } from './context/CartContext';
@@ -92,6 +93,7 @@ function App() {
                     <Route path="leads" element={<AdminLeads />} />
                     <Route path="export" element={<CsvExport />} />
                     <Route path="screenshots" element={<ScreenshotCatalog />} />
+                    <Route path="wholesale" element={<WholesaleBudget />} />
                     <Route path="products/new" element={<ProductForm />} />
                     <Route path="products/:id" element={<ProductForm />} />
                   </Route>
